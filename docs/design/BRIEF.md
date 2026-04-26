@@ -157,6 +157,61 @@ stated preference for Elixir. What is the minimum viable implementation that
 actually runs and makes good use of the BEAM's properties — or, if another
 platform is clearly better, why?
 
+### Q5 — Shared State Medium: Filesystem Blackboard vs GitHub Issues (blocking)
+
+The current design uses a markdown file (`ACTIVE_DISCUSSION.md`) committed to
+git as the shared state. This was inherited from the prior blackboard model,
+where it worked well for human-paced discussions. For automated turn-taking it
+has significant weaknesses:
+
+**Problems with file + git commit:**
+- Two agents writing simultaneously → merge conflict; requires pull/push
+  discipline that is hard to enforce across separately-invoked CLI processes
+- One growing file creates context window pressure over many rounds
+- No per-question threading; the orchestrator must parse the whole file to
+  find each question's state
+- Termination detection requires regex over unstructured prose
+
+**GitHub Issues as an alternative shared state:**
+- One issue per question (Q1, Q2, Q3, Q4)
+- Agents post comments via `gh issue comment <n> --body "..."` — no git
+  operations, no merge conflicts, parallel writes are safe
+- Orchestrator reads state with `gh issue view <n> --comments --json`
+- Labels (`satisfied`, `needs-more-evidence`, `satisfied-conditional`) track
+  per-question state without markdown parsing
+- Closing an issue is the natural termination signal for that question
+- GitHub's own notification infrastructure becomes available
+- `BRIEF.md` and `DECISION.md` stay as files; `ACTIVE_DISCUSSION.md` becomes
+  an index pointing to the issues
+
+**Trade-offs to consider:**
+- GitHub Issues require a `GITHUB_TOKEN` and `gh` CLI installed; adds an
+  external dependency the filesystem approach avoids
+- Issue comment threads lack the rich signed-position format of the current
+  markdown structure; formatting conventions would need porting
+- A hybrid is possible: issues for active discussion rounds, files for
+  BRIEF/DECISION/archive
+
+**The question:** Should the orchestrator use the filesystem blackboard, GitHub
+Issues, a hybrid, or something else as its shared state medium? This choice
+directly affects Q1 (what agents need to do after generating output), Q2 (how
+turn-taking is signalled), and Q3 (how termination is detected). Address this
+before or alongside those questions.
+
+---
+
+## How To Contribute a Position
+
+Write a signed position to `ACTIVE_DISCUSSION.md` in this directory. Address
+one or more questions above with primary evidence (CLI help output, source code
+references, or live test results). Follow the format in the discussion file.
+
+Mark each question you address as `[satisfied]`, `[satisfied-conditional: X]`,
+or `[needs more evidence: X]` at the end of your position.
+
+**The IC will not close any question until all contributing agents have marked
+it satisfied.** The discussion continues until all agents are satisfied.
+
 ---
 
 ## How To Contribute a Position
