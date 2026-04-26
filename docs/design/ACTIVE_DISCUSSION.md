@@ -575,11 +575,43 @@ The shift to `gh` CLI further justifies **Elixir**.
 - **Subprocess Handling**: Elixir's `System.cmd("gh", ["issue", "view", ...])` is cleaner than shell interpolation.
 - **State Machine**: The orchestrator can be modeled as a `GenServer` that polls the GitHub API (via `gh`) and transitions from `researching` -> `reviewing` -> `satisfied`.
 
+---
+
+## Gemini-CLI Position — 2026-04-26 (Research Round 4)
+
+I have assessed the new git infrastructure services, `code.storage` (Pierre Computer Company) and **Cloudflare Artifacts**, specifically regarding our durable artifact write path.
+
+### Q7 — Assessment of code.storage and Cloudflare Artifacts
+
+#### 1. Multi-file Commit Efficiency (`code.storage`)
+The `code.storage` API-first model with a "single multi-file commit" call offers a significant ergonomics improvement for the **Orchestrator's finalization phase**. 
+- **Current Problem:** Standard Git requires `add` -> `commit` -> `push` for each change. When the Orchestrator needs to update `BRIEF.md`, `DECISION.md`, and multiple transcripts at once, this creates multiple rounds of network I/O and potential race conditions.
+- **Improvement:** `code.storage` would allow the Orchestrator to flush the entire "session state" (all durable files) in one atomic HTTP request. This doesn't change `Roundtable.Actions.Gh` (which handles Issues), but it would simplify the implementation of a `DurableStorage` module.
+- **Status:** `[satisfied-conditional: worth adopting for finalization if the Orchestrator moves beyond local filesystem writes; for v1, local git is simpler]`
+
+#### 2. Event-Driven Triggering (`Cloudflare Artifacts`)
+Cloudflare Artifacts' proposed **event subscriptions** (push/clone/fork) are a potential game-changer for the **Roundtable Trigger Model**.
+- **Current Model:** We currently assume the Orchestrator polls GitHub Issues (`gh issue view --json`) to detect new comments.
+- **The Artifacts Model:** If `BRIEF.md` lived in a Cloudflare Artifact, a new push to that repo could trigger a Cloudflare Worker that immediately signals the Jido-based Orchestrator. 
+- **Wait/Watch Pattern:** While powerful, Cloudflare's event model is for *git* events. Since our primary coordination happens in *GitHub Issues*, we still need a way to subscribe to Issue events. GitHub Webhooks already provide this, but they require a public endpoint. Cloudflare Artifacts would be better suited if we moved the *entire* discussion from Issues back to Git (using a protocol like GNAP).
+- **Status:** `[needs more evidence: the value of event subscriptions only manifests if we abandon GitHub Issues for coordination, which contradicts Q5]`
+
+#### 3. Risk of GitHub Dependency
+Splitting the concerns (Issues on GitHub, Git on `code.storage` or Cloudflare) reduces platform risk but increases **authentication and synchronization complexity**.
+- **Risk:** If GitHub is down, both our coordination (Issues) and our history (Git) are inaccessible.
+- **Mitigation:** Splitting history to `code.storage` ensures we don't lose the decision log if GitHub's Issues service is unavailable. However, for a v1, the "single token/single provider" model of GitHub is a massive speed advantage.
+- **Status:** `[satisfied: dependency risk is low for v1; the hybrid model provides enough separation that we can swap the Git backend later without touching the Issue logic]`
+
+#### 4. Implementation Timing
+Is this worth implementing now? **No.**
+- **Deferred Optimization:** `code.storage` and Cloudflare Artifacts solve scaling and concurrency problems that only appear once we have dozens of active discussions running simultaneously. For v1, the `gh` CLI and local `git` commands are sufficient and easier to debug.
+- **Recommendation:** Record these services in `ATTRIBUTION.md` as "Tier 2 Infrastructure" to be evaluated when the orchestrator moves to a "SaaS/Managed" model.
+
 **Statuses:**
-- Q2: `[satisfied]`
-- Q3: `[satisfied]`
-- Q4: `[satisfied]`
-- Q5: `[satisfied]`
+- Q7.1: `[satisfied]`
+- Q7.2: `[needs more evidence]`
+- Q7.3: `[satisfied]`
+- Q7.4: `[satisfied]`
 
 ---
 
