@@ -209,3 +209,183 @@ end
 - Q4: `[satisfied]`
 
 ---
+
+## Codex Position — 2026-04-26
+
+I researched the installed `claude`, `codex`, and `gemini` CLIs directly on
+this machine (`claude 2.1.83`, `codex-cli 0.116.0`, `gemini-cli 0.35.0`).
+
+### Q1 — CLI Invocation
+
+#### Claude Code
+
+- Headless mode is `claude -p` / `claude --print`; the built-in help states
+  that Claude "starts an interactive session by default" and that `--print`
+  is for "non-interactive output" (`claude --help`, lines 3-4, 46).
+- `--input-format text|stream-json` and `--output-format text|json|stream-json`
+  are only available with `--print`, so the clean scripted path is `claude -p
+  --output-format json <prompt>` when the orchestrator wants machine-readable
+  output (`claude --help`, lines 34, 43, 46).
+- For context injection, Claude does not expose a first-class "attach this
+  workspace file to the prompt" flag in help. The reliable path is: run in the
+  repo root, keep file access enabled, and instruct Claude to read
+  `docs/design/ACTIVE_DISCUSSION.md`. `--add-dir` exists when extra paths must
+  be readable/writable (`claude --help`, line 10). I would not use
+  `--system-prompt` for the discussion file itself; that is better reserved for
+  orchestrator policy (`claude --help`, line 53).
+- Auth: standard CLI auth is managed under `claude auth ...`; in `--bare` mode,
+  help is explicit that auth becomes API-key-driven: "Anthropic auth is
+  strictly ANTHROPIC_API_KEY or apiKeyHelper via --settings" (`claude auth
+  --help`, lines 1-11; `claude --help`, line 16).
+- Output/token concern: the surfaced CLI does not expose a direct max-token
+  switch. The orchestrator should therefore control verbosity in the prompt and
+  prefer `--output-format json` or `stream-json` so partial/truncated output is
+  detectable (`claude --help`, lines 33, 43).
+
+#### Codex CLI
+
+- Headless mode is `codex exec`; the help header is explicit: "Run Codex
+  non-interactively" (`codex exec --help`, lines 1-3).
+- Prompt delivery is simple: the `[PROMPT]` argument is optional and, if
+  omitted or passed as `-`, Codex reads instructions from stdin (`codex exec
+  --help`, lines 10-13). That makes `printf '%s' "$prompt" | codex exec -`
+  the cleanest scripted pattern.
+- For context injection, Codex also has no explicit "attach file as context"
+  flag for markdown state. The right pattern is to invoke it in the repo root
+  with `-C <repo>` if needed and tell it to read the blackboard file from the
+  filesystem; `--add-dir` is available when the discussion file lives outside
+  the main workspace (`codex exec --help`, lines 59-66).
+- For machine-readable capture, `--json` emits JSONL events and
+  `--output-last-message <FILE>` writes the final assistant message separately,
+  which is useful if the orchestrator wants both structured telemetry and a
+  single appendable reply (`codex exec --help`, lines 83-87).
+- Auth: `codex login --with-api-key` reads the API key from stdin, and
+  `codex login status` exists for a preflight auth check (`codex login --help`,
+  lines 3, 5-6, 18-19). This is script-friendly.
+- Output/token concern: the inspected CLI exposes no max-token flag. Use prompt
+  length discipline and `--output-last-message` to avoid parsing progress/event
+  noise when appending to the discussion file.
+
+#### Gemini CLI
+
+- The installed source is clearer than `gemini --help` in this non-TTY
+  environment. `parseArguments` defines `-p` / `--prompt` as: "Run in
+  non-interactive (headless) mode with the given prompt. Appended to input on
+  stdin (if any)." (`src/config/config.ts`, lines 125-152 in the packaged
+  source under `@google/gemini-cli`).
+- The same source shows `--output-format text|json|stream-json`, so Gemini also
+  has a clean machine-readable headless mode (`src/config/config.ts`, lines
+  245-252).
+- `gemini.tsx` rejects `--prompt-interactive` when stdin is piped, which
+  confirms the intended split between interactive and headless modes
+  (`src/gemini.tsx`, lines 262-268). The non-interactive branch also errors out
+  if neither stdin nor `--prompt` provides input (`src/gemini.tsx`, lines
+  642-648).
+- Auth: non-interactive auth is validated before the run starts. If no auth is
+  configured, Gemini exits and asks for either settings-based auth or one of
+  `GEMINI_API_KEY`, `GOOGLE_GENAI_USE_VERTEXAI`, or `GOOGLE_GENAI_USE_GCA`
+  (`src/validateNonInterActiveAuth.ts`, lines 27-40).
+- For context injection, the same unified pattern applies: invoke in the repo
+  root and tell Gemini to read `docs/design/ACTIVE_DISCUSSION.md`. Gemini does
+  support stdin-plus-prompt concatenation, but that is better used for the
+  instruction payload than for stuffing the whole discussion file inline
+  (`src/config/config.ts`, lines 146-152).
+
+#### Unified Recommendation
+
+Use one blackboard pattern for all three agents:
+
+1. Run each CLI from the repo root so the discussion file is already in its
+   working context.
+2. Pass a short instruction prompt that explicitly names the file to read and
+   the section to append.
+3. Do not inline the full discussion markdown into stdin unless an agent lacks
+   file access; it adds token overhead and makes retries harder to debug.
+4. Capture structured output where possible (`claude --output-format json`,
+   `codex exec --json` plus `--output-last-message`, `gemini --output-format
+   json`).
+
+Example invocation family:
+
+```text
+claude -p --output-format json "<prompt naming docs/design/ACTIVE_DISCUSSION.md>"
+printf '%s' "<prompt naming docs/design/ACTIVE_DISCUSSION.md>" | codex exec - --json -o /tmp/codex-last.txt
+gemini -p "<prompt naming docs/design/ACTIVE_DISCUSSION.md>" -o json
+```
+
+My only reason for not marking Q1 fully closed is that I did not complete a
+live end-to-end response test against all three CLIs in this sandboxed session;
+the invocation surfaces and auth requirements are confirmed locally, but output
+size/truncation behavior still needs one scripted integration run per agent.
+
+### Q4 — Implementation Form
+
+The minimum viable orchestrator should be **an Elixir script/application,
+packaged by the repo's Nix flake**, not a pure shell script and not AutoGen.
+
+- Shell is enough for a one-off round-robin loop, but it becomes brittle as
+  soon as we need timeout handling, per-agent stderr capture, retries, and a
+  parser for satisfaction markers.
+- Python would work, but the owner preference for Elixir is technically
+  justified here rather than cosmetic: `System.cmd/3` is enough for these CLIs,
+  supervision gives a clean answer for hung subprocesses, and the architecture
+  can stay thin because the shared state already lives in markdown on disk.
+- Nix should package the result, but Nix is not the orchestrator language; it
+  is the reproducible wrapper around it.
+
+Concretely, I would build:
+
+- `mix run -e 'Roundtable.CLI.main(["docs/design/BRIEF.md"])'`
+- a thin `roundtable` wrapper in the flake app output
+- a first implementation that supports only fixed-order round-robin and a max
+  round count
+
+Minimal loop sketch:
+
+```elixir
+defmodule Roundtable do
+  @agents [
+    {:codex, {"codex", ["exec", "-", "--output-last-message", "/tmp/codex.out"]}},
+    {:gemini, {"gemini", ["-p"]}},
+    {:claude_ic, {"claude", ["-p", "--output-format", "json"]}}
+  ]
+
+  def run(repo_root, discussion_path, rounds_left \\ 5)
+
+  def run(_repo_root, discussion_path, 0) do
+    {:max_rounds, File.read!(discussion_path)}
+  end
+
+  def run(repo_root, discussion_path, rounds_left) do
+    Enum.each(@agents, fn {agent, {cmd, args}} ->
+      prompt = Prompt.build(agent, discussion_path)
+      {stdout, status} =
+        System.cmd(cmd, args, cd: repo_root, input: prompt, stderr_to_stdout: true)
+
+      Append.write_reply!(discussion_path, agent, stdout, status)
+    end)
+
+    case Satisfaction.check(File.read!(discussion_path)) do
+      :done -> :ok
+      :continue -> run(repo_root, discussion_path, rounds_left - 1)
+      {:ambiguous, reason} -> {:needs_ic_review, reason}
+    end
+  end
+end
+```
+
+That is enough to prove the model:
+
+- one process per agent invocation
+- filesystem blackboard only
+- deterministic round order
+- parser-driven stop/continue decision
+
+After that works, add OTP supervision and per-agent timeout wrappers without
+changing the external protocol.
+
+**Statuses:**
+- Q1: `[satisfied-conditional: headless flags, auth preconditions, and structured-output modes are verified locally; one live scripted invocation per agent is still needed to characterize truncation/output edge cases]`
+- Q4: `[satisfied]`
+
+---
