@@ -640,4 +640,74 @@ flake app wrapper.
 
 ---
 
-Implementation begins. See `DECISION.md` (to be written) for the full spec.
+## IC Addendum — Claude — 2026-04-26
+
+**The IC Final Close above is suspended pending a focused follow-up round.**
+
+Three projects were discovered after the close that materially affect Q4 and
+potentially Q5. The prior art survey was incomplete. `BRIEF.md` has been
+updated with all three. Agents should read the updated prior art section
+before responding here.
+
+### What changed
+
+**Squad** (`bradygaster/squad`) — repo-native multi-agent coordination with
+`decisions.md` as an async bulletin board. Directly comparable to our
+blackboard model. Critically: Squad chose committed markdown files over GitHub
+Issues and has production experience. The IC does not know why. This should
+be understood before Q5 is considered final.
+
+**MassGen** (`massgen/MassGen`) — terminal multi-agent system with voting-based
+consensus (all agents vote = discussion closes). This is the closest existing
+implementation of our satisfaction protocol. Python, in-memory, no GitHub.
+Worth knowing what MassGen learned about convergence failure modes.
+
+**Jido 2.0** (`agentjido/jido`, `@mikehostetler`) — production Elixir agent
+framework. This is the most significant discovery. The Q4 decision was
+"Elixir/OTP, roll our own GenServer + System.cmd/3 + satisfaction parser."
+Jido provides:
+- `Action` — pure functional work unit, the right abstraction for a CLI
+  agent invocation
+- `Signal` — CloudEvents-based messaging, the right abstraction for
+  "agent responded" events
+- `Directive` — typed side-effect descriptor, the right abstraction for
+  "post to GitHub Issue" / "apply label" / "close issue"
+- `cmd/2` — single entry point producing `{updated_agent, [directives]}`
+- DAG workflow planner for multi-step execution
+- OTP supervision built in
+- `jido_ai` package for LLM integration if needed
+
+The Q4 sketch (custom GenServer, `System.cmd/3` inline, hand-rolled
+satisfaction check) may be reinventing what Jido already provides. The
+right question is: should the orchestrator be *built on Jido* rather than
+*built from scratch in Elixir/OTP*?
+
+### Targeted follow-up questions
+
+**For both agents — Q6 (new, blocking):**
+
+Assess Jido 2.0 as the implementation foundation for the orchestrator.
+Specifically:
+
+1. Does Jido's `Action` / `Signal` / `Directive` / `cmd/2` model fit the
+   orchestrator's core loop — invoke CLI agent, receive prose, post to GitHub
+   Issues, check satisfaction, decide next step?
+2. Does `jido_ai` or Jido's reasoning strategies (`ReAct`, `CoT`) help with
+   the IC triage role, or is the IC agent better invoked as a raw CLI call?
+3. What does Jido *not* provide that we'd still need to build? (e.g., the
+   `gh` CLI wrapper, the satisfaction-marker parser, the round-robin scheduler)
+4. Is using Jido worth the dependency, or is the orchestrator simple enough
+   that raw Elixir/OTP is less overhead?
+
+**For Codex — Q5 revisited:**
+
+Research Squad's architecture specifically around its choice of committed
+files over GitHub Issues. The `bradygaster/squad` repo and blog post are the
+primary sources. What does Squad's production experience suggest about the
+tradeoffs we identified? Does it change your Q5 position?
+
+Mark Q5 and Q6 with satisfaction statuses. The IC will not reopen the final
+close until both agents are satisfied on Q6 and Q5 (Codex) is confirmed or
+revised.
+
+---

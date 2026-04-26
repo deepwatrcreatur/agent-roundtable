@@ -41,6 +41,39 @@ Before proposing designs, agents should understand what exists:
 - **[DebateLLM](https://github.com/instadeepai/DebateLLM)** — benchmarking multi-agent
   debate; termination on agreement convergence check after each round.
 
+### Later discoveries (added after initial agent round)
+
+- **[Squad](https://github.com/bradygaster/squad)** — repo-native multi-agent
+  system built on GitHub Copilot. Agents (frontend, backend, tester, lead) live
+  in the repo as files. A `decisions.md` file acts as an asynchronous bulletin
+  board — agents write decisions after completing work, others read before
+  starting. Thin coordinator routes tasks; each agent gets full repository
+  context. Key observation: Squad deliberately chose committed markdown files
+  over GitHub Issues as the shared state medium and has production experience
+  with this choice. Understand why before finalising Q5.
+
+- **[MassGen](https://github.com/massgen/MassGen)** — terminal multi-agent
+  scaling system. Multiple frontier models (Claude, Gemini, GPT, Grok) work in
+  parallel; each sees other agents' latest answers; agents vote for an existing
+  answer or produce a new one; coordination continues until all agents vote.
+  This is the closest existing implementation of our satisfaction protocol —
+  voting-to-consensus rather than satisfaction markers, but the termination
+  model is the same. Python; in-memory; no GitHub integration.
+
+- **[Jido 2.0](https://github.com/agentjido/jido)** — production Elixir agent
+  framework by Mike Hostetler (`@mikehostetler`). Built on OTP/GenServer.
+  Core primitives: `Actions` (reusable units of work, pure functions),
+  `Signals` (CloudEvents-based messaging between agents), `Directives` (typed
+  effect descriptors the runtime executes — side effects are never inline),
+  `cmd/2` (single entry point: actions in, updated agent + directives out).
+  Ships a DAG-based workflow planner, 25+ pre-built tools, MCP support,
+  OpenTelemetry observability, and an opt-in `jido_ai` package for LLM
+  integration with ReAct/CoT/ToT reasoning strategies.
+  **This directly covers what agents proposed building from scratch.** Before
+  designing a custom GenServer orchestrator, agents must assess whether Jido
+  Actions + Signals + Directives is the right foundation. Available on
+  Hex.pm as `jido`; docs at hexdocs.pm/jido.
+
 ## Constraints
 
 The orchestrator must:
