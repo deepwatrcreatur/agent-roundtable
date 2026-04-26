@@ -106,6 +106,77 @@ this project's Q3 termination design.
 
 ---
 
+## OpenClaw — Agent Identity and Programmatic Sub-Agent Invocation
+
+**OpenClaw** (formerly OpenCursor) is a large open-source AI coding assistant
+with a growing multi-agent coordination ecosystem. Two patterns are directly
+relevant to this project:
+
+**AGENTS.md** — OpenClaw introduced a convention where `AGENTS.md` in a repo
+root provides per-project rules, identity hints, and capability notes for any
+agent working in that repo. This is a committed-file approach to agent
+configuration that complements the `BRIEF.md` / `DECISION.md` pattern. Our
+`docs/work-items/` files serve an analogous role for task assignment.
+
+**`sessions_spawn` / `sessions_send`** — OpenClaw's session API allows one
+agent to programmatically spawn child sessions and send them messages. This is
+the CLI-native equivalent of AutoGen's `reply` function and directly informs
+the design of `Roundtable.Actions.RunCliAgent`: spawning a headless session,
+injecting the prompt, and capturing output is the same pattern at a lower level
+of abstraction.
+
+OpenClaw Issue [#34999 — True Multi-Agent Group Chat](https://github.com/openclaw/openclaw/issues/34999)
+(Feb 2026) proposes shared session context for coordinated multi-agent
+responses. It is an open feature request, not a shipped capability — confirming
+that the gap this project fills (CLI agents, shared GitHub Issues medium, labeled
+termination signals) does not yet exist in OpenClaw's production surface.
+
+- Repository: [openclaw/openclaw](https://github.com/openclaw/openclaw)
+- AGENTS.md: [openclaw/AGENTS.md](https://github.com/openclaw/openclaw/blob/main/AGENTS.md)
+- Multi-agent docs: [docs.openclaw.ai/concepts/multi-agent](https://docs.openclaw.ai/concepts/multi-agent)
+
+---
+
+## GNAP — Git-Native Agent Protocol
+
+**GNAP** is a minimal coordination layer: 4 JSON files in a shared git repo
+acting as a task board. Tasks live in `board/todo/`, agents claim them to
+`board/doing/`, commit results to `board/done/`. No orchestrator process; the
+git history is the audit trail.
+
+GNAP is the git-native extreme of the Squad committed-files approach — zero
+infrastructure, maximum portability. It validates our design choice to keep
+`BRIEF.md` / `DECISION.md` / `ATTRIBUTION.md` as committed git files (durable,
+auditable), while using GitHub Issues for the active per-round discussion
+(conflict-free concurrent writes, labeled state, URL-addressable). GNAP would
+struggle with the concurrent-write problem we empirically encountered: two agents
+pushing `ACTIVE_DISCUSSION.md` simultaneously caused merge conflicts. GitHub
+Issues comment threads have no such problem.
+
+- Referenced in: [letta-ai/letta#3226](https://github.com/letta-ai/letta/issues/3226)
+- Listed in: [andyrewlee/awesome-agent-orchestrators](https://github.com/andyrewlee/awesome-agent-orchestrators)
+
+---
+
+## ComposioHQ agent-orchestrator
+
+**agent-orchestrator** (ComposioHQ) manages fleets of parallel coding agents,
+each in its own git worktree and branch, with automated CI-feedback loops: when
+CI fails, the agent fixes it; when reviewers comment, the agent addresses them.
+Up to 30 agents across 40 worktrees.
+
+This system uses GitHub Issues as a **downstream artifact** (PR review,
+CI logs) rather than as a **coordination medium**. It confirms that using Issues
+for agent coordination is not a solved problem: agent-orchestrator's agents are
+isolated per-worktree and do not share a discussion thread at all. Our design is
+differentiated: GitHub Issues as the *primary shared state* for per-question
+discussion, with labeled termination signals driving the Elixir orchestrator.
+
+- Repository: [ComposioHQ/agent-orchestrator](https://github.com/ComposioHQ/agent-orchestrator)
+- Architecture: [artifacts/architecture-design.md](https://github.com/ComposioHQ/agent-orchestrator/blob/main/artifacts/architecture-design.md)
+
+---
+
 ## Multi-Agent Debate (MAD) and DebateLLM
 
 **MAD** (Skytliang et al., 2023) and **DebateLLM** (InstaDeep) demonstrated

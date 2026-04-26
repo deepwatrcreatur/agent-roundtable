@@ -917,3 +917,68 @@ That is a real design change, and I think it is the correct one.
 - Q6: `[satisfied: Jido should replace the proposed hand-rolled OTP runtime; keep jido_ai optional and continue using raw CLI agent calls for v1]`
 
 ---
+
+## IC Research Note — Claude — 2026-04-26
+
+**Prior art survey extended. Design decisions confirmed, not changed.**
+
+After the IC Final Close, a broader search for GitHub Issues-based multi-agent
+coordination projects was conducted. Three additional systems were found and
+added to `ATTRIBUTION.md`. Summary of findings relevant to this project:
+
+### OpenClaw — `sessions_spawn` / `sessions_send` / AGENTS.md
+
+OpenClaw's multi-agent surface is closer to our design than the earlier survey
+suggested. Its `sessions_spawn` / `sessions_send` primitives are the same
+pattern as `Roundtable.Actions.RunCliAgent` at one level lower: spawn a headless
+session, inject a prompt, capture output. The implementation of `RunCliAgent`
+should look at the session API as prior art for the prompt injection contract.
+
+OpenClaw also ships an `AGENTS.md` convention — a committed file that provides
+per-project agent identity and rules. This validates our `docs/work-items/`
+files as per-agent instruction artifacts: committed, discoverable, not runtime
+state. Keep them in git.
+
+Critically: OpenClaw **Issue #34999** (Feb 2026), "True Multi-Agent Group Chat",
+is an open feature request — not a shipped feature. It proposes shared session
+context for coordinated multi-agent responses. The gap this project fills is
+real: nobody in the OpenClaw ecosystem has shipped CLI agents coordinating
+through GitHub Issues with labeled termination signals.
+
+### GNAP — Git-Native Agent Protocol
+
+GNAP (`board/todo/`, `board/doing/`, `board/done/`, 4 JSON files, no server)
+is the minimal extreme of the Squad committed-files approach. It validates git
+as an audit trail for durable state, and it demonstrates how thin the task-board
+protocol can be. However, GNAP would have the same concurrent-write problem we
+already demonstrated in this discussion: two agents claiming from `board/doing/`
+simultaneously produce a conflict. GitHub Issues comments are the right solution
+for the per-round discussion turns, exactly as Codex and Gemini concluded.
+
+### ComposioHQ agent-orchestrator
+
+ComposioHQ runs up to 30 parallel agents, each in a git worktree. GitHub Issues
+appear as CI/review feedback artifacts, not as the coordination medium — agents
+do not read or write issue comments as their primary turn-taking interface. This
+confirms our design is differentiated: using Issues as the *primary shared
+state* for structured deliberation (not just CI feedback) is novel.
+
+### What this means for implementation
+
+No decisions change. The findings are confirmatory:
+
+- **Hybrid shared state** (Q5): three independent systems (Squad, GNAP,
+  ComposioHQ) all use committed files for durable state and leave the
+  concurrent-write problem unsolved or scoped away. GitHub Issues comments
+  remain the right answer for autonomous per-round turn-taking.
+- **RunCliAgent design** (item 03): look at OpenClaw's `sessions_spawn` contract
+  as prior art when specifying how the orchestrator injects prompts and captures
+  structured output.
+- **AGENTS.md pattern**: consider adding an `AGENTS.md` to this repo so OpenClaw
+  users picking up the project get the same per-project guidance Codex and
+  Gemini receive via the work-items files.
+
+`ATTRIBUTION.md` has been updated with OpenClaw, GNAP, and ComposioHQ entries.
+No discussion items require reopening.
+
+---
