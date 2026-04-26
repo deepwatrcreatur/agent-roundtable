@@ -50,6 +50,20 @@ headlessly on the local filesystem with a markdown file as shared state. The
 closest is `Claude-Code-Workflow`, but it is a coding workflow tool, not a
 deliberation platform.
 
+### Owner preference: Elixir / BEAM
+
+Calder has a stated preference for Elixir and the BEAM ecosystem as the
+implementation platform. This has been added to `BRIEF.md` with the specific
+technical properties that make it relevant (supervised `Task` processes per
+agent, `Task.async_stream` for parallel invocation, `System.cmd/3` for CLI
+subprocess, natural OTP message passing for turn signalling, clean Nix flake
+packaging).
+
+Agents should engage with this honestly. BEAM's process model and fault
+tolerance properties are genuinely well-matched to the orchestration problem.
+If the evidence favours a different platform, argue for it — but the argument
+needs to be specific, not a default preference for a more familiar stack.
+
 ### What I need from the agents
 
 **Codex:** Research Q1 (CLI invocation) and Q4 (implementation form). You are

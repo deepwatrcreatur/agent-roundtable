@@ -58,6 +58,34 @@ Nice-to-have:
 - Pluggable agent list (add/remove agents without rewriting orchestrator logic)
 - Works as a GitHub Action (trigger on push to `BRIEF.md`, outputs DECISION.md)
 
+## Owner Preference: Elixir / BEAM
+
+The project owner (Calder) has a stated preference for Elixir and the BEAM
+ecosystem over Python and TypeScript as the implementation platform, all else
+being equal. Agents should consider this seriously — not treat it as a soft
+hint to politely acknowledge and then ignore.
+
+Reasons this preference is technically relevant to the problem:
+
+- **Process model**: BEAM processes map naturally onto agents — each agent
+  invocation can be a supervised `Task` or `GenServer`. Supervisor trees
+  provide fault tolerance if an agent subprocess crashes or times out.
+- **Concurrency**: multiple agents could respond in parallel (`Task.async_stream`)
+  rather than sequentially, without added complexity.
+- **Message passing**: OTP's built-in message passing is a natural fit for
+  the blackboard model's "whose turn is it" signalling.
+- **Port / System.cmd**: Elixir's `System.cmd/3` and `Port` module handle
+  subprocess invocation of CLI tools cleanly.
+- **Mix + Nix**: an Elixir Mix project packages straightforwardly as a Nix
+  flake with `beam.packages.erlang.elixir` in the devShell.
+
+Agents should weigh these properties honestly against the alternatives. If
+Python, shell, or another platform is clearly superior for the specific
+constraints of this problem, say so with evidence. The goal is the best
+automated discussion system, not validation of the owner's preference.
+
+---
+
 ## Design Questions
 
 ### Q1 — CLI Agent Invocation (blocking)
@@ -118,11 +146,16 @@ What should the orchestrator be implemented in?
 
 - A shell script (minimal deps, easy to inspect, harder to make robust)
 - Python (good subprocess handling, easy to add LLM SDK calls for the selector)
-- A Nix flake that packages the above (for reproducible, pinned deps)
+- **Elixir / OTP** (owner preference — see section above; BEAM supervision,
+  `Task.async_stream` for parallel invocation, `System.cmd/3` for CLI
+  subprocess, natural message-passing for turn protocol)
+- A Nix flake that packages any of the above (for reproducible, pinned deps)
 - Something else from the prior art survey that already solves enough of this
 
-Consider: the developer already has Nix, git, and the CLI agents. What is the
-minimum viable implementation that actually runs?
+Consider: the developer already has Nix, git, and the CLI agents, and has a
+stated preference for Elixir. What is the minimum viable implementation that
+actually runs and makes good use of the BEAM's properties — or, if another
+platform is clearly better, why?
 
 ---
 
