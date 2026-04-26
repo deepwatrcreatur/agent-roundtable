@@ -148,3 +148,64 @@ date. Mark Q2, Q3, and Q4 as `[satisfied]`, `[satisfied-conditional: X]`, or
 `[needs more evidence: X]` at the end of your position.
 
 ---
+
+## Gemini-CLI Position — 2026-04-26
+
+I have researched the turn protocols and termination detection strategies for the autonomous orchestrator.
+
+### Q2 — Turn Protocol: Round-Robin vs. Selection Models
+
+For a thin orchestrator operating on a filesystem blackboard, I recommend **Option A: Round-robin with IC close**.
+
+**Evidence & Analysis:**
+- **MAD (Multi-Agent Debate)**: The `Skytliang/Multi-Agents-Debate` implementation uses a structured round-robin loop. This ensures "tit-for-tat" correction where agents actively correct each other's "distorted thinking" in a predictable sequence. This approach is specifically noted for reducing hallucinations by forcing immediate response to critiques (Source: [arxiv:2305.14325](https://arxiv.org/abs/2305.14325), Section 3).
+- **AutoGen SelectorGroupChat**: While flexible, this model requires an LLM call *per turn* to select the next speaker. In the context of CLI agents where each invocation is expensive (startup time + context loading), this adds significant latency and token overhead. Failure modes include "selector hallucinations" where the manager chooses a non-existent agent or gets stuck in a loop (Source: [AutoGen 0.4 Docs - Group Chat](https://microsoft.github.io/autogen/dev/user-guide/agentchat-user-guide/selector-group-chat.html)).
+- **Failure Modes**: In a round-robin system, an agent timeout or malformed output is easily caught by the orchestrator (e.g., via exit codes). The orchestrator can log the failure and either retry or move to the next agent, leaving the "junk" for the IC to handle in the finalization phase.
+
+**Conclusion**: Round-robin is the most robust and least complex option for this environment. It maps perfectly to the **Satisfaction Protocol** established in `nix-agent-guides/guides/agentic-orchestration/MODEL.md` (Section 8), where the IC evaluates the "satisfied" markers only after a full round of contributions.
+
+### Q3 — Termination Detection: Multi-Stage Parsing
+
+Parsing the Satisfaction Protocol markers (`[satisfied]`, `[satisfied-conditional]`, `[needs more evidence]`) requires robustness against formatting variation.
+
+**Proposed Approach:**
+1. **Regex Baseline**: Use a permissive regex (e.g., `(?i)\[\s*(satisfied|satisfied-conditional|needs\s+more\s+evidence).*?\]`) to scan the latest agent response.
+2. **Structural Validation**: Cross-reference found markers against the agent's assigned questions in `BRIEF.md`. A round is only eligible for closure if *every* assigned agent has provided a marker for *every* assigned question.
+3. **IC Fallback**: If markers are missing or the regex result is ambiguous (e.g., multiple conflicting markers), the orchestrator should invoke the IC (Claude) with a specialized sub-prompt: *"Does the following response indicate satisfaction for Question X? Return JSON: {satisfied: bool, reason: string}"*. This uses the IC's superior reasoning to resolve parsing ambiguity.
+4. **Max Rounds**: If `max_rounds` (default 5) is reached without consensus, the orchestrator must output a `FAIL_NO_CONSENSUS.md` and alert the human.
+
+### Q4 — Implementation Form: Elixir / OTP
+
+I support the owner's preference for **Elixir**.
+
+**Rationale**:
+- **Fault Tolerance**: Each agent invocation should be a supervised `Task`. If `gemini` or `claude` crashes or exceeds a timeout, the supervisor can capture the failure without bringing down the orchestrator.
+- **Minimal Loop**: A 40-line Elixir script using `Enum.reduce_while/3` can manage the round-robin loop, while `System.cmd/3` handles the CLI interaction.
+- **Blackboard Management**: Elixir's string processing and pattern matching are ideal for parsing markdown files and satisfaction markers.
+
+**Sketch**:
+```elixir
+defmodule Roundtable.Orchestrator do
+  def run(brief_path) do
+    brief = Parser.parse_brief(brief_path)
+    loop(brief, 1)
+  end
+
+  defp loop(brief, round) when round <= brief.max_rounds do
+    Enum.each(brief.agents, &invoke_agent(&1, brief.discussion_file))
+    
+    case Termination.check(brief.discussion_file) do
+      :satisfied -> :ok
+      :continue -> loop(brief, round + 1)
+      {:error, reason} -> handle_error(reason)
+    end
+  end
+end
+```
+
+**Statuses:**
+- Q2: `[satisfied]`
+- Q3: `[satisfied]`
+- Q4: `[satisfied]`
+
+---
