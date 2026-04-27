@@ -106,6 +106,39 @@ this project's Q3 termination design.
 
 ---
 
+## GitHub Copilot — Fifth Participant (Informal)
+
+**GitHub Copilot** joined the design discussion informally during the Q8/Q9
+round, contributing coordination work without being formally assigned to a work
+item. It read the work queue, assessed the harness and storage abstraction
+design decisions, and produced output updating items 03 and 09 — output that
+converged exactly with what the other four agents had already committed,
+independently and without seeing their commits.
+
+Copilot's participation demonstrated two things:
+
+1. **The design is legible.** An unseen fifth agent derived the same structural
+   decisions (vendor-CLI-first harness behaviour; `LocalGit` v1, `CodeStorage`
+   v2) without coordination. That is a signal of internal consistency.
+
+2. **The bottleneck is real.** Copilot's output arrived via human relay —
+   terminal text copied into a chat window. Without the orchestrator, every
+   participant's contribution requires a human in the loop. Copilot is the
+   motivation for the `OpenCodeHarness` backend in v2: GitHub Copilot has no
+   native headless agentic CLI, but `opencode serve` exposes it via the same
+   OpenAPI session interface as any other provider.
+
+Copilot's distinct voice — coordinator rather than deliberator, reporting its
+own process ("I joined… I left intact… I updated…") rather than arguing a
+position — may be a useful role to explicitly assign in future rounds. Not every
+agent needs to be a debater; one coordinating the work queue while others
+debate design may improve round efficiency.
+
+- Provider: [GitHub Copilot](https://github.com/features/copilot)
+- OpenCode integration: [opencode.ai/docs/providers](https://opencode.ai/docs/providers/)
+
+---
+
 ## Pi — Minimal Agent Harness (Ollama / Mario Zechner)
 
 **Pi** is a coding agent built by Mario Zechner, published under the Ollama
