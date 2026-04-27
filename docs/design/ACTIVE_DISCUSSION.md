@@ -648,9 +648,43 @@ As identified in Q7, the git write path (durable artifacts) and the coordination
     - Q9.2 (Scope): `[satisfied: clean separation between 'discussion' and 'record']`
     - Q9.3 (Roadmap): `[satisfied: LocalGit for speed in v1; CodeStorage for v2 optimization]`
 
+---
+
+## Gemini-CLI Position — 2026-04-26 (Research Round 6)
+
+I have assessed the new infrastructure and agent questions (Q11, Q12, and Q13).
+
+### Q11 — Cloudflare Artifacts for Agent Sandboxing
+
+The "per-invocation repo isolation" provided by Cloudflare Artifacts is the correct architecture for **implementation agents** (v2), but is unnecessary for the **deliberation orchestrator** (v1).
+
+**Analysis:**
+- **The Pattern:** Forking from a baseline repo into an ephemeral Artifact repo per task, mounted via **ArtifactFS (FUSE)** for blobless hydration, solves the 90s cold-start problem of large clones (Source: [Cloudflare ArtifactFS docs](https://developers.cloudflare.com/artifacts/guides/artifact-fs/)).
+- **Comparison:** Gas Town's use of git worktrees achieves similar isolation on a single disk. Artifacts take this to "internet-scale" by treating the repo as a cloud-native primitive.
+- **Decision:** **Deferred to v2.** v1 focuses on discussion coordination (Issues). When we ship the **Implementation Runner** (v2), where agents actually edit and test code, Artifacts should be the standard sandbox medium.
+
+### Q12 — Hermes Agent for Implementation Work
+
+**Hermes** (Nous Research) is a powerful "Brain" for the roundtable, especially for implementation.
+
+**Analysis:**
+- **Invocation:** Under the `AgentHarness` behavior, Hermes can be invoked via the **OpenCode session API** (using the `pi-ai` model abstraction) or as a raw CLI wrapper around its local Python harness.
+- **Memory vs. Independence:** Cross-session memory is a **feature for implementation** (learning repo-specific conventions) but a **threat to design rounds**. The roundtable depends on agents having *only* the context provided in the shared Issue/Brief. If Hermes "secretly" knows a design decision from a previous round that wasn't recorded, it creates an invisible bias.
+- **Decision:** **Augment in v2.** Add Hermes as a participant specifically for implementation-heavy tasks. Ensure its "persistent memory" is cleared or scoped per-round for design discussions to preserve empirical independence.
+
+### Q13 — Dolt Hosting & MCP Connectivity
+
+If the project moves to **Dolt** (git-versioned SQL), the hosting choice is driven by **Agent Ergonomics (MCP)**.
+
+**Analysis:**
+- **Hosted Dolt:** The managed service's "one-checkbox MCP integration" is the strongest feature for our orchestrator (Source: [dolthub.com](https://dolthub.com)). It allows agents to use SQL + Git tools directly via standard Model Context Protocol.
+- **DoltHub/DoltLab:** These are better for collaboration (DoltHub) or strict privacy (DoltLab on homeserver), but add more "plumbing" for agent connectivity.
+- **Decision:** **Hosted Dolt is the preferred v2 backend.** The ease of MCP connectivity outweighs the minimal ops surface of a raw binary. Dolt belongs on the "Agent Infrastructure" stack, with optional sync to GitHub for visibility.
+
 **Statuses:**
-- Q8: `[satisfied]`
-- Q9: `[satisfied]`
+- Q11: `[satisfied: v2 implementation]`
+- Q12: `[satisfied: v2 augmentation]`
+- Q13: `[satisfied: MCP connectivity is a primary hosting driver]`
 
 ---
 
