@@ -106,6 +106,52 @@ this project's Q3 termination design.
 
 ---
 
+## Pi — Minimal Agent Harness (Ollama / Mario Zechner)
+
+**Pi** is a coding agent built by Mario Zechner, published under the Ollama
+project, and used as the substrate on which OpenClaw is built. ~4,000 lines of
+TypeScript. Four core tools: Read, Write, Edit, Bash. Extension system that lets
+the agent extend itself via session files rather than downloading plugins. Session
+trees for branching without losing context. Multi-model support without provider
+lock-in. Explicitly does not support MCP by design philosophy.
+
+Pi is the closest existence proof of the "thin harness" philosophy this project
+takes for `Roundtable.AgentHarness`: a minimal, replaceable substrate that the
+model runs inside, with identity and behaviour coming from config rather than
+from the harness binary itself. The Q8 decision to design a pluggable
+`AgentHarness` behaviour (rather than hard-coding three vendor CLI wrappers) is
+directly influenced by Pi's architecture.
+
+Pi is deferred from v1 scope — the vendor CLIs and OpenCode's HTTP API cover
+the required agent surface — but it is the right reference point if a future
+round wants a local/offline Ollama-backed participant with no subscription cost.
+
+- Repository: [mariozechner/pi-mono](https://github.com/mariozechner/pi-mono)
+- Launch post: [lucumr.pocoo.org/2026/1/31/pi](https://lucumr.pocoo.org/2026/1/31/pi/)
+- Ollama launch: [ollama.com/library/pi](https://ollama.com/library/pi)
+
+---
+
+## OpenCode — Unified Agent HTTP Server
+
+**OpenCode** (`opencode-ai/opencode`) is an open-source terminal-first AI
+coding agent that runs a headless HTTP server (`opencode serve`) exposing an
+OpenAPI 3.1 spec at `/doc`. Supports 75+ providers including Claude,
+OpenAI/Codex, Gemini, GitHub Copilot, and local models via Ollama. Official
+JS/TS SDK (`@opencode-ai/sdk`). Server-sent events for real-time updates.
+mDNS discovery for local network service detection.
+
+This project's Q8 decision — add an `OpenCodeHarness` backend in v2 so GitHub
+Copilot and Opencode Go subscriptions participate as first-class roundtable
+agents without a vendor-specific headless CLI — depends directly on OpenCode's
+server API. The `POST /session/:id/message` and `GET /event` SSE endpoints are
+the integration surface.
+
+- Repository: [opencode-ai/opencode](https://github.com/opencode-ai/opencode)
+- Server docs: [opencode.ai/docs/server](https://opencode.ai/docs/server/)
+
+---
+
 ## OpenClaw — Agent Identity and Programmatic Sub-Agent Invocation
 
 **OpenClaw** (formerly OpenCursor) is a large open-source AI coding assistant

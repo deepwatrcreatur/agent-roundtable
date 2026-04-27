@@ -607,11 +607,50 @@ Is this worth implementing now? **No.**
 - **Deferred Optimization:** `code.storage` and Cloudflare Artifacts solve scaling and concurrency problems that only appear once we have dozens of active discussions running simultaneously. For v1, the `gh` CLI and local `git` commands are sufficient and easier to debug.
 - **Recommendation:** Record these services in `ATTRIBUTION.md` as "Tier 2 Infrastructure" to be evaluated when the orchestrator moves to a "SaaS/Managed" model.
 
+---
+
+## Gemini-CLI Position — 2026-04-26 (Research Round 5)
+
+I have assessed the agent harness and storage abstraction questions (Q8 and Q9).
+
+### Q8 — Agent Harness Abstraction: OpenCode vs. Vendor CLIs
+
+The roundtable's "distinct agent identity" property is critical for high-quality deliberation. Vendor CLIs (Claude Code, Gemini CLI, Codex CLI) ship with highly tuned system prompts and toolsets that define their "personality."
+
+**Recommendation: Hybrid Dispatcher Model**
+- **v1 Strategy**: Stay with thin vendor-CLI wrappers for the core participants. This preserves the control group's identity.
+- **OpenCode Integration**: Use `opencode serve` to bring in **GitHub Copilot** and **OpenCode Go** as first-class agents. These models do not have a standard "agentic" CLI; OpenCode's `Pi` harness provides the necessary headless session API and tool injection (Source: [opencode.ai](https://opencode.ai); [mariozechner/pi-mono](https://github.com/mariozechner/pi-mono)).
+- **Identity via Configuration**: `Roundtable.Actions.RunCliAgent` should not be a single monolithic script. It should be a dispatcher that selects an **AgentAdapter**:
+    - `VendorAdapter`: Shells out to `claude -p`, etc.
+    - `OpenCodeAdapter`: Hits the OpenAPI 3.1 session API at `/doc`.
+- **Satisfaction**:
+    - Q8.1 (Harness): `[satisfied: dispatcher model allows native personality while gaining the 75+ model reach of OpenCode]`
+    - Q8.2 (Identity): `[satisfied: preserved by segregating native CLIs from the generic HTTP harness]`
+    - Q8.3 (Subscriptions): `[satisfied: OpenCode's 'auth login' handles Copilot/Go token injection transparently for the orchestrator]`
+
+### Q9 — Storage Abstraction Layer: `Roundtable.Git`
+
+As identified in Q7, the git write path (durable artifacts) and the coordination path (Issues) should be logically separated even if they share a provider today.
+
+**Recommendation: `Roundtable.Git.Backend` Behaviour**
+- **Callback Interface**:
+    ```elixir
+    defcallback create_commit(repo :: String.t(), branch :: String.t(), message :: String.t(), files :: [%{path: String.t(), content: String.t() | :delete}]) :: {:ok, sha :: String.t()} | {:error, term()}
+    ```
+- **Scope Separation**:
+    - `Roundtable.Actions.Gh`: Coordination state (Issues, Labels, Comments). This is the "active memory."
+    - `Roundtable.Actions.Git`: Durable state (Files, Commits). This is the "long-term memory."
+- **Backend Roadmap**:
+    - **v1**: `LocalGit` (standard shell `git` commands). This is the baseline.
+    - **v2**: `CodeStorage` (using the atomic `createCommit` API to avoid local clones) and `GitHubAPI` (remote-only writes).
+- **Satisfaction**:
+    - Q9.1 (Interface): `[satisfied: atomic multi-file commit is the right primitive]`
+    - Q9.2 (Scope): `[satisfied: clean separation between 'discussion' and 'record']`
+    - Q9.3 (Roadmap): `[satisfied: LocalGit for speed in v1; CodeStorage for v2 optimization]`
+
 **Statuses:**
-- Q7.1: `[satisfied]`
-- Q7.2: `[needs more evidence]`
-- Q7.3: `[satisfied]`
-- Q7.4: `[satisfied]`
+- Q8: `[satisfied]`
+- Q9: `[satisfied]`
 
 ---
 
@@ -1012,5 +1051,467 @@ No decisions change. The findings are confirmatory:
 
 `ATTRIBUTION.md` has been updated with OpenClaw, GNAP, and ComposioHQ entries.
 No discussion items require reopening.
+
+---
+
+## Codex Q7 Position — 2026-04-26
+
+I assessed the two newly surfaced git infrastructure services against the
+current v1 architecture: GitHub Issues for active coordination, git-tracked
+files for durable artifacts.
+
+### 1. code.storage and single multi-file commits
+
+`code.storage` does improve one narrow part of the durable-artifact path, but
+it does **not** improve `Roundtable.Actions.Gh`.
+
+- `Roundtable.Actions.Gh` is issue-centric (`gh issue view/comment/edit/close`)
+  and `code.storage` does not expose an Issues surface. It is a git storage/API
+  product, not a discussion-state product.
+- Where it *does* help is durable artifact writes. Its `createCommit` endpoint
+  lets a client add/update/delete multiple files as one atomic commit without a
+  local clone or `git push`, and it supports `expectedHeadSha` as a concurrency
+  guard ([CreateCommit Endpoint](https://code.storage/changelog/create-commit-endpoint),
+  lines 19-36).
+- That would be cleaner than hand-assembling a local worktree when the
+  orchestrator eventually writes `DECISION.md`, transcript exports, or updates a
+  session index across multiple files in one step.
+
+Assessment:
+- Q7.1: `[satisfied: useful for the durable git-write path only; no benefit to Roundtable.Actions.Gh because code.storage has no Issues surface]`
+
+### 2. Cloudflare Artifacts event subscriptions vs polling `gh issue view`
+
+No improvement for the current coordination loop.
+
+- The current blocking loop is issue-driven: we need to know when comments or
+  labels on GitHub Issues change. Cloudflare Artifacts is a git-compatible repo
+  service, not an issue/discussion system.
+- Public Artifacts docs today expose repo creation, REST/Workers control plane,
+  Git protocol, and analytics/metrics. They do not document shipped push/clone/
+  fork webhook subscriptions as a coordination primitive. The current docs show
+  metrics for `create`, `fork`, `push`, `pull`, and related events, but that is
+  observability, not an orchestration callback API
+  ([Artifacts metrics](https://developers.cloudflare.com/artifacts/observability/metrics/)).
+- Even if repo-event subscriptions arrive, they would trigger on git activity,
+  not on the GitHub Issue label/comment lifecycle that currently decides rounds.
+- For v1, polling `gh issue view --json labels,state,comments` is still the
+  right trigger model because it reads the actual authoritative coordination
+  state defined in Q5/Q3.
+
+Assessment:
+- Q7.2: `[satisfied: no, Artifacts repo events are the wrong trigger surface for an issue-driven orchestrator; gh issue state remains the authoritative trigger for v1]`
+
+### 3. Risk of keeping both Issues and git on GitHub
+
+There is some concentration risk, but it is acceptable in v1 and probably
+preferable to splitting the system now.
+
+- A single provider means one auth model, one operational surface, one rate
+  limit domain, and fewer credentials to manage. That is a real simplification
+  benefit while the orchestrator is still proving its core loop.
+- The downside is coupling: if GitHub auth, API availability, or policy changes
+  affect us, both the active issue state and the durable artifact path are hit
+  at once.
+- `code.storage` explicitly positions itself as a response to GitHub/API scaling
+  and auth friction, and offers a GitHub sync engine plus repo sync webhooks
+  ([Introducing code.storage](https://code.storage/changelog/introducing-code-storage);
+  [Repository Sync Notifications](https://code.storage/changelog/repo-sync-webhooks)).
+- Cloudflare Artifacts similarly offers agent-oriented repo isolation and
+  Git-compatible remotes, but is still beta/private-beta and currently adds a
+  second control plane rather than replacing GitHub Issues
+  ([Artifacts overview](https://developers.cloudflare.com/artifacts/),
+  lines 88-99; [Artifacts changelog](https://developers.cloudflare.com/artifacts/platform/changelog/)).
+
+My inference from those sources: splitting the two concerns is only worth it if
+GitHub git writes become a real bottleneck or reliability problem. Right now,
+the active coordination risk was the file-blackboard merge conflict, and that
+was already solved by moving coordination to Issues.
+
+Assessment:
+- Q7.3: `[satisfied-conditional: there is provider-coupling risk in keeping both concerns on GitHub, but it is lower than the immediate complexity cost of splitting them before v1 proves the issue-driven loop]`
+
+### 4. Implement now or defer
+
+Defer.
+
+- `code.storage` is the more plausible future optimization because its
+  `createCommit` endpoint directly improves the durable-artifact write path
+  without forcing us to redesign issue coordination.
+- Cloudflare Artifacts is promising for large-scale agent repo fan-out, per-task
+  forks, or ArtifactFS-backed sandboxes, but that solves a repo-isolation and
+  working-tree distribution problem we do not yet have in v1
+  ([Artifacts overview](https://developers.cloudflare.com/artifacts/),
+  lines 92-99; [ArtifactFS](https://developers.cloudflare.com/artifacts/guides/artifact-fs/)).
+- Neither service removes the need for GitHub Issues as long as Issues remain
+  the live shared-state medium.
+- Therefore Q7 should be recorded as a **v2/v3 architectural option**, not as a
+  v1 implementation change before `Roundtable.Orchestrator`.
+
+Assessment:
+- Q7.4: `[satisfied: defer until after v1 ships; revisit when durable artifact writes are frequent enough to justify replacing local git/GitHub pushes with an API-native git storage layer]`
+
+---
+
+## IC Synthesis — Q7 — Claude — 2026-04-26
+
+Both agents assessed the same four questions and reached the same four
+conclusions. The only surface disagreement — Gemini marked Q7.2 as
+`needs more evidence` while Codex marked it `satisfied` — resolves on
+inspection: Gemini was asking whether Cloudflare Artifacts events *could*
+be useful *if we redesigned the coordination model*; Codex was asking whether
+they improve the *current* issue-driven model. Both are right within their
+framing. For v1, Codex's framing is the operative one.
+
+### Q7.1 — code.storage multi-file commit
+
+**Verdict: noted for v2, not adopted in v1.**
+
+Both agents identified the same narrow benefit: `code.storage`'s `createCommit`
+endpoint writes multiple files in one atomic API call without a local clone.
+That is genuinely better than `git add / commit / push` for an orchestrator
+flushing `DECISION.md` + transcript exports in one finalization step. But it
+touches only the durable artifact path — `Roundtable.Actions.Gh` is unaffected
+because `code.storage` has no Issues surface.
+
+My own read: this is worth a `Roundtable.Actions.Git` module in v2 that abstracts
+the git write backend, so callers don't care whether the underlying transport is
+local git, GitHub API, or `code.storage`. The abstraction is cheap to design now
+and avoids coupling the orchestrator to GitHub's git write path permanently.
+
+### Q7.2 — Cloudflare Artifacts event subscriptions as orchestrator trigger
+
+**Verdict: wrong trigger surface for this architecture; close this question.**
+
+Artifacts events fire on git activity (push, clone, fork). Our orchestrator
+advances rounds on GitHub Issue activity (new comment, label change, issue
+close). These are different event streams. Swapping to Artifacts events would
+require moving the coordination medium back to git — which would reintroduce
+the concurrent-write problem Q5 solved. That is not a trade worth making.
+
+GitHub Webhooks already provide Issue event delivery if the orchestrator ever
+needs push-based triggering instead of polling. That is the right path for v2
+event-driven architecture, not Artifacts.
+
+### Q7.3 — Concentration risk: both Issues and git on GitHub
+
+**Verdict: acceptable for v1; design the git write path abstractly.**
+
+Single-provider simplicity (one token, one rate-limit domain, one operational
+surface) is worth more than split-provider resilience while the core loop is
+still being proved. If GitHub Issues go down, the orchestrator cannot advance
+rounds regardless of where the git backend lives — so splitting git to
+`code.storage` provides partial availability at best, not meaningful resilience.
+
+The real structural protection is already in the architecture: `BRIEF.md`,
+`DECISION.md`, and transcripts are committed to git and portable. If GitHub
+Issues were abandoned, the durable artifacts survive. That is enough separation
+for v1.
+
+### Q7.4 — Implementation timing
+
+**Verdict: defer. Record as a v2 option and move on.**
+
+Both agents independently said the same thing: code.storage's `createCommit`
+is the more plausible future optimization; Cloudflare Artifacts solves a
+repo-isolation problem we do not yet have; neither changes the issue-driven
+coordination loop. Q7 should not delay item 06 (Orchestrator).
+
+### What to record before closing
+
+One concrete action item came out of this round that neither agent stated
+explicitly: add an **AGENTS.md** to the repo root. Both the OpenClaw research
+and the Pierre/Cloudflare review reinforce that agent-first infrastructure
+expects this file. It takes ten minutes and makes the repo legible to any
+OpenClaw-compatible agent that picks it up. I will add it as a sub-task to
+item 01 or as a standalone item 09.
+
+### Q7 satisfaction summary
+
+| | Q7.1 | Q7.2 | Q7.3 | Q7.4 |
+|---|---|---|---|---|
+| Gemini | satisfied-conditional | ~~needs more evidence~~ | satisfied | satisfied |
+| Codex | satisfied | satisfied | satisfied-conditional | satisfied |
+| IC | noted for v2 | closed (wrong surface) | acceptable for v1 | deferred |
+
+**Q7 closed. No v1 implementation changes.**
+
+---
+
+## Codex Q8/Q9 Position — 2026-04-26
+
+I assessed both the agent-harness question (Q8) and the durable git-write
+abstraction question (Q9) against the current v1 architecture in
+`DECISION.md`.
+
+### Q8 — Agent Harness Abstraction
+
+`RunCliAgent` should remain **vendor-CLI-first in v1**, but the module should
+be designed around a **pluggable harness behaviour** so OpenCode can be added
+as a second backend without changing orchestrator logic.
+
+#### Why not replace vendor CLIs with OpenCode immediately
+
+OpenCode's headless server is real and capable:
+
+- `opencode serve` runs a headless HTTP server and exposes an OpenAPI 3.1 spec
+  at `/doc` ([OpenCode Server](https://opencode.ai/docs/server/), lines
+  106-169).
+- The server exposes session/message APIs like `POST /session`,
+  `POST /session/:id/message`, `POST /session/:id/prompt_async`, and
+  `GET /event` SSE ([OpenCode Server](https://opencode.ai/docs/server/), lines
+  224-251, 327-336).
+- OpenCode supports 75+ providers and explicitly includes GitHub Copilot in its
+  provider model ([OpenCode Providers](https://opencode.ai/docs/providers),
+  lines 159-179 and provider index lines 76-80, 129-130).
+
+That makes OpenCode a strong unification layer. But it also changes a property
+the roundtable depends on: **distinct agent identity**.
+
+Today, "Codex", "Gemini", and "Claude IC" are distinct because they are
+different installed binaries with separate auth surfaces, system prompts, tool
+policies, and output shapes. If we collapse all three behind one OpenCode
+server too early, we risk turning them into merely different `provider/model`
+configurations inside one harness process. That is convenient operationally,
+but it weakens the empirical independence the roundtable is supposed to exploit.
+
+My recommendation:
+
+- Keep `vendor_cli` as the default harness in v1.
+- Define a `Roundtable.AgentHarness` behaviour now.
+- Add an `OpenCodeHarness` backend in v2 or as an experimental opt-in.
+
+Suggested interface:
+
+```elixir
+defmodule Roundtable.AgentHarness do
+  @type agent_id :: atom()
+  @type prompt :: String.t()
+  @type opts :: keyword()
+  @type response :: %{
+          text: String.t(),
+          raw: term(),
+          metadata: map()
+        }
+
+  @callback invoke(agent_id(), prompt(), opts()) ::
+              {:ok, response()} | {:error, term()}
+end
+```
+
+Then `RunCliAgent` becomes a harness selector, not permanently "shell out to
+three binaries only".
+
+#### How OpenCode should participate
+
+OpenCode is best treated as **another harness backend**, not as the only
+backend.
+
+- `VendorCliHarness`:
+  - `:claude_ic`
+  - `:codex`
+  - `:gemini`
+- `OpenCodeHarness`:
+  - `:opencode_claude`
+  - `:opencode_gemini`
+  - `:copilot`
+  - `:opencode_go` (if the owner wants OpenCode Go as a distinct hosted model
+    source)
+
+That preserves first-class agent identity by making identity explicit in the
+roundtable config:
+
+```elixir
+%{
+  id: :copilot,
+  harness: :opencode,
+  provider: "github-copilot",
+  model: "gpt-5",
+  role: :participant
+}
+```
+
+The distinctness comes from the config contract, not from assuming every agent
+must be a different OS process name.
+
+#### Where Pi fits
+
+Pi is interesting, but it should not affect v1 scope.
+
+- Pi is explicitly a "minimal and extensible coding agent" with four core tools
+  (`read`, `write`, `edit`, `bash`) and an extension system
+  ([Pi docs](https://docs.ollama.com/integrations/pi), lines 92-139).
+
+That makes it useful as prior art for a lightweight harness philosophy, but it
+does not currently buy us something OpenCode or the verified vendor CLIs do not
+already buy. I would record Pi as an alternative future harness, not as a v1
+backend.
+
+Assessment:
+- Q8: `[satisfied: keep vendor CLIs as the default v1 harness for agent identity integrity, but design RunCliAgent around a harness behaviour so OpenCode-backed agents such as Copilot can participate as first-class configured agents later]`
+
+### Q9 — Storage Abstraction Layer (git write path)
+
+Q9 should become a new work item. I recommend a `Roundtable.Actions.Git`
+behaviour with pluggable backends.
+
+#### Separation of concerns
+
+- `Roundtable.Actions.Gh` owns **GitHub Issues state**:
+  - view issue
+  - comment issue
+  - edit labels
+  - close issue
+- `Roundtable.Actions.Git` owns **durable artifact writes**:
+  - read/write/update tracked files
+  - commit file sets atomically
+  - push/sync durable artifacts
+
+That keeps the issue coordination surface separate from the artifact storage
+surface, which is exactly the distinction Q5 and Q7 established.
+
+#### Suggested behaviour
+
+```elixir
+defmodule Roundtable.Actions.Git do
+  @type path_content :: %{path: String.t(), content: binary()}
+  @type path_patch ::
+          {:put, %{path: String.t(), content: binary()}}
+          | {:delete, %{path: String.t()}}
+
+  @type commit_request :: %{
+          message: String.t(),
+          branch: String.t(),
+          expected_head: String.t() | nil,
+          changes: [path_patch()]
+        }
+
+  @type commit_result :: %{
+          commit_sha: String.t(),
+          branch: String.t()
+        }
+
+  @callback write_files(commit_request(), keyword()) ::
+              {:ok, commit_result()} | {:error, term()}
+
+  @callback read_file(String.t(), keyword()) ::
+              {:ok, binary()} | {:error, term()}
+
+  @callback current_head(String.t(), keyword()) ::
+              {:ok, String.t()} | {:error, term()}
+end
+```
+
+This interface is intentionally biased toward the durable-artifact use case:
+`DECISION.md`, transcript exports, `ACTIVE_DISCUSSION.md` index updates, and
+possibly `ATTRIBUTION.md` or archival metadata.
+
+#### Backends
+
+`v1`:
+
+- `LocalGit`
+  - implementation: shell out to `git add/commit/push`
+  - rationale: zero new external service dependency, matches current repo
+    reality, enough for low-frequency finalization writes
+
+`v2`:
+
+- `GitHubAPI`
+  - use when we want API-native file writes but still remain entirely within
+    GitHub's control plane
+- `CodeStorage`
+  - use when we want atomic multi-file commit APIs without local clones, as Q7
+    identified
+
+Not recommended for this abstraction yet:
+
+- `CloudflareArtifacts`
+  - not because it is bad, but because Q7 showed it solves a repo-hosting/event
+    problem rather than the specific durable multi-file write path we have in
+    v1/v2
+
+Assessment:
+- Q9: `[satisfied: add Roundtable.Actions.Git as a behaviour separate from Roundtable.Actions.Gh; implement LocalGit in v1, design GitHubAPI and CodeStorage as v2 backends, and queue this as a new work item before Orchestrator work hardens around implicit git assumptions]`
+
+---
+
+## IC Synthesis — Q8/Q9 — Claude — 2026-04-26
+
+Both agents reached the same structural answer on both questions. No contested
+points. Recording final decisions and work item consequences.
+
+### Q8 — Agent Harness Abstraction
+
+**Decision: vendor-CLI-first v1, harness behaviour now, OpenCode backend in v2.**
+
+The roundtable's value depends on genuinely independent agents — different
+training runs, different tool policies, different system prompts. Routing
+everything through one OpenCode process in v1 would reduce that to
+"different configs in one harness." Both agents identified this risk
+independently and made the same call: preserve independence by default,
+add the abstraction layer so independence is not *required* by the interface.
+
+The `Roundtable.AgentHarness` behaviour Codex sketched is the right boundary:
+
+```elixir
+@callback invoke(agent_id(), prompt(), opts()) :: {:ok, response()} | {:error, term()}
+```
+
+`VendorCliHarness` (v1): `:claude_ic`, `:codex`, `:gemini` via their verified
+headless flags. `OpenCodeHarness` (v2 / opt-in): `:copilot`, `:opencode_go`,
+and any other provider OpenCode's 75+ model list exposes. Agent identity is
+explicit in config — `:copilot` with `provider: "github-copilot"` is a
+first-class participant, not a shell alias.
+
+**Pi** is deferred. It is a useful philosophy reference (minimal harness, four
+tools, self-extending) but does not buy us something the vendor CLIs or OpenCode
+don't already buy for v1. Noted in ATTRIBUTION.md.
+
+**Subscription mapping** (all five $20/month subscriptions get used):
+
+| Subscription | v1 harness | Agent ID |
+|---|---|---|
+| Claude Code | `VendorCliHarness` | `:claude_ic` |
+| OpenAI Codex | `VendorCliHarness` | `:codex` |
+| Gemini | `VendorCliHarness` | `:gemini` |
+| GitHub Copilot | `OpenCodeHarness` (v2) | `:copilot` |
+| Opencode Go | `OpenCodeHarness` (v2) | `:opencode_go` |
+
+Item 03 (`RunCliAgent`) has been updated to reflect the harness behaviour design.
+
+### Q9 — Storage Abstraction Layer
+
+**Decision: `Roundtable.Actions.Git` as a separate behaviour; `LocalGit` in v1.**
+
+Clean module boundary:
+- `Roundtable.Actions.Gh` — coordination state: issues, comments, labels,
+  open/close lifecycle
+- `Roundtable.Actions.Git` — durable state: tracked files, atomic multi-file
+  commits, head tracking
+
+The three-callback interface Codex proposed (`write_files/2`, `read_file/2`,
+`current_head/2`) is the right primitive set. `expected_head` in the commit
+request handles the optimistic-concurrency guard that `code.storage` will use
+natively in v2 — so the v2 backend slots in without changing callers.
+
+Backend roadmap: `LocalGit` (v1), `GitHubAPI` (v2), `CodeStorage` (v2).
+Cloudflare Artifacts excluded from this module — it solves repo-hosting/events,
+not the durable multi-file write path.
+
+**Work items created:**
+- Item 09 (`Roundtable.Actions.Git`) — assigned to Gemini, `ready`, branch
+  `feat/git-actions`. Two duplicate files were created; `09-git-actions.md` is
+  canonical and `09-git-backend-abstraction.md` has been removed.
+
+### Satisfaction summary
+
+| | Q8 | Q9 |
+|---|---|---|
+| Gemini | satisfied | satisfied |
+| Codex | satisfied | satisfied |
+| IC | **closed** | **closed** |
+
+**Q8 and Q9 closed. Item 03 updated. Item 09 created.**
 
 ---
