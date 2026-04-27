@@ -2225,3 +2225,84 @@ Assessment:
 - Q15: `[satisfied: the protocols optimize for different goals; bounded challenge is worth borrowing, binary outputs belong to gating phases rather than synthesis phases, and the YC independent-judgment analogy breaks down because our agents are iterative co-authors rather than one-shot judges]`
 
 ---
+
+## IC Synthesis — Q15 + Protocol Design Implications — Claude — 2026-04-27
+
+Both agents produced strong, substantive responses. The YC comparison surfaced
+concrete protocol design decisions worth recording.
+
+### What the two protocols optimise for
+
+- **YC:** speed, comparative selection, stress-testing conviction, decision
+  under incomplete evidence. Adversarial posture is load-bearing — the signal
+  wanted is founder quality *under compression*.
+- **Ours:** surfacing missing evidence before closing, preserving conditional
+  agreement, allowing the answer to improve, making the convergence path legible.
+  Revisability is load-bearing.
+
+Direct evidence from this discussion: the IC closed once, then suspended the
+close when Squad/MassGen/Jido appeared. The architecture changed materially as a
+result. A binary protocol would have collapsed that into a premature decision.
+
+### The skeptic role — and why it should not have veto power
+
+Both agents endorsed a **bounded challenge role**, not a permanent adversarial
+one. A permanent skeptic risks theatrical disagreement over useful dissent.
+The right form is a **rotating skeptic** — assigned per round by the IC when
+convergence looks premature, with a mandate to actively disconfirm rather than
+build.
+
+**The owner's constraint: the skeptic should not have veto power.**
+
+Under the current protocol, every agent's `[needs more evidence]` is a hard
+block. A designated skeptic operating under those rules would have permanent
+veto power, making the protocol captive to one agent's willingness to relent.
+
+The right design is **majority convergence + noted dissent**:
+
+- Closure condition: all *deliberation* agents satisfied. Skeptic concerns are
+  recorded but do not block closure beyond a configured threshold.
+- After `max_skeptic_rounds` (default: 1 extra round after majority satisfied),
+  the IC may close with `[closed-with-dissent: X]`, preserving the minority
+  position in the issue thread and in `DECISION.md`.
+- This separates **the right to be heard** (every agent, including a skeptic,
+  gets their rounds) from **the power to block** (belongs to no single agent).
+
+### Binary vs graduated outcomes
+
+Both agents: **graduated for understanding phases, binary for gating/execution
+phases**. Our protocol prepares binary decisions; it does not replace them.
+
+Execution gates that should produce binary outputs: merge PR, ship v1, grant
+permission, proceed to next work item. The web dashboard (item 10) should
+surface these as action buttons for the owner, backed by the graduated record.
+
+### Where the independent-judgment analogy breaks down
+
+YC partners judge a stable subject. Our agents are iterative co-authors of the
+object of judgment. Independence matters at round start; after that, controlled
+contamination is the point — reviewers who read each other's drafts between
+rounds, not one-shot independent votes.
+
+Direct implication for Hermes: a stateful agent carries latent commitments
+stronger than a rubric, which is exactly where the YC analogy fails decisively.
+
+### Three protocol changes to record
+
+1. **Rotating skeptic** — IC may assign `[role: skeptic]` to one agent per
+   round when convergence looks premature. Mandate: disconfirm, not build.
+
+2. **Majority convergence + noted dissent** — after `max_skeptic_rounds`, IC
+   may close with `[closed-with-dissent]`. Minority position preserved in
+   record; not erased, not a veto.
+
+3. **Execution gate binary outcomes** — orchestrator emits binary decisions at
+   defined gates (merge, ship, grant permission). Web dashboard surfaces these
+   as owner action buttons.
+
+These changes should be recorded in `DECISION.md` and propagated to the
+`nix-agent-guides` MODEL.md as protocol updates.
+
+**Q15 closed.**
+
+---

@@ -182,6 +182,34 @@ Jido provides the runtime. These modules are project-specific:
 - `GitHubAPI` and `CodeStorage` git backends — defer to v2; `LocalGit` is
   sufficient for v1 finalization writes
 
+## Protocol Updates (from Q15 discussion)
+
+Three changes to the satisfaction-convergence protocol derived from comparing
+it to the YC founder interview protocol:
+
+**1. Rotating skeptic role**
+The IC may assign `[role: skeptic]` to one agent per round when convergence
+looks premature. The skeptic's mandate is to actively disconfirm — challenge
+assumptions, find the missing evidence, argue against the emerging consensus.
+This role is temporary and scoped to the round; it is not a standing persona.
+
+**2. Majority convergence + noted dissent (no skeptic veto)**
+Closure does not require unanimous satisfaction from every agent. After
+`max_skeptic_rounds` (default: 1 additional round beyond majority consensus),
+the IC may close with `[closed-with-dissent: X]`, recording the minority
+position in the issue thread and in the decision record. The dissent is
+preserved, not erased — but it is not a veto. This separates the right to be
+heard from the power to block.
+
+**3. Execution gate binary outcomes**
+The orchestrator emits binary decisions at defined execution gates: merge PR,
+ship v1, grant permission, proceed to next work item. The web dashboard
+(item 10) surfaces these as owner action buttons, backed by the graduated
+discussion record that justifies them. Graduated markers are for understanding
+phases; binary outputs are for gating/authority phases.
+
+---
+
 ## Open Questions (not yet decided)
 
 **PR review as a coordination surface**
