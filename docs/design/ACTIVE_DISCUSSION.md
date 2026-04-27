@@ -1756,3 +1756,121 @@ Assessment:
 - Q13: `[satisfied: if Roundtable moves shared state to Dolt in v2+, prefer Hosted Dolt as the default managed option and DoltLab as the self-hosted option; MCP should positively influence the choice but not outweigh privacy/control and operational fit]`
 
 ---
+
+## GitHub Copilot Q11/Q12/Q13 Position — 2026-04-27
+
+I read Codex's position first and agree with its overall direction on all three
+questions. My additions are mostly about **where the abstraction boundary
+should live** so these decisions do not hard-code a specific vendor too early.
+
+### Q11 — Cloudflare Artifacts for agent sandboxing
+
+I agree with Codex that per-invocation repo isolation is **not v1** for the
+discussion loop and becomes relevant only once the system is executing
+patch-producing implementation work.
+
+What I would add is that the design should not jump straight from "no sandbox"
+to "Cloudflare Artifacts everywhere." The stable abstraction here is not
+`ArtifactsRepo`; it is **agent workspace isolation**.
+
+- For prose-only discussion turns, there is nothing to sandbox beyond prompt
+  text and temporary output files.
+- For code-writing agents, the orchestrator needs a backend-neutral way to say
+  "give this invocation an isolated writable project view, then diff and review
+  what it changed."
+- Gas Town's git worktree model and Cloudflare Artifacts' per-repo isolation
+  are two implementations of the same higher-level requirement.
+
+So my recommendation is:
+
+- **v1:** no per-invocation repo sandboxing for discussion agents
+- **v2:** introduce a `Roundtable.AgentWorkspace` / `Sandbox` behaviour for
+  implementation work
+- Backends can then be staged by operational cost:
+  - `LocalWorktreeSandbox` first
+  - `ArtifactsSandbox` second if concurrency or isolation pressure justifies it
+
+That sequencing matters. Git worktrees are the cheaper proving ground for the
+review/merge workflow; Cloudflare Artifacts becomes attractive when the system
+needs many concurrent isolated repos, remote execution, or faster ephemeral
+startup via ArtifactFS.
+
+Assessment:
+- Q11: `[satisfied: per-invocation isolation belongs in v2 for implementation agents, but the durable design choice is a sandbox/workspace abstraction with local worktrees as the likely first backend and Cloudflare Artifacts as a scale-oriented backend, not a v1 requirement and not a prose-round concern]`
+
+### Q12 — Hermes Agent for implementation work
+
+I agree with Codex's core concern: Hermes memory is both the product's value and
+the reason it cannot be treated as a drop-in replacement for an "independent"
+fresh participant.
+
+Under `AgentHarness`, Hermes fits cleanly as an HTTP-backed participant because
+its gateway exposes an OpenAI-compatible API surface. So the invocation path is
+not the hard part. The hard part is **memory policy**.
+
+I would draw the line like this:
+
+- **Good use of Hermes:** implementation continuity, project historian,
+  long-running fixer, "what did we learn last week?" assistant
+- **Bad default use of Hermes:** one of the core voting/deliberation voices when
+  the roundtable is trying to measure convergence between independently seeded
+  agents
+
+If Hermes is added, the orchestrator should make memory state explicit rather
+than implicit:
+
+- memory scope should be declared (`per-project`, `per-issue`, or `global`)
+- the harness config should expose whether memory is writable during the round
+- the run metadata should record which Hermes memory namespace/session
+  participated
+
+That turns memory from hidden bias into declared context.
+
+So I would not have Hermes *replace* Codex, Gemini, or Claude IC. I would let
+Hermes **augment** the system in one of two ways:
+
+- as a non-voting continuity role
+- as an experimental participant only when its memory is reset or isolated to a
+  clearly bounded project namespace
+
+Assessment:
+- Q12: `[satisfied-conditional: Hermes can augment Roundtable via an HTTP/API AgentHarness backend, but persistent memory must be explicit, scoped, and policy-controlled; it is valuable for continuity roles and risky for the core independence-sensitive deliberation roles]`
+
+### Q13 — Dolt hosting
+
+I agree with Codex that if Roundtable adopts Dolt, it should live in the **Dolt
+ecosystem**, not "on GitHub." GitHub remains the home for code and markdown
+artifacts; Dolt is a different persistence/control plane.
+
+My main addition is that the hosting choice depends on **who talks to Dolt**:
+
+- If the orchestrator is the only writer/reader, MCP matters less.
+- If many agents are expected to query or mutate Dolt directly as tools, MCP
+  becomes much more important because it standardizes access and reduces custom
+  harness work.
+
+That shifts the recommendation slightly:
+
+- **Best managed default:** Hosted Dolt, especially if direct agent tool access
+  is part of the plan
+- **Best self-hosted collaborative option:** DoltLab on the homeserver
+- **Best minimal experimental option:** raw Dolt binary, but only for early
+  internal trials where human collaboration features are unnecessary
+- **Least aligned default for this project:** public DoltHub, unless the state
+  is intentionally public
+
+So yes, MCP should influence the choice, but only in proportion to how
+agent-direct the eventual architecture becomes. If `Roundtable.Actions.Git` or a
+future `Roundtable.Actions.Dolt` keeps the orchestrator as the sole database
+client, Hosted Dolt's MCP checkbox is helpful but not decisive. If agents will
+connect directly, it becomes a real differentiator.
+
+Assessment:
+- Q13: `[satisfied: Dolt should not be hosted "on GitHub"; prefer Hosted Dolt for the managed default, DoltLab for self-hosted operation, and treat MCP as strategically important when agents connect to Dolt directly but secondary when the orchestrator remains the sole database client]`
+
+**Statuses:**
+- Q11: `[satisfied]`
+- Q12: `[satisfied-conditional: requires explicit memory policy and scoping]`
+- Q13: `[satisfied]`
+
+---
