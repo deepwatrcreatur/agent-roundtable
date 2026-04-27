@@ -61,10 +61,11 @@ defmodule Roundtable.Actions.GhTest do
     assert_received {:cmd, "gh", ["issue", "close", "1", "-R", "owner/repo", "-c", "Closing now"], [stderr_to_stdout: true]}
   end
 
-  test "create_issue builds the correct gh command" do
-    Process.put(:runner_result, {"", 0})
+  test "create_issue returns the issue url" do
+    url = "https://github.com/owner/repo/issues/10"
+    Process.put(:runner_result, {url <> "\n", 0})
 
-    assert :ok = Gh.create_issue("owner/repo", "T", "B", ["l1"])
+    assert {:ok, ^url} = Gh.create_issue("owner/repo", "T", "B", ["l1"])
 
     assert_received {:cmd, "gh", ["issue", "create", "-R", "owner/repo", "-t", "T", "-b", "B", "-l", "l1"], [stderr_to_stdout: true]}
   end
@@ -82,5 +83,12 @@ defmodule Roundtable.Actions.GhTest do
   test "returns error on invalid json" do
     Process.put(:runner_result, {"not json", 0})
     assert {:error, {:invalid_json, _}} = Gh.view_issue("r", 1)
+  end
+
+  test "returns error on network timeout/failure" do
+    error_msg = "error connecting to github.com: timeout"
+    Process.put(:runner_result, {error_msg, 1})
+
+    assert {:error, {:command_failed, 1, ^error_msg}} = Gh.view_issue("r", 1)
   end
 end

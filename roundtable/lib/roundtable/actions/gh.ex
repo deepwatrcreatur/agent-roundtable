@@ -74,7 +74,7 @@ defmodule Roundtable.Actions.Gh do
     args = if labels != [], do: args ++ ["-l", Enum.join(labels, ",")], else: args
 
     case run_gh(args) do
-      {:ok, _stdout} -> :ok
+      {:ok, stdout} -> {:ok, String.trim(stdout)}
       error -> error
     end
   end
@@ -98,7 +98,7 @@ defmodule Roundtable.Actions.Gh do
   end
 
   defp decode_json(stdout) do
-    case JSON.decode(stdout) do
+    case Jason.decode(stdout) do
       {:ok, decoded} -> {:ok, decoded}
       {:error, reason} -> {:error, {:invalid_json, reason}}
     end
