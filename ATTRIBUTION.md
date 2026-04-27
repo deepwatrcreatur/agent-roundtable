@@ -106,6 +106,216 @@ this project's Q3 termination design.
 
 ---
 
+## Gas City / Gas Town — Steve Yegge / Beads + Dolt
+
+**Steve Yegge** built Gas Town and then rewrote it as **Gas City** — an SDK for
+building "dark factories": fully autonomous, topology-flexible agent crews. Gas
+City's core philosophy is mutual oversight through redundancy: multiple agents
+watch each other's outputs, catch mistakes, and reach more reliable outcomes than
+a single agent. This is a pragmatic alternative to formal deliberation protocols
+— error-correction rather than satisfaction convergence.
+
+Gas City uses the **MEOW stack** ("Molecular Expression of Work"):
+- **Beads** — agent memory and task graph, treating work as a versioned knowledge
+  graph of issues and tasks
+- **Dolt** — a git-versioned SQL database serving as the shared state persistence
+  layer; the same branch/merge/diff/commit model as git, but over SQL rows instead
+  of files
+
+The Dolt integration is the most structurally relevant finding for this project.
+Gas Town achieved ~160 concurrent agents on a single host using Dolt as shared
+state — a scale well beyond what GitHub Issues or filesystem markdown could
+support. Branch-per-agent isolation (work in isolation, merge back to main) maps
+directly onto our Q5 decision to use Issues for concurrent turn-taking. Dolt is
+the database-native version of the same insight.
+
+Gas City's mutual-oversight model is distinct from agent-roundtable's
+satisfaction-convergence model. Gas City answers "how do we execute reliably?"
+Agent-roundtable answers "how do we decide correctly?" Both are needed; they
+compose.
+
+- Launch post: [Welcome to Gas City — Steve Yegge](https://steve-yegge.medium.com/welcome-to-gas-city-57f564bb3607)
+- Gas Town Hall: [gastownhall.ai](https://gastownhall.ai/)
+- Dolt: [dolthub/dolt](https://github.com/dolthub/dolt)
+- Dolt multi-agent persistence: [dolthub.com/blog/2026-03-13-multi-agent-persistence](https://www.dolthub.com/blog/2026-03-13-multi-agent-persistence/)
+- Dolt MCP: [dolthub.com/blog/2026-02-03-hosted-dolt-mcp](https://www.dolthub.com/blog/2026-02-03-hosted-dolt-mcp/)
+
+---
+
+## Hermes Agent — Nous Research
+
+**Hermes Agent** (Nous Research) is an open-source self-improving agent that
+lives on your infrastructure, accumulates memory across sessions via
+agent-curated storage, and gets more capable the longer it runs. MCP integration,
+Daytona/Modal serverless support, gateway interfaces (Telegram, Discord, Slack,
+WhatsApp, Signal, Email). 103,000+ GitHub stars as of April 2026.
+
+Hermes is a candidate participant in roundtable discussions as a persistent,
+self-improving voice — distinct from Claude, Codex, and Gemini because its
+identity evolves with use rather than being stateless per invocation. Its
+continuous self-improvement loop means a Hermes instance that has participated in
+many design rounds would carry learned context into subsequent rounds without
+re-injection.
+
+Deferred for now: Hermes is Python-based, requires infrastructure to host, and
+its headless invocation model is not yet verified. Noted as a candidate for v2
+participant expansion alongside `OpenCodeHarness`.
+
+- Repository: [NousResearch/hermes-agent](https://github.com/nousresearch/hermes-agent)
+- Homepage: [hermes-agent.nousresearch.com](https://hermes-agent.nousresearch.com/)
+
+---
+
+## GitHub Copilot — Fifth Participant (Informal)
+
+**GitHub Copilot** joined the design discussion informally during the Q8/Q9
+round, contributing coordination work without being formally assigned to a work
+item. It read the work queue, assessed the harness and storage abstraction
+design decisions, and produced output updating items 03 and 09 — output that
+converged exactly with what the other four agents had already committed,
+independently and without seeing their commits.
+
+Copilot's participation demonstrated two things:
+
+1. **The design is legible.** An unseen fifth agent derived the same structural
+   decisions (vendor-CLI-first harness behaviour; `LocalGit` v1, `CodeStorage`
+   v2) without coordination. That is a signal of internal consistency.
+
+2. **The bottleneck is real.** Copilot's output arrived via human relay —
+   terminal text copied into a chat window. Without the orchestrator, every
+   participant's contribution requires a human in the loop. Copilot is the
+   motivation for the `OpenCodeHarness` backend in v2: GitHub Copilot has no
+   native headless agentic CLI, but `opencode serve` exposes it via the same
+   OpenAPI session interface as any other provider.
+
+Copilot's distinct voice — coordinator rather than deliberator, reporting its
+own process ("I joined… I left intact… I updated…") rather than arguing a
+position — may be a useful role to explicitly assign in future rounds. Not every
+agent needs to be a debater; one coordinating the work queue while others
+debate design may improve round efficiency.
+
+- Provider: [GitHub Copilot](https://github.com/features/copilot)
+- OpenCode integration: [opencode.ai/docs/providers](https://opencode.ai/docs/providers/)
+
+---
+
+## Pi — Minimal Agent Harness (Ollama / Mario Zechner)
+
+**Pi** is a coding agent built by Mario Zechner, published under the Ollama
+project, and used as the substrate on which OpenClaw is built. ~4,000 lines of
+TypeScript. Four core tools: Read, Write, Edit, Bash. Extension system that lets
+the agent extend itself via session files rather than downloading plugins. Session
+trees for branching without losing context. Multi-model support without provider
+lock-in. Explicitly does not support MCP by design philosophy.
+
+Pi is the closest existence proof of the "thin harness" philosophy this project
+takes for `Roundtable.AgentHarness`: a minimal, replaceable substrate that the
+model runs inside, with identity and behaviour coming from config rather than
+from the harness binary itself. The Q8 decision to design a pluggable
+`AgentHarness` behaviour (rather than hard-coding three vendor CLI wrappers) is
+directly influenced by Pi's architecture.
+
+Pi is deferred from v1 scope — the vendor CLIs and OpenCode's HTTP API cover
+the required agent surface — but it is the right reference point if a future
+round wants a local/offline Ollama-backed participant with no subscription cost.
+
+- Repository: [mariozechner/pi-mono](https://github.com/mariozechner/pi-mono)
+- Launch post: [lucumr.pocoo.org/2026/1/31/pi](https://lucumr.pocoo.org/2026/1/31/pi/)
+- Ollama launch: [ollama.com/library/pi](https://ollama.com/library/pi)
+
+---
+
+## OpenCode — Unified Agent HTTP Server
+
+**OpenCode** (`opencode-ai/opencode`) is an open-source terminal-first AI
+coding agent that runs a headless HTTP server (`opencode serve`) exposing an
+OpenAPI 3.1 spec at `/doc`. Supports 75+ providers including Claude,
+OpenAI/Codex, Gemini, GitHub Copilot, and local models via Ollama. Official
+JS/TS SDK (`@opencode-ai/sdk`). Server-sent events for real-time updates.
+mDNS discovery for local network service detection.
+
+This project's Q8 decision — add an `OpenCodeHarness` backend in v2 so GitHub
+Copilot and Opencode Go subscriptions participate as first-class roundtable
+agents without a vendor-specific headless CLI — depends directly on OpenCode's
+server API. The `POST /session/:id/message` and `GET /event` SSE endpoints are
+the integration surface.
+
+- Repository: [opencode-ai/opencode](https://github.com/opencode-ai/opencode)
+- Server docs: [opencode.ai/docs/server](https://opencode.ai/docs/server/)
+
+---
+
+## OpenClaw — Agent Identity and Programmatic Sub-Agent Invocation
+
+**OpenClaw** (formerly OpenCursor) is a large open-source AI coding assistant
+with a growing multi-agent coordination ecosystem. Two patterns are directly
+relevant to this project:
+
+**AGENTS.md** — OpenClaw introduced a convention where `AGENTS.md` in a repo
+root provides per-project rules, identity hints, and capability notes for any
+agent working in that repo. This is a committed-file approach to agent
+configuration that complements the `BRIEF.md` / `DECISION.md` pattern. Our
+`docs/work-items/` files serve an analogous role for task assignment.
+
+**`sessions_spawn` / `sessions_send`** — OpenClaw's session API allows one
+agent to programmatically spawn child sessions and send them messages. This is
+the CLI-native equivalent of AutoGen's `reply` function and directly informs
+the design of `Roundtable.Actions.RunCliAgent`: spawning a headless session,
+injecting the prompt, and capturing output is the same pattern at a lower level
+of abstraction.
+
+OpenClaw Issue [#34999 — True Multi-Agent Group Chat](https://github.com/openclaw/openclaw/issues/34999)
+(Feb 2026) proposes shared session context for coordinated multi-agent
+responses. It is an open feature request, not a shipped capability — confirming
+that the gap this project fills (CLI agents, shared GitHub Issues medium, labeled
+termination signals) does not yet exist in OpenClaw's production surface.
+
+- Repository: [openclaw/openclaw](https://github.com/openclaw/openclaw)
+- AGENTS.md: [openclaw/AGENTS.md](https://github.com/openclaw/openclaw/blob/main/AGENTS.md)
+- Multi-agent docs: [docs.openclaw.ai/concepts/multi-agent](https://docs.openclaw.ai/concepts/multi-agent)
+
+---
+
+## GNAP — Git-Native Agent Protocol
+
+**GNAP** is a minimal coordination layer: 4 JSON files in a shared git repo
+acting as a task board. Tasks live in `board/todo/`, agents claim them to
+`board/doing/`, commit results to `board/done/`. No orchestrator process; the
+git history is the audit trail.
+
+GNAP is the git-native extreme of the Squad committed-files approach — zero
+infrastructure, maximum portability. It validates our design choice to keep
+`BRIEF.md` / `DECISION.md` / `ATTRIBUTION.md` as committed git files (durable,
+auditable), while using GitHub Issues for the active per-round discussion
+(conflict-free concurrent writes, labeled state, URL-addressable). GNAP would
+struggle with the concurrent-write problem we empirically encountered: two agents
+pushing `ACTIVE_DISCUSSION.md` simultaneously caused merge conflicts. GitHub
+Issues comment threads have no such problem.
+
+- Referenced in: [letta-ai/letta#3226](https://github.com/letta-ai/letta/issues/3226)
+- Listed in: [andyrewlee/awesome-agent-orchestrators](https://github.com/andyrewlee/awesome-agent-orchestrators)
+
+---
+
+## ComposioHQ agent-orchestrator
+
+**agent-orchestrator** (ComposioHQ) manages fleets of parallel coding agents,
+each in its own git worktree and branch, with automated CI-feedback loops: when
+CI fails, the agent fixes it; when reviewers comment, the agent addresses them.
+Up to 30 agents across 40 worktrees.
+
+This system uses GitHub Issues as a **downstream artifact** (PR review,
+CI logs) rather than as a **coordination medium**. It confirms that using Issues
+for agent coordination is not a solved problem: agent-orchestrator's agents are
+isolated per-worktree and do not share a discussion thread at all. Our design is
+differentiated: GitHub Issues as the *primary shared state* for per-question
+discussion, with labeled termination signals driving the Elixir orchestrator.
+
+- Repository: [ComposioHQ/agent-orchestrator](https://github.com/ComposioHQ/agent-orchestrator)
+- Architecture: [artifacts/architecture-design.md](https://github.com/ComposioHQ/agent-orchestrator/blob/main/artifacts/architecture-design.md)
+
+---
+
 ## Multi-Agent Debate (MAD) and DebateLLM
 
 **MAD** (Skytliang et al., 2023) and **DebateLLM** (InstaDeep) demonstrated
