@@ -184,6 +184,18 @@ Jido provides the runtime. These modules are project-specific:
 
 ## Open Questions (not yet decided)
 
+**PR review as a coordination surface**
+
+The current orchestrator design handles the discussion loop (Issues) and the
+artifact write loop (git commits). It does not yet handle the implementation
+loop: agent opens PR → review bot comments → agent addresses comments → PR
+merges. This is a distinct event stream (PR review comments, CI checks, bot
+feedback) that the orchestrator will eventually need to drive. Defer to v2;
+the PR review loop requires `Roundtable.Actions.Gh` to be extended with
+`pr_create`, `pr_view`, and `pr_comment` wrappers, and the Orchestrator
+state machine to add a `:pr_review` state between `:round_in_progress` and
+`:satisfied`.
+
 **Q10.3 — Mid-discussion join context**
 
 What compressed context does a new agent receive when joining a discussion that
