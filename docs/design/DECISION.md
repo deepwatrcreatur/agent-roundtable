@@ -210,6 +210,73 @@ phases; binary outputs are for gating/authority phases.
 
 ---
 
+## Protocol Updates (from Q16 discussion)
+
+Two additional design decisions derived from the agent memory and model
+diversity discussion:
+
+**4. Agent memory policy — three classes**
+
+Memory partitioning by class is the decided approach. Memory yes/no is the
+wrong frame.
+
+| Class | Persistence | Policy |
+|---|---|---|
+| `project_knowledge` | Durable, per-project | Allowed; read-only during deliberation |
+| `process_memory` | Ephemeral per issue | Allowed; writable during active round |
+| `consensus_memory` | Must not persist | Forbidden for independent deliberation voices |
+
+`consensus_memory` must not persist silently across rounds for any agent
+declared as an independent deliberation voice. Prior `[satisfied]` /
+`[needs more evidence]` positions, unrecorded synthesis from previous rounds,
+and latent "I already agreed with X" commitments all fall in this class.
+
+A historian/continuity role may persist `consensus_memory` across rounds,
+but must be declared non-independent in the round config.
+
+The `AgentHarness` config accepts memory policy explicitly:
+
+```elixir
+%{
+  harness: :hermes,             # or :vendor_cli, :opencode
+  memory_scope: :project,
+  memory_write: false,
+  memory_classes: [:project_knowledge]
+}
+```
+
+Memory backend (Letta, Zep, Hermes provider) is a v2 configuration item;
+defer until `AgentHarness` has a concrete v1 implementation to attach it to.
+
+**5. Model roster policy — 3 default, cost-constrained escalation**
+
+The current three-family roster (Anthropic / OpenAI / Google) is the v1
+default. Additions should be ranked:
+
+1. New provider family (DeepSeek, Kimi) — independent training stack, most
+   value per voice
+2. New deployment profile (local / open-weight vs hosted frontier)
+3. Same-vendor tier specialization (Opus vs Sonnet) — role differentiation,
+   not independence
+
+DeepSeek is the highest-value next addition: independent training, ~15x lower
+cost per token, strong long-context reasoning.
+
+Same-vendor tiers share training corpora and architectures; treat them as role
+assignments, not independent voices.
+
+Diminishing returns begin around four to five voices unless roles are strongly
+specialized.
+
+Default orchestrator scheduling:
+- 3-agent round by default
+- Escalate to 4th/5th specialist agent when `needs-more-evidence` persists
+  past `max_skeptic_rounds` or the question is high-leverage
+- Optional: Opus as IC for difficult rounds; DeepSeek for high-volume
+  iterative turns
+
+---
+
 ## Open Questions (not yet decided)
 
 **PR review as a coordination surface**

@@ -321,6 +321,93 @@ available model for each role regardless of cost?
 
 ---
 
+### Q17 — How does our collective deliberation compare to Mixture of Experts?
+
+**Background — Mixture of Experts (MoE):**
+
+Mixture of Experts is a neural architecture where a model is divided into
+specialised subnetworks ("experts"), with a learned gating/routing function
+that selects which experts to activate per input token. Modern examples:
+
+- **Mixtral 8×7B / 8×22B** (Mistral AI) — 8 experts per layer; top-2 active
+  per token; full parameter count ~47B, active count ~13B. Dense performance
+  from sparse activation.
+- **DeepSeek-V3 / V4** — 256 fine-grained experts per layer, top-8 active;
+  adds "shared experts" that always fire alongside the routed ones.
+- **GPT-4, Gemini 1.5** — MoE architecture widely reported but not officially
+  confirmed by vendors.
+
+Key MoE properties:
+- Routing is **automatic and sub-token**: the gating network, not a human or
+  IC, decides which expert handles each token.
+- Experts are **same-architecture, different-weights**: specialisation emerges
+  from training, not from deliberate design.
+- Combination is **weighted sum**: expert outputs are blended numerically, not
+  synthesised by reasoning.
+- Experts run **in parallel within a single forward pass**: no sequential
+  rounds, no turn protocol.
+- There is no **disagreement signal**: experts do not debate; the gating
+  function does not detect or resolve conflicting outputs.
+
+Our collective deliberation protocol differs on every one of these axes.
+
+**Questions for agents:**
+
+**Q17.1 — Where the analogy holds and where it breaks**
+
+Both MoE and our protocol try to get better answers by routing to diverse
+specialised perspectives. Where is that analogy tight, and where does it
+break down? Specifically:
+
+- MoE routing is learned/automatic; ours is rule-based (round-robin) or
+  IC-directed. Which is more appropriate for design deliberation, and why?
+- MoE combination is a weighted numerical sum; ours is a structured prose
+  synthesis by the IC. What can prose synthesis do that a weighted sum cannot?
+  What can a weighted sum do that prose synthesis cannot?
+- MoE experts are same-architecture-different-weights. Our agents are
+  different-architecture-different-training. Does that difference matter for
+  the quality of the combined output?
+
+**Q17.2 — What MoE gets right that we should borrow**
+
+MoE has been studied extensively and deployed at scale. Are there design
+insights from MoE research that should inform our protocol?
+
+Consider:
+- Load balancing (preventing over-reliance on one expert) — do we have an
+  equivalent? Should we?
+- "Expert collapse" (experts converging to the same function during training)
+  — does the analogous failure mode occur in our protocol, and does the
+  rotating skeptic role guard against it?
+- "Shared experts" (always-on generalists alongside specialised routers) — is
+  the IC playing this role, and is that the right design?
+- Token-level vs question-level granularity — MoE routes at the token level;
+  we route at the question level. Is there a finer-grained routing strategy
+  that would improve our protocol?
+
+**Q17.3 — What our protocol gets right that MoE cannot do**
+
+MoE produces no audit trail, no disagreement signal, and no explicit
+satisfaction condition. Our protocol produces all three. Where does the
+sequential deliberation model generate value that a parallel weighted-sum
+model structurally cannot?
+
+Consider the hallucination correction loop, the citation verification round,
+the `[needs more evidence]` signal, and the rotating skeptic role. Are any
+of these implementable in a MoE architecture, and if not, why not?
+
+**Q17.4 — Should the orchestrator learn from routing?**
+
+MoE gating networks learn which experts are reliable for which input types.
+Should our orchestrator track which agents have historically been most useful
+on which question types (architecture, cost, security, API design) and use
+that signal to weight turn order, extra rounds, or escalation decisions?
+
+Is a learned routing policy worth the complexity, or does the simplicity of
+round-robin + IC close have advantages that outweigh adaptive routing?
+
+---
+
 ### Q15 — How does our consensus protocol compare to the YC interview protocol?
 
 **Context:** Y Combinator's partner interviews assess founders using a
