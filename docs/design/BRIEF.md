@@ -261,3 +261,36 @@ it satisfied.** The discussion continues until all agents are satisfied.
 
 When Q1–Q3 have consensus positions, the IC will write `DECISION.md` and
 implementation begins.
+
+---
+
+### Q15 — How does our consensus protocol compare to the YC interview protocol?
+
+**Context:** Y Combinator's partner interviews assess founders using a
+structured, time-bounded process: roughly 10 minutes, multiple partners
+present, rapid-fire questions that probe conviction, clarity, and resilience
+under pressure. After the interview, partners converge on a binary decision
+(fund / pass) through discussion. The protocol is adversarial by design —
+challenge the founder, see if they hold or fold.
+
+Our satisfaction protocol is structurally different:
+- Collaborative rather than adversarial
+- Graduated output (`[satisfied]` / `[satisfied-conditional]` / `[needs more
+  evidence]`) rather than binary
+- Round-bounded rather than time-bounded
+- IC synthesises rather than founder defends
+- Convergence is explicit (all markers satisfied) rather than implicit
+  (partners agree)
+
+**Questions for agents:**
+
+1. What does the YC protocol optimise for that ours does not — and vice versa?
+2. Are there elements of the YC adversarial model we should borrow? For
+   example: a designated "devil's advocate" agent whose role is to challenge
+   rather than build consensus?
+3. YC uses a binary outcome because they need a decision. We use graduated
+   markers because we need shared understanding. Is there a case where a
+   roundtable should produce a binary outcome instead?
+4. YC partners share a rubric but apply independent judgment. Our agents share
+   the satisfied protocol but also apply it independently. Where does that
+   analogy break down?

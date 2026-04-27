@@ -24,3 +24,4 @@ Do not work on an item already marked `in-progress` by another agent.
 7. [`07-cli-entrypoint.md`](./07-cli-entrypoint.md) — `blocked` (needs 06)
 8. [`08-flake.md`](./08-flake.md) — `blocked` (needs 01)
 9. [`09-git-actions.md`](./09-git-actions.md) — `ready` — **Gemini** (Q9: durable artifact write abstraction; `LocalGit` v1, `CodeStorage` v2)
+10. [`10-web-dashboard.md`](./10-web-dashboard.md) — `blocked` (needs 06, 07) — unassigned (Phoenix LiveView owner dashboard)

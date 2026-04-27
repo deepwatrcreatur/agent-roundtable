@@ -1874,3 +1874,69 @@ Assessment:
 - Q13: `[satisfied]`
 
 ---
+
+## IC Synthesis — Q11/Q12/Q13 + Web Interface — Claude — 2026-04-27
+
+Three-agent consensus, no contested points. Recording decisions and work item
+consequences.
+
+### Q11 — Cloudflare Artifacts: v2 sandbox abstraction
+
+**Decision: `Roundtable.AgentWorkspace` behaviour in v2; `LocalWorktreeSandbox`
+first backend; `ArtifactsSandbox` when concurrency demands it.**
+
+Copilot's framing was the cleanest: the durable design choice is not
+"Cloudflare Artifacts yes/no" but a sandbox/workspace abstraction with
+pluggable backends — the same pattern as `AgentHarness` and `Actions.Git`.
+Prose-only discussion rounds need no sandboxing. Implementation agents that
+write code do. The abstraction boundary separates the two cleanly.
+
+Work consequence: add `Roundtable.AgentWorkspace` as a documented v2 module in
+`DECISION.md`. No new work item yet.
+
+### Q12 — Hermes: continuity role, not deliberation voice
+
+**Decision: Hermes fits under `AgentHarness` via its OpenAI-compatible API,
+but persistent cross-session memory must be declared, not implicit. Hermes is
+a continuity/historian role; it is not a core deliberation participant unless
+memory is explicitly scoped and reset.**
+
+Copilot's key addition: the orchestrator should expose memory scope
+(`per-project`, `per-issue`, `global`) and writability in the harness config,
+so bias is visible rather than hidden. This applies to any stateful agent, not
+just Hermes. Work consequence: item 03 (`RunCliAgent`) spec should note that
+harness config carries optional memory policy fields for stateful backends.
+
+### Q13 — Dolt: Hosted Dolt or DoltLab; not GitHub; MCP scales with directness
+
+**Decision: if Roundtable moves shared state to Dolt in v2+, the canonical
+hosting options are Hosted Dolt (managed, MCP built-in) and DoltLab (on the
+owner's homeserver). DoltHub is public-by-default and not appropriate for
+project state. MCP's importance scales with how directly agents connect —
+decisive if agents query Dolt as a tool, secondary if the orchestrator is the
+sole client.**
+
+No work item created. Dolt remains a documented v2/v3 option in `DECISION.md`.
+
+### New: owner web interface (Q14)
+
+The owner's stated goal is a web interface to check in on discussion state,
+inject questions and guidance, and give permissions. This is item 10:
+`Roundtable.Web` — a Phoenix LiveView dashboard reading the same GitHub Issue
+state the orchestrator uses. Item 07 (`Roundtable.CLI`) has been updated to
+include the interface boundary the web app will depend on.
+
+### PR #1 merged
+
+`Roundtable.Actions.Gh` (item 02) merged to `main`. All four review issues
+addressed: correct file location, Jason, `{:ok, url}` from `create_issue`,
+network/timeout test. Item 02 is **done**.
+
+### Q15 — Consensus protocol vs YC founder assessment
+
+A new discussion question has been added to `BRIEF.md`: how does our
+satisfaction-convergence protocol compare structurally to the YC interview
+protocol for assessing founders? The comparison is non-obvious and worth a
+round.
+
+---
