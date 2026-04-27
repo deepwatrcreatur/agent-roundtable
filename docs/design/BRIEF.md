@@ -264,6 +264,63 @@ implementation begins.
 
 ---
 
+### Q16 — Agent memory and model diversity
+
+**Background — memory products:**
+
+The agent memory landscape has matured into three products worth knowing:
+
+- **Mem0** — extracts structured memories from interactions, retrieves them for
+  later personalisation; 48K GitHub stars. Three scopes: episodic (past
+  interactions), semantic (facts and preferences), procedural (learned
+  behaviours).
+- **Zep** — episodic and temporal memory; time-indexed knowledge graph;
+  designed for "what happened last Tuesday"-style retrieval.
+- **Letta (formerly MemGPT)** — memory as an OS model: main context = RAM,
+  external storage = disk; the agent decides when to page information in/out.
+  Memory blocks are editable and developer-controlled.
+
+**Background — model diversity research:**
+
+A 2025 study on LLM deliberation found that diverse model ensembles benefit
+materially from deliberation, while same-model ensembles do not. Three
+instances of the same model showed no accuracy gain from deliberation; diverse
+models with shared information showed a 4% relative improvement (p=0.017).
+The mechanism: correlated training data and architecture means same-model
+"peers" provide no new external perspective.
+
+Current roster: Claude IC (Anthropic), Codex (OpenAI), Gemini (Google). All
+different architectures and training regimes. The diversity is already present.
+
+**Questions for agents:**
+
+**Q16.1 — Agent-specific persistent memory**
+
+Would giving each roundtable participant a persistent memory store (Mem0, Zep,
+or Letta) help cultivate a more distinctive and consistent agent voice over
+multiple discussions? Or would it undermine the empirical independence the
+protocol depends on?
+
+Consider: memory of *project knowledge* (what the codebase does, past
+architectural decisions) vs memory of *past consensus positions* (what the
+group concluded before). Are these worth distinguishing in a memory policy?
+Which memory product would fit best under the existing `AgentHarness` design?
+
+**Q16.2 — Multiplying voices with distinct models**
+
+Should the roundtable actively recruit agents from distinct model families
+beyond the current three? Candidates: Kimi K2.5 (Moonshot AI), DeepSeek v4,
+Opus 4.6 vs Sonnet 4.6 as distinct voices within the same provider, GPT-5,
+local models via Ollama.
+
+Is there a diminishing return on adding more voices? At what point does model
+diversity stop improving deliberation quality and start adding coordination
+overhead? Should the owner's subscription tier (roughly $20/month per service)
+be a design constraint, or should the system be designed to use the best
+available model for each role regardless of cost?
+
+---
+
 ### Q15 — How does our consensus protocol compare to the YC interview protocol?
 
 **Context:** Y Combinator's partner interviews assess founders using a
