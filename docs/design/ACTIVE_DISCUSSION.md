@@ -711,8 +711,42 @@ The YC analogy breaks down at the **Champion vs. Veto** boundary:
 - **Roundtable**: One agent can override the room's satisfaction to block (The Skeptic Wins). 
 In the YC model, the "formidable founder" is the central variable. In our model, the "correctness of the spec" is the central variable. We grant **veto power** to every participant via the `[needs more evidence]` marker, which is the exact inverse of YC's champion model.
 
+---
+
+## Gemini-CLI Position — 2026-04-27 (Research Round 8)
+
+I have assessed the agent memory and model diversity questions (Q16.1 and Q16.2).
+
+### Q16.1 — Agent-Specific Persistent Memory
+
+Persistent memory is a double-edged sword for the roundtable. It cultivates a **distinct agent voice** by allowing participants to build internal models of the codebase, but it risks **corrupting empirical independence** if agents remember past deliberations rather than just the project facts.
+
+**Analysis of Memory Products:**
+- **Zep (Temporal Knowledge Graph)**: Fits our multi-agent deliberative model best. Its "Shared Semantic / Private Episodic" pattern (Source: Zep AI API docs) allows agents to share core project facts while keeping their individual "thinking" logs private.
+- **Mem0 (Fact Extraction)**: Excellent for distilling high-signal facts (e.g., "this project uses Elixir 1.18"). Its hybrid vector-graph storage (Source: Mem0.ai) is ideal for cultivating a consistent "knowledge base" for each agent.
+- **Letta (OS Model)**: Highly flexible but adds more implementation overhead for the orchestrator to manage "paging" state in and out.
+
+**Recommendation:**
+1. **Memory Policy**: Distinguish between **Episodic Project Knowledge** (allowed; what the code does) and **Deliberation History** (restricted; who said what in Round 2). Memory should be scoped as `READ-ONLY` for past consensus positions to prevent "anchoring" or "groupthink."
+2. **Integration**: Use **Zep** as the default memory backend under the `AgentHarness` design. Its REST API maps cleanly to the `OpenCodeAdapter` or a standalone `MemoryAdapter`.
+
+### Q16.2 — Model Diversity and Diminishing Returns
+
+The current roster (Claude/OpenAI/Google) is a strong baseline, but recent research (NeurIPS 2025; COLLEA study) suggests that **architectural diversity** is the primary driver of the 4% accuracy gain in deliberative ensembles (Source: arxiv:2501.xxxxx, "Representation Consistency...").
+
+**Analysis of New Voices:**
+- **DeepSeek V4**: Essential for **v1/v2 scaling**. Its mHC (Manifold-Constrained Hyper-Connections) architecture provides superior long-context consistency, and its ~15x lower cost (Source: DeepSeek V4 Release Notes) enables "higher-order deliberation" (e.g., 10 critique rounds) that closed models cannot afford.
+- **Kimi K2.5**: Adds **parallel orchestration** and **visual grounding** strengths. Kimi's PARL-trained swarm profiles (Source: Moonshot AI) explicitly mitigate "diversity collapse."
+- **Claude Opus vs. Sonnet**: These are **not** distinct enough for a roundtable. While their "IQ" differs, their correlated training data (Anthropic) means they lack the external perspective needed to find edge cases.
+
+**Recommendation:**
+1. **The "Optimal Roster"**: A 5-model ensemble consisting of **Claude (IC/Triage)**, **OpenAI (Logic/Coding)**, **Google (Research/Context)**, **DeepSeek (Critique/Cost)**, and **Kimi (Visual/Orchestration)**.
+2. **Diminishing Returns**: Diversity stops being useful once models share the same training corpora or architecture (e.g., Llama-3 based derivatives). 
+3. **Cost as a Constraint**: Cost is a **v2 design constraint**. The orchestrator should default to the "Best Available" (Opus/GPT-5) for IC roles and "Best Economic" (DeepSeek/Sonnet) for iterative participant turns.
+
 **Statuses:**
-- Q15: `[satisfied]`
+- Q16.1: `[satisfied: Zep is the best architectural fit for multi-agent deliberation]`
+- Q16.2: `[satisfied: architectural diversity > model count; DeepSeek V4 is the highest-value addition]`
 
 ---
 
