@@ -106,6 +106,66 @@ this project's Q3 termination design.
 
 ---
 
+## Gas City / Gas Town — Steve Yegge / Beads + Dolt
+
+**Steve Yegge** built Gas Town and then rewrote it as **Gas City** — an SDK for
+building "dark factories": fully autonomous, topology-flexible agent crews. Gas
+City's core philosophy is mutual oversight through redundancy: multiple agents
+watch each other's outputs, catch mistakes, and reach more reliable outcomes than
+a single agent. This is a pragmatic alternative to formal deliberation protocols
+— error-correction rather than satisfaction convergence.
+
+Gas City uses the **MEOW stack** ("Molecular Expression of Work"):
+- **Beads** — agent memory and task graph, treating work as a versioned knowledge
+  graph of issues and tasks
+- **Dolt** — a git-versioned SQL database serving as the shared state persistence
+  layer; the same branch/merge/diff/commit model as git, but over SQL rows instead
+  of files
+
+The Dolt integration is the most structurally relevant finding for this project.
+Gas Town achieved ~160 concurrent agents on a single host using Dolt as shared
+state — a scale well beyond what GitHub Issues or filesystem markdown could
+support. Branch-per-agent isolation (work in isolation, merge back to main) maps
+directly onto our Q5 decision to use Issues for concurrent turn-taking. Dolt is
+the database-native version of the same insight.
+
+Gas City's mutual-oversight model is distinct from agent-roundtable's
+satisfaction-convergence model. Gas City answers "how do we execute reliably?"
+Agent-roundtable answers "how do we decide correctly?" Both are needed; they
+compose.
+
+- Launch post: [Welcome to Gas City — Steve Yegge](https://steve-yegge.medium.com/welcome-to-gas-city-57f564bb3607)
+- Gas Town Hall: [gastownhall.ai](https://gastownhall.ai/)
+- Dolt: [dolthub/dolt](https://github.com/dolthub/dolt)
+- Dolt multi-agent persistence: [dolthub.com/blog/2026-03-13-multi-agent-persistence](https://www.dolthub.com/blog/2026-03-13-multi-agent-persistence/)
+- Dolt MCP: [dolthub.com/blog/2026-02-03-hosted-dolt-mcp](https://www.dolthub.com/blog/2026-02-03-hosted-dolt-mcp/)
+
+---
+
+## Hermes Agent — Nous Research
+
+**Hermes Agent** (Nous Research) is an open-source self-improving agent that
+lives on your infrastructure, accumulates memory across sessions via
+agent-curated storage, and gets more capable the longer it runs. MCP integration,
+Daytona/Modal serverless support, gateway interfaces (Telegram, Discord, Slack,
+WhatsApp, Signal, Email). 103,000+ GitHub stars as of April 2026.
+
+Hermes is a candidate participant in roundtable discussions as a persistent,
+self-improving voice — distinct from Claude, Codex, and Gemini because its
+identity evolves with use rather than being stateless per invocation. Its
+continuous self-improvement loop means a Hermes instance that has participated in
+many design rounds would carry learned context into subsequent rounds without
+re-injection.
+
+Deferred for now: Hermes is Python-based, requires infrastructure to host, and
+its headless invocation model is not yet verified. Noted as a candidate for v2
+participant expansion alongside `OpenCodeHarness`.
+
+- Repository: [NousResearch/hermes-agent](https://github.com/nousresearch/hermes-agent)
+- Homepage: [hermes-agent.nousresearch.com](https://hermes-agent.nousresearch.com/)
+
+---
+
 ## GitHub Copilot — Fifth Participant (Informal)
 
 **GitHub Copilot** joined the design discussion informally during the Q8/Q9
