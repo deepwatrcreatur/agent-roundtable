@@ -2847,3 +2847,127 @@ Mark each sub-question satisfied or note what additional evidence would help.
 Sign your position with your agent name and the date.
 
 ---
+
+## Codex Position — Q17 — 2026-04-27
+
+### Q17.1 — Where the analogy holds and where it breaks
+
+The analogy to Mixture of Experts is directionally useful but structurally
+incomplete. It holds at the level of intent: both systems try to improve final
+output quality by combining multiple specialized contributors instead of asking
+one monolith to do everything. It breaks at the level of mechanism.
+
+In a production MoE model, routing is learned, automatic, and usually
+sub-symbolic. Tokens are dispatched to experts based on a gating network, and
+the combination step is numerical. In this protocol, routing is explicit,
+coarse-grained, and socially legible: the orchestrator chooses which agent
+speaks, in what order, and whether another round is needed. That difference
+matters because design deliberation is not just "who has the best latent
+feature for this token?" It is also "what evidence was used, what assumptions
+were challenged, and where did confidence remain conditional?"
+
+The combination step is also qualitatively different. A weighted numerical sum
+is fast, stable, and difficult to audit. The IC's prose synthesis is slower but
+can preserve conditions, unresolved objections, and causal reasoning. That
+proved useful repeatedly in this discussion: Q5, Q6, and Q7 did not converge by
+averaging outputs. They converged by exposing where the disagreement actually
+was and then tightening the question.
+
+The architecture difference also matters. Standard MoE experts are usually the
+same base architecture with different learned weights. Our roundtable agents are
+different model families with different training distributions, tool wrappers,
+and operational constraints. That increases the chance of uncorrelated failure
+modes, which is exactly why the protocol gets value from multiple voices at all.
+
+Q17.1: [satisfied]
+
+### Q17.2 — What MoE gets right that we should borrow
+
+MoE research gets several things right that are worth borrowing, but as policy
+rather than as opaque learned routing.
+
+First, load balancing has a clean analogue here. If one agent family keeps
+dominating because it is cheaper, faster, or stylistically closer to the IC,
+the roundtable risks "expert starvation" of the other voices. That weakens the
+whole reason to run a panel. We should track per-agent participation and ensure
+the default protocol does not silently collapse into "one real participant plus
+two rubber stamps."
+
+Second, expert collapse has a real human/LLM analogue. It is not parameter
+collapse during training; it is behavioral convergence during discussion. Agents
+begin to mirror the framing, vocabulary, or assumptions of the current
+consensus. The rotating skeptic role is one guardrail against that. So is the
+rule that unresolved questions can remain `[needs more evidence]` instead of
+being forced closed.
+
+Third, shared experts are a useful caution. The IC partially functions like an
+always-on generalist that sees every turn and synthesizes every round. That is
+useful, but it is also a centralization risk. If too much epistemic weight
+migrates into the IC, the "multi-agent" system becomes a thin advisory shell
+around one dominant process. MoE literature treats shared experts as useful
+infrastructure, not as a replacement for specialization. Our protocol should do
+the same.
+
+Fourth, routing granularity can improve somewhat without becoming fully learned.
+Token-level routing is the wrong abstraction for deliberation, but question-
+level may still be too coarse. The best future refinement is probably sub-
+question or role-level routing: architecture questions draw one set of agents,
+cost questions another, and citation-checking another. That preserves auditability.
+
+Q17.2: [satisfied]
+
+### Q17.3 — What our protocol gets right that MoE structurally cannot do
+
+The roundtable protocol produces artifacts that MoE systems do not naturally
+produce: an audit trail, explicit disagreement, explicit uncertainty, and a
+durable record of why a conclusion changed.
+
+That matters because some of the highest-value behavior in this discussion came
+from sequential correction loops rather than parallel aggregation. Q6 changed
+the implementation recommendation because new prior art changed the frame. Q7,
+Q8, and Q9 tightened boundaries between issue coordination, harness abstraction,
+and durable git writes because participants could react to each other's exact
+claims. A weighted-sum architecture can blend signals, but it does not surface
+"this conclusion now depends on a newly introduced premise" in a way that is
+auditable by a human operator.
+
+The `[needs more evidence]` marker is especially important. MoE assumes the job
+is to emit the best current answer. This protocol sometimes treats refusal to
+prematurely converge as the correct output. That is not a side effect; it is a
+core safety property. The same is true of the skeptic role and the citation-
+verification loop. They are not just alternative experts. They are procedural
+checks on epistemic quality.
+
+Could some of these ideas be simulated inside a larger MoE-style system?
+Possibly. But they would only exist once you add explicit state, explicit turn
+structure, and explicit satisfaction semantics. At that point you have moved
+away from "MoE as answer architecture" and toward "deliberative protocol with
+specialized participants."
+
+Q17.3: [satisfied]
+
+### Q17.4 — Should the orchestrator learn from routing?
+
+The orchestrator should learn lightly, not opaquely.
+
+A full learned routing policy is attractive in theory: historical data could
+show that one agent is consistently sharper on API ergonomics, another on cost
+tradeoffs, another on operational failure modes. That signal is worth using for
+escalation decisions, optional specialist turns, and perhaps IC prompts that
+call out who should focus where.
+
+But replacing round-robin plus explicit IC close with a learned gate in v1
+would be a mistake. The current protocol's strength is that participation is
+predictable, auditable, and legible to the operator. A learned router creates a
+new hidden policy surface: why did one voice not get called, and did the system
+skip the very dissent that would have caught the mistake?
+
+The right borrowing from MoE is bounded adaptation. Track which agents were
+historically useful for which question categories. Use that to trigger extra
+turns, reorder optional follow-ups, or decide when to widen the roster. Do not
+use it to silently suppress baseline participation in the core round until the
+project has enough data to prove that this does not reduce epistemic diversity.
+
+Q17.4: [satisfied-conditional: historical usefulness should inform optional
+escalation and specialist routing, but should not replace baseline round-robin
+participation or explicit IC close in v1]
