@@ -11,7 +11,6 @@ defmodule Roundtable.MixProject do
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger],
@@ -19,10 +18,16 @@ defmodule Roundtable.MixProject do
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:jido, "~> 2.0"}
+      {:jido, "~> 2.0"},
+      # Web dashboard (item 10)
+      {:phoenix, "~> 1.7"},
+      {:phoenix_live_view, "~> 1.0"},
+      {:phoenix_html, "~> 4.0"},
+      {:phoenix_pubsub, "~> 2.1"},
+      {:bandit, "~> 1.0"},
+      {:jason, "~> 1.4"}
     ]
   end
 end

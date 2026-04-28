@@ -7,14 +7,27 @@ defmodule Roundtable.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
-      # Starts a worker by calling: Roundtable.Worker.start_link(arg)
-      # {Roundtable.Worker, arg}
-    ]
+    children =
+      [
+        {Phoenix.PubSub, name: Roundtable.PubSub},
+        if web_enabled?() do
+          RoundtableWeb.Endpoint
+        end
+      ]
+      |> Enum.reject(&is_nil/1)
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Roundtable.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  defp web_enabled? do
+    Mix.env() in [:dev, :prod] or System.get_env("ROUNDTABLE_WEB") == "true"
+  end
+
+  defp web_port do
+    case System.get_env("PORT") do
+      nil -> 4000
+      p -> String.to_integer(p)
+    end
   end
 end

@@ -1,8 +1,8 @@
 # 06 — Roundtable.Orchestrator
 
-**Status:** `blocked` (needs 01–05)
-**Assigned:** unassigned
-**Branch:** `feat/orchestrator`
+**Status:** `ready-for-review`
+**Assigned:** Claude IC
+**Branch:** `feat/orchestrator-loop`
 
 ## Scope
 
