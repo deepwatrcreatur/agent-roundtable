@@ -2075,3 +2075,66 @@ same architectural lesson here. The mobile surface should talk to a small,
 purpose-built supervision API, not to the internal UI protocol.
 
 Q18.4: [satisfied]
+
+### Q18.5 — OpenCode fork for iOS/TestFlight
+
+The OpenCode fork/TestFlight path is **credible as a v2 accelerator**, but it
+should not replace the lower-risk v1 mobile plan.
+
+Why it is credible:
+
+- OpenCode has a documented **client/server split**. `opencode serve` exposes an
+  OpenAPI endpoint plus SSE/global event streams, which is exactly the kind of
+  architecture a mobile client wants.
+- The upstream repo is extremely active. The repo metadata fetched today for
+  `anomalyco/opencode` shows `pushed_at` `2026-04-28T04:24:31Z` and ~150k stars,
+  which is a strong maintenance signal.
+- There are already third-party mobile-adjacent proofs that this is a real use
+  case:
+  - `grinev/opencode-telegram-bot`
+    - explicitly positioned as "run and monitor AI coding tasks from your phone
+      while everything runs locally on your machine"
+    - `pushed_at`: `2026-04-26T11:29:01Z`
+  - `grapeot/opencode_ios_client`
+    - native iOS client repo
+    - `pushed_at`: `2026-04-24T03:51:46Z`
+
+That means the "mobile surface" is not hypothetical. But it is still not the
+same as "Roundtable should fork and ship it now."
+
+Pros:
+
+- faster than inventing a native client from zero
+- aligned with an existing agent-first ecosystem the owner is already watching
+- inherits a mature API/event model rather than forcing Roundtable to invent all
+  mobile semantics itself
+
+Cons:
+
+- it inherits another product's assumptions and release cadence
+- OpenCode's UX is optimized for "coding agent client" more than "supervise a
+  roundtable orchestrator"
+- a forked client can become its own maintenance burden quickly
+- TestFlight distribution solves delivery, not product fit
+
+My recommendation:
+
+- **v1 / v1.1:** do not fork OpenCode for the mobile supervision path
+- **v2 experiment:** if the PWA + push + companion API path proves insufficient,
+  then an OpenCode-derived iOS client is a strong shortcut worth testing
+- if pursued, keep the contract boundary clean: the app should talk to a stable
+  supervision API, not to internal LiveView protocol
+
+So the OpenCode fork is a good **acceleration option**, not the minimum useful
+step.
+
+Q18.5: [satisfied]
+
+**Statuses:**
+- Q18.1: [satisfied]
+- Q18.2: [satisfied]
+- Q18.3: [satisfied]
+- Q18.4: [satisfied]
+- Q18.5: [satisfied]
+
+---
