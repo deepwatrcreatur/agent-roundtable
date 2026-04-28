@@ -234,3 +234,44 @@ mix deps.get
 Build `Gh` actions first — they are the most testable (mock `System.cmd/3`)
 and the most likely source of environment-specific surprises (auth, rate limits,
 field names in `gh --json` output).
+
+---
+
+## Protocol Update 6 — Mobile Supervision Architecture (Q18, 2026-04-28)
+
+**Decision:** Companion REST + SSE API is the canonical mobile contract; LiveView dashboard is the primary browser UI.
+
+### Ruled out
+- **LiveView Native** — archived February 10, 2026. Do not use.
+- **OpenCode fork as primary path** — satisfaction labels and round triggering absent from OpenCode data model; upstream moves at ~1 release/day. Deferred to v2 if supervision scope expands.
+
+### Required additions (v1)
+
+**Push notifications:**
+- Orchestrator emits HTTP POST to ntfy.sh on `consensus_reached` and `needs_human_review` events.
+- Config: `NTFY_TOPIC` env var. When unset, notifications are silently skipped.
+- ntfy.sh is the default backend (self-hostable, free iOS app). Pushover is an acceptable alternative via the same abstraction.
+
+**Companion API (new module: `RoundtableWeb.ApiController`):**
+```
+GET  /api/state             — map of issue_number => state_map (same shape as get_discussion_state/1)
+GET  /api/events            — SSE stream; events: agent_done, round_start, consensus_reached, needs_human_review
+POST /api/questions         — body: {text: String} — calls inject_question/3
+POST /api/rounds/trigger    — body: {} — calls start_discussion/2 in background Task
+```
+Authentication: bearer token in `Authorization` header; token set via `ROUNDTABLE_API_TOKEN` env var.
+
+**PWA:**
+- LiveView dashboard served with `manifest.json` (name, icons, display: standalone, start_url: /).
+- iOS 16.4+ Web Push via Service Worker is the alerting path for home-screen installs.
+
+### Mobile supervision feature classification
+| Task | Mechanism | Real-time |
+|---|---|---|
+| Watch | SSE `/api/events` | Yes |
+| Alert | ntfy.sh / Pushover push | Yes (out-of-app) |
+| Inject | POST `/api/questions` | No |
+| Trigger | POST `/api/rounds/trigger` | No |
+
+Apple Shortcuts can drive Inject and Trigger against the companion API with no native app required.
+
