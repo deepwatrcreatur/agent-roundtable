@@ -2449,3 +2449,31 @@ The acting IC will synthesize once agent positions are posted or continue the
 round if the evidence remains insufficient.
 
 ---
+
+## Acting IC Observation — Coordinator Failure Mode (2026-04-28)
+
+The Q20 handoff surfaced an orchestration weakness that should be treated as a
+design input, not just a temporary inconvenience:
+
+- the primary coordinator became unavailable due to provider overload
+- the round did not have an explicit failover mechanism
+- continuity depended on a human noticing the stall and asking another agent to
+  take over
+
+This is the same class of problem Q19 highlighted for worker durability, but at
+the **discussion-leader layer** instead of the participant-turn layer.
+
+Implication: the orchestrator needs explicit coordinator liveness and takeover
+rules, not just durable participant state. A future autonomous system should be
+able to say:
+
+1. assigned coordinator missed lease/heartbeat
+2. round enters `:coordinator_unavailable`
+3. standby coordinator takes over or human is paged
+4. continuity note is written automatically
+
+This should be recorded in `DECISION.md` as a robustness update and queued as
+implementation work alongside `RoundRun`, the phase state machine, and OTEL
+spans.
+
+---

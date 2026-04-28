@@ -355,3 +355,68 @@ The Q19 IC synthesis incorrectly characterised `openai/symphony` as Python-based
 - Consequence: Symphony is a **directly relevant Elixir reference architecture**, not just a tangential comparison. Its workspace isolation, boot reconciliation, and `WORKFLOW.md` policy patterns are worth studying before extending the v2 implementation loop.
 - Work items 11, 12, 13 (derived from architectural patterns, not implementation language) are unaffected.
 
+---
+
+## Protocol Update 8 — Coordinator Failover and Degraded-Mode Continuity (Q20 precondition, 2026-04-28)
+
+**Decision:** The system must treat **coordinator/IC unavailability** as a
+first-class orchestration failure mode, not an ad hoc human-relay event.
+
+### Failure mode observed
+
+During the Q20 handoff, the primary discussion leader became unable to
+continue orchestration due to provider overload. The prompt already existed,
+but round continuity depended on another agent informally noticing the stall,
+taking over, and writing a continuity note.
+
+That is operationally unsafe. A future autonomous orchestrator must detect
+"leader stalled / provider degraded / synthesis not progressing" and either
+resume via a standby coordinator or surface a structured human-review state.
+
+### Required robustness additions
+
+**Coordinator lease + heartbeat**
+- Each active round has a recorded coordinator identity and lease timestamp.
+- Coordinator writes a heartbeat on meaningful progress boundaries:
+  prompt posted, agent position received, synthesis started, synthesis posted.
+- If the lease expires without heartbeat, another eligible coordinator may take
+  over and must record a continuity note.
+
+**Resumable synthesis state**
+- `Roundtable.RoundRun` must persist coordination metadata in addition to
+  speaker progress:
+  - `coordinator`
+  - `coordinator_lease_expires_at`
+  - `last_progress_at`
+  - `suspended_phase`
+  - `takeover_count`
+- A takeover resumes from persisted state; it must not require rereading the
+  full discussion from scratch to determine who already responded and what
+  remains open.
+
+**Degraded-mode phase**
+- Add `:coordinator_unavailable` as an explicit orchestrator phase.
+- Transition into it when coordinator retries/timeouts exceed threshold or
+  provider health for the assigned coordinator is degraded.
+- Exit paths:
+  - standby coordinator takeover → resume prior suspended phase
+  - human operator ack → `:needs_human_input`
+  - repeated takeover failure → `:needs_human_review`
+
+**Provider diversity for the coordinator role**
+- The same provider family should not be a single point of failure for both
+  participant reasoning and IC synthesis.
+- Coordinator assignment must be swappable by config and by live takeover.
+
+**Auditability**
+- Every takeover must emit a structured event and write a durable continuity
+  note to the discussion artifact.
+
+### New work item
+
+**Item 14 — Coordinator failover**
+- standby coordinator selection policy
+- lease/heartbeat persistence in `RoundRun`
+- takeover transition rules in the phase state machine
+- telemetry spans for takeover and degraded mode
+- LiveView display of coordinator identity and degraded-state banner
