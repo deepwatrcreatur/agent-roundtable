@@ -2138,3 +2138,106 @@ Q18.5: [satisfied]
 - Q18.5: [satisfied]
 
 ---
+
+---
+
+## Round 10 — Q18 Agent Positions (summary)
+
+**Codex (Q18.1–Q18.4):** Terminal-first still dominant (Termius 4.7★/18K ratings, Blink 3.1★, ShellFish 4.8★, Prompt 4.3★). Emerging orchestration-first apps: Onepilot, OpenCode Telegram bot (540★), unofficial iOS OpenCode client on App Store. LiveView Native archived Feb 10 2026 — rules out native LiveView binding. SwiftPhoenixClient (530★, Jan 2025) viable for plain Channels. Recommends companion JSON/SSE API + ntfy/Pushover + PWA. Against OpenCode fork as primary path: "couples us to another product's UX and assumptions."
+
+**Gemini (Q18.1–Q18.4):** Same terminal-first observation. Highlighted Moshi app (HITL push notifications from mobile). Grapeot/OpenCodeClient in TestFlight as OpenCode iOS reference. Originally recommended LiveView Native as Phase 3 — RETRACTED after fact check (archived Feb 10 2026 confirmed). Recommends ntfy.sh Phase 1, PWA Phase 2, purpose-built app Phase 3. $5 Pushover one-time vs. self-hostable ntfy.
+
+**Both (Q18.5):**
+- OpenCode architecture: HTTP + SSE (`opencode serve`, OpenAPI 3.1 spec at `/doc`, `/event` SSE stream). iOS clients connect to your own server. SSH tunnel support (grapeot/OpenCodeClient uses Citadel).
+- Repo moved from `sst/opencode` → `anomalyco/opencode`. 779 releases; latest April 27 2026. Fast-moving upstream.
+- Gaps for roundtable: satisfaction labels not native; round triggering not a first-class concept.
+- Cost: $99/year Apple Dev + 90-day TestFlight build refresh.
+- Codex verdict: [satisfied] — companion API + PWA is better primary path; OpenCode fork only if goal is "mobile coding agent control generally."
+- Gemini verdict: [satisfied-conditional] — OpenCode fork is a valid "Admin Console / Pro tool" complement, not the primary path. PWA wins for v1.
+
+---
+
+## IC Synthesis — Q18 (Round 10, 2026-04-28)
+
+**IC: Claude**
+
+### Resolved fact conflicts
+
+LiveView Native (`liveview-native/live_view_native`) was archived February 10, 2026 — confirmed by both agents independently. Gemini's original Q18.2 recommendation of LiveView Native as Phase 3 is withdrawn. This rules out the "bind native app directly to LiveView protocol" path for any new project as of today.
+
+### Q18.1 — State of the art: closed
+
+The current market is two-tier:
+- **Terminal-first:** Termius, Blink Shell, ShellFish, Prompt — SSH + Mosh + Tailscale is the dominant real pattern. Excellent for session persistence, reconnect, and high-density output. Poor for structured supervision tasks.
+- **Orchestration-first (emerging):** Moshi (HITL push alerts), Onepilot (agent dashboard + terminal on iOS), OpenCode mobile clients (grapeot TestFlight + unofficial App Store builds), OpenCode Telegram bot (540★). These are not mature but prove the demand.
+
+The hardest things to replicate without a terminal: streaming stdout density, session recovery, interactive approval prompts, and arbitrary shell escape hatches. Our orchestrator does not need most of these for the supervision use case.
+
+**Q18.1: [satisfied]**
+
+### Q18.2 — Phoenix Channels native clients: closed
+
+LiveView protocol binding → ruled out (archived). Plain Phoenix Channels → viable via SwiftPhoenixClient (530★, v5.3.5 stable, v6.x in dev for Swift 6 concurrency) and JavaPhoenixClient (71★). However, the right contract for mobile is not LiveView protocol internals — it is a companion REST + SSE API that exposes only what a supervisor needs:
+
+```
+GET  /api/state           — current questions, labels, running status
+GET  /api/events          — SSE stream: agent_done, round_start, consensus, human_review
+POST /api/questions       — inject question
+POST /api/rounds/trigger  — start a round for open questions
+```
+
+This is smaller than LiveView, has no wire-format coupling to Phoenix internals, and works equally well for a PWA, a Shortcut, or a future native app.
+
+**Q18.2: [satisfied]**
+
+### Q18.3 — Minimum feature set: closed
+
+| Task | Mechanism | Real-time needed? |
+|---|---|---|
+| Watch | SSE (`/api/events`) | Yes — polling feels wrong during an active round |
+| Alert | Push (ntfy.sh or Pushover) | Yes — must fire when app is closed |
+| Inject | HTTP POST | No — fire and forget |
+| Trigger | HTTP POST | No — fire and forget, watch SSE for progress |
+
+ntfy.sh (self-hostable, iOS app, Elixir `Req.post!` trivial integration) covers alerting without native code. Pushover ($5 one-time, 3K★/4.8★) is the stable commercial fallback. Apple Shortcuts can wrap the POST endpoints for inject and trigger with zero app development.
+
+**Q18.3: [satisfied]**
+
+### Q18.4 — Recommended path (non-fork): closed
+
+Consensus path, in order:
+
+1. **Immediate:** Add ntfy.sh push notifications to orchestrator events (`consensus_reached`, `needs_human_review`). Cost: ~2 hours. Unblocks phone supervision today.
+2. **Short-term:** Expose the companion REST/SSE API above. Cost: ~1 day. Enables Shortcuts and future native clients with a stable contract.
+3. **Medium-term:** Ship the existing LiveView dashboard as a PWA (manifest + service worker). iOS 16.4+ supports Web Push for home-screen apps. Cost: ~1 day. Covers iPad well; acceptable on iPhone for actions.
+4. **Future:** Purpose-built iOS app using SwiftPhoenixClient against the SSE/REST API. Only warranted if PWA UX proves insufficient.
+
+**Q18.4: [satisfied]**
+
+### Q18.5 — OpenCode fork: closed
+
+OpenCode's architecture is HTTP + SSE (`opencode serve`), OpenAPI 3.1 spec public, SSH tunnel supported in existing iOS clients. This is technically sound. However, for this project's supervision use case, the fit is partial:
+
+| Supervision need | OpenCode native support |
+|---|---|
+| Streaming agent turns | Yes (SSE TextDelta) |
+| Satisfaction label display | No — not in data model |
+| Question injection | Partial (message send, not roundtable question) |
+| Round triggering | No — not a first-class concept |
+
+The repo is extremely fast-moving (779 releases, latest April 27 2026, already migrated from `sst/opencode` → `anomalyco/opencode`). A fork tracking that velocity plus maintaining a Swift client plus $99/year Apple Dev plus 90-day TestFlight build refreshes is a non-trivial ongoing cost for partial fit.
+
+**Decision:** The OpenCode fork is not the v1 path for this orchestrator's supervision needs. It is potentially valuable as a future "Pro layer" if the product expands toward general coding-agent control, or if the owner decides to invest in a richer iPad experience beyond supervision. For now, the companion API + PWA path has better fit/cost ratio.
+
+**Q18.5: [satisfied]**
+
+### Protocol updates
+
+**Protocol Update 6 — Mobile supervision architecture**
+
+- Orchestrator MUST emit push notifications to ntfy.sh on `consensus_reached` and `needs_human_review` events (configurable topic, `NTFY_TOPIC` env var).
+- A companion REST + SSE API (`/api/*`) is the canonical mobile contract. LiveView dashboard remains the primary browser UI and is not duplicated.
+- LiveView dashboard SHOULD be served with PWA manifest for home-screen install.
+- OpenCode fork is deferred to v2 and only warranted if supervision scope expands beyond roundtable-specific needs.
+- LiveView Native is ruled out: archived February 10, 2026.
+
