@@ -277,9 +277,9 @@ real-time push and which can be poll-based? Is there an existing app
 (e.g. ntfy.sh, Pushover, Home Assistant, a custom Shortcut) that already covers
 the alerting half without any custom native code?
 
-**Q18.4 — Recommended path: native, PWA, or companion API**
+**Q18.4 — Recommended path: native, PWA, or companion API (excluding OpenCode fork)**
 
-Should the project:
+Of the non-fork options, which path is recommended:
 (a) Make the LiveView dashboard a Progressive Web App (PWA) with offline cache
     and home-screen install — covers iPad well, partial phone coverage,
     zero native code;
@@ -289,7 +289,25 @@ Should the project:
 (d) Rely on push notifications via ntfy.sh / Pushover triggered by orchestrator
     events, with the browser dashboard for any action that needs a screen?
 
-What is the minimum useful step versus the ideal end state?
+What is the minimum useful step versus the ideal end state among these options?
+
+**Q18.5 — OpenCode fork for iOS/TestFlight: dedicated evaluation**
+
+OpenCode (github.com/sst/opencode → now anomalyco/opencode, ~146k stars, 779
+releases as of April 2026) is an open-source agent IDE with a client/server split:
+`opencode serve` runs a headless HTTP server with an OpenAPI 3.1 spec; clients
+connect via REST + SSE. A TestFlight iOS client (grapeot/OpenCodeClient) and an
+unofficial App Store build already exist.
+
+Evaluate the "fork and distribute via TestFlight" path specifically:
+- Architecture: what does the iOS client connect to and what protocol does it use?
+- Cost: Apple developer account ($99/yr), TestFlight 90-day build refresh, upstream
+  tracking burden at ~1 release/day velocity
+- Feature fit: streaming agent turns (SSE ✓), satisfaction label display (absent),
+  question injection (partial), round triggering (absent)
+- Risk: upstream API drift, potential license change from current MIT
+- Verdict: better long-term bet than thin companion API + PWA, or complementary
+  as a future "Pro layer" for power users who need SSH tunnel + terminal access?
 
 ---
 
