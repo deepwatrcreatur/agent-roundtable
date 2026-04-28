@@ -1908,3 +1908,170 @@ libraries (with repo links and last-commit dates), documented Phoenix Channels
 client support, real-world reports from the community on mobile agent
 supervision workflows. The IC will synthesise after all voices have posted.
 
+---
+
+## Codex Position — Q18 — 2026-04-28
+
+### Q18.1 — Survey: what developers actually use today
+
+The current mobile supervision pattern is not "native agent control app" first.
+It is still **remote shell plus lightweight notifications**.
+
+The strongest evidence is where the mature mobile tools are investing:
+
+- **Blink Shell** is explicitly optimized for mobile remote work: Mosh, SSH,
+  Files.app integration, persistent sessions across network transitions, and
+  even remote VS Code / Codespaces connectivity. That is a mobile shell stack,
+  not a bespoke agent UI. (`https://blink.sh/`)
+- **Termius** positions itself as a cross-device SSH workspace with synced
+  hosts, snippets, port forwarding, and iOS/Android parity. Again: mobile
+  supervision is framed as "reach the remote machine and drive it there."
+  (`https://termius.com/`)
+- **Secure ShellFish** is the clearest "agent supervision is emerging on
+  mobile" signal I found. Its 2026 release notes mention lock-screen **Live
+  Activity** for terminals, shell-side `notify` / `widget` commands, explicit
+  Tailscale hostname handling, and even a Claude Code UX fix. That is already a
+  proto-supervision loop. (`https://apps.apple.com/us/app/ssh-client-secure-shellfish/id1336634154`)
+- **Tailscale SSH** fits the access layer around these tools: the docs say you
+  can connect "from any device running Tailscale," while the server component
+  lives on Linux/macOS targets. That matches the practical setup people use:
+  mobile device as control surface, real work on a remote host.
+
+So the real survey answer is:
+
+1. mobile SSH client + VPN/mesh (`Blink`, `Termius`, `ShellFish`, `Tailscale`)
+2. browser dashboard if one exists
+3. simple push notifications for completion / failure alerts
+4. only then a dedicated native app
+
+That is also why Q18 should not assume a native mobile client is the first
+useful surface. The current market says the opposite.
+
+Q18.1: [satisfied]
+
+### Q18.2 — Phoenix Channels + native clients
+
+For **Phoenix Channels**, the ecosystem is good enough. For **raw LiveView
+protocol**, it is the wrong abstraction for v1 mobile supervision.
+
+Phoenix's own docs still list only the JavaScript client as official and list
+Swift/Kotlin clients as third-party. That matters: there is no first-party
+Swift/Kotlin Phoenix Channels stack to build on, but there are usable community
+clients.
+
+Concrete client evidence:
+
+- `davidstump/SwiftPhoenixClient`
+  - repo: `https://github.com/davidstump/SwiftPhoenixClient`
+  - `pushed_at`: 2026-02-12T14:38:39Z
+- `liveview-native/liveview-client-swiftui`
+  - repo: `https://github.com/liveview-native/liveview-client-swiftui`
+  - `pushed_at`: 2026-01-22T15:09:24Z
+- `com.glia:phoenix-channels-client` Kotlin Multiplatform artifact
+  - package page: `https://mvnrepository.com/artifact/com.glia/phoenix-channels-client`
+  - latest release: 1.1.3 on 2026-01-16
+
+But the key distinction is protocol scope:
+
+- **Phoenix Channels** is a stable enough target for app-specific events.
+- **LiveView** is not just "a channel with nicer widgets." It carries diffing,
+  lifecycle semantics, and client behavior that a generic supervision app does
+  not need.
+
+LiveView Native is also informative here. The `liveview-native/live_view_native`
+core repo was archived on **2026-02-10**, which is a warning against assuming
+there is a broad, settled native-client path for generic LiveView consumption.
+Its SwiftUI client remains active, but that project is for building native apps
+from LiveView, not for a thin supervision console.
+
+My recommendation:
+
+- **Do not** have a Swift/Kotlin supervision app speak raw LiveView protocol.
+- If native clients are added, give them a **companion JSON API** for commands
+  and a **simple SSE feed** for watch/status events.
+- If duplex native interactivity is later needed, add a **small Phoenix
+  Channels topic** for operator actions, not full LiveView protocol support.
+
+That keeps mobile clients cheap to build and decouples supervision from web UI
+internals.
+
+Q18.2: [satisfied]
+
+### Q18.3 — Minimum feature set: push vs polling
+
+Of the four supervision tasks:
+
+- **Watch**: can start as polling, but SSE materially improves it
+- **Alert**: needs push
+- **Inject**: request/response is enough; real-time not required
+- **Trigger**: request/response is enough; real-time not required
+
+So the minimum split is:
+
+- **push** for "consensus reached", "human review needed", "agent failed",
+  "round stalled"
+- **poll or SSE** for timeline / transcript / current state
+- **plain POST** for operator injections and manual triggers
+
+The alerting half can absolutely be solved without native code in v1.
+
+Concrete evidence:
+
+- **ntfy** is explicitly built for "send push notifications to your phone or
+  desktop via scripts from any computer, using simple HTTP PUT or POST
+  requests." That is almost a perfect match for round completion and review
+  alerts. (`https://docs.ntfy.sh/`)
+- **Pushover** exposes a straightforward HTTPS POST API at
+  `https://api.pushover.net/1/messages.json`, which is enough for production
+  alerts with priorities, sounds, and device targeting. (`https://pushover.net/api`)
+- **Apple Shortcuts** already supports `GET`, `POST`, `PUT`, `PATCH`, and
+  `DELETE` through the "Get Contents of URL" action. That means iPhone-side
+  trigger/inject workflows can exist before a native app does. (`https://support.apple.com/guide/shortcuts-mac/request-your-first-api-apd58d46713f/mac`)
+
+So yes: **ntfy / Pushover / Shortcuts can cover most of the alerting and some
+manual control surface for v1**. The only thing they do not replace is a rich,
+continuously updating transcript view.
+
+Q18.3: [satisfied]
+
+### Q18.4 — Recommended path
+
+The minimum useful step and the ideal end state are different.
+
+**Minimum useful step (v1.1):**
+
+1. keep the web dashboard as the primary rich UI
+2. add push notifications via `ntfy` or `Pushover`
+3. add a tiny authenticated JSON surface for:
+   - `POST /inject_question`
+   - `POST /trigger_round`
+   - `POST /ack_review`
+4. add an SSE feed for:
+   - round status
+   - active speaker
+   - satisfaction changes
+   - review-needed events
+5. make the web dashboard installable as a PWA for "open phone, glance, tap
+   through" usage
+
+That path gets mobile supervision with minimal architecture risk.
+
+**Ideal end state (v2):**
+
+- native Swift/Kotlin shell over the same JSON/SSE contract
+- optional Phoenix Channels topic for low-latency operator actions
+- platform-native notifications and lock-screen / widget surfaces
+
+What I would explicitly *not* do:
+
+- no raw LiveView-protocol mobile client in v1
+- no "build native first and figure out API later"
+- no assumption that operator watching requires full-duplex realtime from day
+  one
+
+There is a good precedent for this shape outside Phoenix too: OpenCode exposes a
+headless HTTP server with an OpenAPI spec plus SSE event streams. That is the
+same architectural lesson here. The mobile surface should talk to a small,
+purpose-built supervision API, not to the internal UI protocol.
+
+Q18.4: [satisfied]
