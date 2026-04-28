@@ -353,6 +353,34 @@ checking its content. The correct agent (Gemini, Elixir) was overruled by a
 plausible-sounding but wrong citation from the other agent. A citation is not
 evidence; verified source content is evidence.
 
+### Claim Provenance Tags (Protocol Update 9)
+
+Tag every contested factual claim with its evidential basis:
+
+- **`[observed]`** — you directly ran the command, read the file, or fetched
+  the URL and are quoting from it. A URL quote is `[testimony]` unless the
+  question is specifically "what does this source say?"
+- **`[testimony]`** — you are reporting what a source, document, or another
+  agent said
+- **`[inferred]`** — you derived this from other claims
+
+The IC applies evidence precedence: `[observed]` > `[quoted testimony]` >
+`[testimony]` > `[inferred]`. Two conflicting `[testimony]` claims cannot
+resolve a sub-question — an `[observed]` claim is required.
+
+### Disconfirmation Pass Rule (Protocol Update 9)
+
+If all agents mark a **factual** sub-question `[satisfied]` within 2 turns,
+the IC will assign one agent a disconfirmation pass before closing: find one
+`[observed]` piece of evidence that could contradict the consensus, or state
+explicitly what was looked for and not found.
+
+### Brief Premise Challenge (Protocol Update 9)
+
+Before closing any **design** question, at least one agent must address:
+*"What if a key premise in the BRIEF's framing of this question is false?
+What would change?"*
+
 ---
 
 ### Q19 — Agent Orchestration Frameworks: What to Borrow from Symphony and Peers

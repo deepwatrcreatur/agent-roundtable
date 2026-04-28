@@ -420,3 +420,67 @@ resume via a standby coordinator or surface a structured human-review state.
 - takeover transition rules in the phase state machine
 - telemetry spans for takeover and degraded mode
 - LiveView display of coordinator identity and degraded-state banner
+
+---
+
+## Protocol Update 9 — Epistemically Grounded Closure Rules (Q20, 2026-04-28)
+
+**Decision:** Four protocol changes derived from philosophy of mind literature
+(predictive processing, social epistemology, BonJour's coherentism critique)
+to improve reality-testing and reduce collective confabulation.
+
+### Theoretical grounding
+
+The Q19 failure was a coherentist closure: the IC selected the more
+internally consistent position without verifying against external reality.
+BonJour's Isolation Objection (*The Structure of Empirical Knowledge*, 1985)
+provides the precise diagnosis: coherence alone cannot constitute empirical
+knowledge. Longino's uptake conditions (1990) explain why the IC's authority
+structure failed: valid criticism (Gemini's Elixir claim) did not produce
+uptake. Corlett/Fletcher's predictive-processing account of delusion explains
+the mechanism: priors (Codex's plausible citation) were weighted above
+prediction error (Gemini's disconfirming claim).
+
+### Change 1 — Typed claim provenance (effective immediately)
+
+Every contested factual claim should carry a basis tag:
+
+- `[observed]` — agent directly ran the command, read the file, or fetched and quoted from the URL
+- `[testimony]` — agent reports what a source or another agent said
+- `[inferred]` — derived from other claims
+
+A URL quote is `[testimony]` unless the question is specifically "what does
+this source say?" A quote is not an observation of reality; it is an
+observation of a text.
+
+### Change 2 — IC evidence precedence rule (effective immediately)
+
+`[observed]` > `[quoted testimony]` > `[testimony]` > `[inferred]`
+
+When two `[testimony]` claims conflict, the sub-question must remain
+`[needs more evidence]` until an `[observed]` claim resolves it. The IC may
+not close a contested factual sub-question on majority testimony, narrative
+coherence, or citation count alone.
+
+### Change 3 — Disconfirmation pass when fast consensus (effective immediately)
+
+If all agents mark a factual sub-question `[satisfied]` within 2 turns, the
+IC must assign one agent a **disconfirmation pass** before closing: find one
+`[observed]` piece of evidence that could contradict the consensus, or
+explicitly state what was looked for and not found. This guards against
+Jump-to-Conclusions closure.
+
+### Change 4 — Brief premise challenge before design closure (next round onwards)
+
+Before closing any design question, at least one agent must answer: *"What
+if a key premise in the BRIEF's framing of this question is false? What would
+change?"* The IC includes this as a required prompt step when a question is
+near closure. Guards against shared delusion from a false BRIEF premise.
+
+### What was ruled out
+
+- DTD (`Draws to Decision`) counter tag — the disconfirmation pass achieves
+  the structural goal without requiring agents to self-report an
+  unverifiable count
+- Replacing the discussion format — all four changes are protocol changes,
+  not architectural ones
