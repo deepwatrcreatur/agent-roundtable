@@ -2351,3 +2351,25 @@ The Conductor pre-stage (Gemini Q19.5 #2) and directed IC routing (Gemini Q19.5 
 - LiveView dashboard to expose phase + speaker progress (not just flash events)
 - HITL interrupt state (`needs_human_input`) added to phase machine with LiveView approve/dismiss action
 
+---
+
+## Correction — Q19.1 Symphony Architecture (2026-04-28, post-synthesis)
+
+**The IC synthesis above incorrectly characterised Symphony as Python-based. This is a factual correction based on post-round primary source verification.**
+
+Codex re-checked against the OpenAI blog post published **April 27, 2026** (the day before the Q19 round) and the current `openai/symphony` GitHub repo:
+
+- **Symphony the concept:** a language-agnostic orchestration spec (`SPEC.md`).
+- **Symphony the reference implementation:** written in **Elixir**. The OpenAI post states explicitly: *"The reference implementation is written in Elixir"* and *"For the reference implementation, we chose Elixir..."* The repo language breakdown is currently **Elixir 95.5%, Python 3.0%**.
+- **Why Elixir:** OpenAI cited the same properties that inform Calder's preference — concurrency primitives and OTP supervision.
+
+**Consequence for the Q19 synthesis:**
+- Gemini's Q19.1 claim (Elixir-based) was correct on implementation language. The IC's rejection of that claim was wrong and is retracted.
+- The Conductor/Composer/Score/Performer/Checker role taxonomy Gemini attributed to Symphony remains unverified — that detail is not yet confirmed against primary sources.
+- The Q19.1 substance (Symphony validates our GitHub Issues + per-question runner model) is unchanged.
+- Symphony is now a **directly relevant Elixir reference architecture**, not a tangential Python comparison. Its workspace isolation, reconciliation on boot, and WORKFLOW.md policy patterns are worth studying before extending the orchestrator further.
+
+**Codex verdict quote:** *"My earlier summary in the roundtable notes treated Symphony as Python-based; that is now contradicted by the current OpenAI post and repo."*
+
+Protocol Update 7 work items (11, 12, 13) are unaffected — they were derived from patterns, not from Symphony's language choice.
+

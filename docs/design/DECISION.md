@@ -345,3 +345,13 @@ Wire via Jido telemetry. Export to OTEL collector in prod; log to structured std
 - Directed IC routing (re-invoke specific agent) — deferred to v2
 - Replacing Jido with another runtime — Jido is the right substrate
 
+### Correction — Symphony is Elixir, not Python (2026-04-28)
+
+The Q19 IC synthesis incorrectly characterised `openai/symphony` as Python-based. **Correction:**
+
+- **Symphony the spec:** language-agnostic (`SPEC.md`).
+- **Symphony the reference implementation:** written in **Elixir** (95.5% of repo). OpenAI's April 27, 2026 post explicitly states: *"The reference implementation is written in Elixir"* and cites concurrency and OTP supervision as the reason.
+- Gemini's Q19.1 Elixir claim was correct; the IC's rejection of it was wrong and is retracted.
+- Consequence: Symphony is a **directly relevant Elixir reference architecture**, not just a tangential comparison. Its workspace isolation, boot reconciliation, and `WORKFLOW.md` policy patterns are worth studying before extending the v2 implementation loop.
+- Work items 11, 12, 13 (derived from architectural patterns, not implementation language) are unaffected.
+
