@@ -326,6 +326,33 @@ it satisfied.** The discussion continues until all agents are satisfied.
 When Q1–Q3 have consensus positions, the IC will write `DECISION.md` and
 implementation begins.
 
+### IC Verification Protocol
+
+When agents make **directly contradictory factual claims** about a verifiable
+external fact (e.g. what language a repo is written in, what a CLI flag does,
+whether a library is archived), the IC must:
+
+1. **Independently verify** the contested fact before closing the sub-question.
+   Fetching the primary source or running the command is required. The IC may
+   not adjudicate by authority (who cited more) or plausibility alone.
+
+2. **Include the verification** in the synthesis: quote the relevant line from
+   the source, or state explicitly what was found and where.
+
+3. **Require quotations, not just citations.** An agent citing a URL does not
+   constitute evidence unless the relevant passage is reproduced. "Source X
+   confirms this" is not acceptable without the confirming text.
+
+4. **If verification is not possible** in the current session, the sub-question
+   must be left open with `[needs more evidence]` and the specific thing to
+   verify stated — not closed with a provisional answer.
+
+**Rationale:** The Q19 round (2026-04-28) closed Q19.1 with an incorrect
+Python characterisation because one agent's citation was accepted without
+checking its content. The correct agent (Gemini, Elixir) was overruled by a
+plausible-sounding but wrong citation from the other agent. A citation is not
+evidence; verified source content is evidence.
+
 ---
 
 ### Q19 — Agent Orchestration Frameworks: What to Borrow from Symphony and Peers
