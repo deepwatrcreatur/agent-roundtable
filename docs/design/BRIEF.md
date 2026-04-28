@@ -233,9 +233,15 @@ before or alongside those questions.
 
 ---
 
-## Design Questions (Continued)
+### Q18 — Mobile Agent Supervision
 
-### Q18 — Mobile Agent Supervision Interface
+The web dashboard (item 10) solves the laptop/desktop relay problem. But the
+owner also wants to supervise rounds from a phone or iPad — watching progress,
+injecting questions, and triggering new rounds while away from a desk.
+
+The common pattern in the community today is SSH via Termius + Tailscale into a
+running Claude Code session. That works but is awkward on small screens and
+requires a persistent terminal session.
 
 The LiveView dashboard is already a step forward. But browser-on-iPhone is a
 poor form factor for ongoing supervision. A native or near-native mobile
@@ -271,9 +277,9 @@ real-time push and which can be poll-based? Is there an existing app
 (e.g. ntfy.sh, Pushover, Home Assistant, a custom Shortcut) that already covers
 the alerting half without any custom native code?
 
-**Q18.4 — Recommended path: native, PWA, or companion API (excluding OpenCode fork)**
+**Q18.4 — Recommended path: native, PWA, or companion API**
 
-Of the non-fork options, which path is recommended:
+Should the project:
 (a) Make the LiveView dashboard a Progressive Web App (PWA) with offline cache
     and home-screen install — covers iPad well, partial phone coverage,
     zero native code;
@@ -283,26 +289,7 @@ Of the non-fork options, which path is recommended:
 (d) Rely on push notifications via ntfy.sh / Pushover triggered by orchestrator
     events, with the browser dashboard for any action that needs a screen?
 
-What is the minimum useful step versus the ideal end state among these options?
-
-**Q18.5 — OpenCode fork for iOS/TestFlight: dedicated evaluation**
-
-OpenCode (github.com/sst/opencode, ~146k stars as of April 2026) is an open-source
-agent IDE with a documented client/server split. A community Telegram bot derivative
-(grinev/opencode-telegram-bot) has 540+ stars. A TestFlight iOS client
-(grapeot/OpenCodeClient) already exists.
-
-Evaluate the "fork and distribute via TestFlight" path specifically:
-- What is OpenCode's client/server architecture — what does the iOS client connect
-  to and what protocol does it use?
-- What does maintaining a fork on TestFlight actually cost? (upstream tracking
-  burden, Apple developer account, TestFlight 90-day expiry, build pipeline)
-- Does OpenCode's current feature set cover roundtable supervision needs:
-  streaming agent turns visible, satisfaction label display, question injection,
-  round triggering?
-- Risk: what upstream changes (architecture pivot, licensing) could break a fork?
-- Verdict: better long-term bet than thin companion API + PWA, or valuable for
-  different reasons?
+What is the minimum useful step versus the ideal end state?
 
 ---
 

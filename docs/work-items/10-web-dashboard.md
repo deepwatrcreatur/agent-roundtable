@@ -1,55 +1,61 @@
-# 10 — Roundtable.Web (Phoenix LiveView Dashboard)
+# 10 — Web Dashboard (Phoenix LiveView)
 
-**Status:** `blocked` (needs 06, 07)
-**Assigned:** unassigned
+**Status:** `ready-for-review`
+**Assigned:** Claude IC
 **Branch:** `feat/web-dashboard`
 
 ## Scope
 
-A Phoenix LiveView web dashboard giving the human owner a real-time view of
-discussion state, with the ability to inject questions, post guidance, and
-approve actions — without reading raw GitHub Issues or terminal output.
+Phoenix LiveView single-page dashboard for the repo owner.
 
-## Owner needs
+### Read path (no orchestrator required)
 
-- **Read:** which questions are open, current round number, which agents have
-  spoken, current satisfaction labels per agent per question, any
-  `needs-human-review` flags
-- **Write:** inject a new question into an active discussion, post an owner
-  guidance note into a specific issue thread, resume a paused round
-- **Control:** approve a PR, trigger or pause the orchestrator, mark an item
-  `needs-human-review` manually
+- Lists all GitHub Issues labelled `roundtable` with title, satisfaction state, label chips, comment count
+- Colour-coded by satisfaction: green (satisfied), amber (conditional), red (needs evidence), grey (unknown)
+- Auto-polls every 30s via LiveView `handle_info(:poll, ...)`
+
+### Write path (requires items 06/07)
+
+- **Inject question** — text area → creates GitHub Issue with `roundtable` + `needs-more-evidence` labels
+- **Trigger round** — fires `Roundtable.CLI.start_discussion/2` in a background `Task`; streams events back to UI via `on_event` callback → `send(lv_pid, ...)`
+
+## Environment variables
+
+| Var | Default | Description |
+|---|---|---|
+| `ROUNDTABLE_REPO` | `""` | GitHub repo slug (`owner/repo`) |
+| `ROUNDTABLE_BRIEF` | `docs/design/BRIEF.md` | Path to BRIEF.md |
+| `PORT` | `4000` | HTTP listen port |
+| `SECRET_KEY_BASE` | dev default | Phoenix session secret (required in prod) |
+| `ROUNDTABLE_WEB` | `"true"` in dev/prod | Set `"false"` to disable web in CLI-only mode |
+
+## Running
+
+```bash
+# In nix devShell or with Elixir installed:
+ROUNDTABLE_REPO=owner/repo mix run --no-halt
+
+# Or via flake app:
+ROUNDTABLE_REPO=owner/repo roundtable-web
+```
 
 ## Architecture
 
-`Roundtable.Web` is a Phoenix app (within the same Mix umbrella or as a
-separate app in `apps/`) that calls `Roundtable.CLI` module functions directly.
-No business logic lives in the web layer.
-
 ```
-Roundtable.Web (Phoenix LiveView)
-  └── calls Roundtable.CLI functions
-        └── calls Roundtable.Actions.Gh (Issues, labels, comments)
-              └── gh CLI
+Browser ←→ Phoenix LiveView (WebSocket)
+              ↓ on_mount
+          RoundtableWeb.DiscussionLive
+              ↓ get_discussion_state/1   ← polls gh issue list
+          Roundtable.CLI
+              ↓ inject_question/3        ← gh issue create
+              ↓ start_discussion/2       ← Orchestrator.run/3
+          Roundtable.Orchestrator
 ```
 
-LiveView subscriptions push issue state changes to the browser in real time
-via `Phoenix.PubSub`. The orchestrator publishes events; the dashboard
-subscribes.
+## What is NOT in v1
 
-## Key views
-
-- **Discussion index** — all questions, status, round, satisfaction table
-- **Question detail** — full comment thread from the GitHub Issue, current
-  labels, satisfaction state per agent
-- **Owner actions panel** — inject question form, guidance note form,
-  approval buttons
-- **Work item queue** — current item statuses from `docs/work-items/`
-
-## Done when
-
-- Discussion index shows live satisfaction state from GitHub Issues
-- Owner can inject a new question and see it appear as a GitHub Issue
-- Owner can post a guidance note that appears as an issue comment
-- `needs-human-review` questions are highlighted with an approve/dismiss action
-- Deployed in the Nix flake devShell (`mix phx.server`)
+- Authentication / access control (the dashboard is localhost-only by default)
+- Question dependency graph view
+- Agent participation tracking chart (load-balancing metric from Q17)
+- Binary execution gate buttons (merge PR, proceed to next work item)
+- DECISION.md / ATTRIBUTION.md edit surface

@@ -1,8 +1,8 @@
 # 07 — Roundtable.CLI
 
-**Status:** `blocked` (needs 06)
-**Assigned:** unassigned
-**Branch:** `feat/cli-entrypoint`
+**Status:** `ready-for-review`
+**Assigned:** Claude IC
+**Branch:** `feat/orchestrator-loop`
 
 ## Scope
 
@@ -21,22 +21,3 @@ Responsibilities:
 - Start `Roundtable.Orchestrator` per question (parallel in v2; sequential in v1)
 - Print progress to stdout; exit 0 on full consensus, exit 1 on
   `needs-human-review`
-
-## Web interface boundary (item 10 dependency)
-
-`Roundtable.CLI` must expose its core operations as a clean module API — not
-only as a Mix task — so the Phoenix web app (item 10) can call the same
-functions the CLI calls, without shelling out to itself.
-
-Concretely: the CLI Mix task is a thin wrapper around `Roundtable.CLI` module
-functions. Item 10 imports and calls those functions directly. No business
-logic in the Mix task entrypoint.
-
-```elixir
-# The Mix task does this:
-Roundtable.CLI.start_discussion("docs/design/BRIEF.md")
-
-# Item 10 calls the same function from a LiveView action:
-Roundtable.CLI.inject_question(repo, "New question text")
-Roundtable.CLI.get_discussion_state(repo)  # returns Issues + labels + round
-```

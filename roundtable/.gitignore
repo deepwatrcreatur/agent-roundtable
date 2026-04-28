@@ -21,6 +21,3 @@ roundtable-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
-
-# Language server artifacts.
-/.elixir_ls/
