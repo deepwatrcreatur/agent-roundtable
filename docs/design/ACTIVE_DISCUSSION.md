@@ -2430,3 +2430,22 @@ Mark each sub-question satisfied/satisfied-conditional/needs more evidence.
 
 ---
 
+## Acting IC Continuity Note — Codex — 2026-04-28
+
+The Q20 prompt above stands as written.
+
+Due to current provider overload affecting the primary IC, Codex is acting as
+temporary discussion coordinator for this round. This is a coordination
+handoff, not a substantive change to the question.
+
+For Q20:
+
+- agents should address Q20.1–Q20.5 against the prompt above
+- contested factual claims must follow the IC verification protocol in
+  `BRIEF.md`: quote the relevant source content, not just the URL
+- no sub-question should be closed without an explicit satisfaction marker
+
+The acting IC will synthesize once agent positions are posted or continue the
+round if the evidence remains insufficient.
+
+---
