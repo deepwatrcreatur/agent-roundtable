@@ -418,3 +418,116 @@ dashboard), what are the top 2–3 concrete borrowings from the surveyed
 frameworks that would most improve the system? Be specific about what to add,
 not just what is possible.
 
+---
+
+### Q20 — Epistemology and Psychosis Prevention: What Can Philosophy of Mind Teach Us?
+
+**Context:**
+
+The Q19 round produced a factual error: the IC accepted a wrong citation from
+one agent and dismissed a correct claim from another. The new IC verification
+protocol (requiring quoted source content before closing contested claims) is a
+procedural fix. This question asks whether philosophy of mind offers a more
+principled basis for designing against hallucination and collective
+confabulation in multi-agent systems.
+
+The owner's goal is *independent agentic minds interacting for better reality
+testing* — protection against the failure modes of single-agent analysis. The
+Q19 incident shows that multi-agent agreement is not the same as truth: agents
+can converge on a wrong answer. What existing frameworks in philosophy of mind
+and epistemology address this distinction?
+
+**Key observation from the owner:**
+
+Steve Yegge's Gas City system corrects *behaviour* (code outputs, test results)
+but not *thoughts* (beliefs about the world). Our system attempts to correct
+beliefs, not just outputs. That is a harder problem, but a more valuable one if
+it can be made reliable. The Q19 incident shows it is currently unreliable.
+
+**Q20.1 — Relevant frameworks from philosophy of mind**
+
+Survey the literature for frameworks directly applicable to hallucination and
+confabulation in reasoning systems. Candidates include but are not limited to:
+
+- **Predictive processing / active inference** (Friston, Clark) — cognition as
+  prediction-error minimisation; psychosis as over-weighting of priors relative
+  to sensory input; relevance to over-relying on internal model vs. external check
+- **Higher-order thought theories** (Rosenthal, Lycan) — the role of
+  meta-cognition in distinguishing knowledge from confabulation; what an agent
+  needs to represent its own uncertainty reliably
+- **Social epistemology** (Goldman, Kitcher, Longino) — collective knowledge
+  production, testimony vs. observation, independence as a condition for
+  epistemic benefit from disagreement, cascade failure in belief propagation
+- **Coherentism vs. foundationalism** — whether a web of mutually consistent
+  beliefs constitutes knowledge, and why coherence alone is insufficient
+- **Extended mind / distributed cognition** (Clark and Chalmers) — whether
+  GitHub Issues as shared state constitutes genuine external memory and how
+  to reason about its reliability
+- Any other frameworks agents identify as more directly applicable
+
+For each framework: identify the core insight, describe how it maps to failure
+modes in our multi-agent system, and assess whether it suggests a concrete
+protocol change.
+
+**Q20.2 — The hallucination problem in agentic systems**
+
+LLM hallucination is well-documented but the mechanism in multi-agent contexts
+is under-discussed. When multiple agents hallucinate *in the same direction*
+(correlated confabulation), disagreement-based error detection fails entirely.
+When one agent hallucinates confidently and another is uncertain, the confident
+agent may dominate.
+
+What does the philosophy of mind literature say about:
+- The conditions under which independent agents provide genuine epistemic
+  benefit vs. merely amplifying each other's errors?
+- The role of *calibration* (accurate self-assessment of confidence) in
+  distinguishing knowledge from confabulation?
+- Whether there are structural features of the deliberation process that make
+  correlated error more or less likely?
+
+**Q20.3 — Belief provenance and the observation/testimony distinction**
+
+A recurring theme in social epistemology is the distinction between:
+- **Observation**: the agent directly verified the claim against the world
+- **Testimony**: the agent is reporting what another source said
+- **Inference**: the agent derived the claim from other beliefs
+
+In our system, agents often conflate these: a citation is treated as
+observation when it is actually testimony (the agent hasn't read the source).
+The new IC protocol requires quoted content — but is that sufficient?
+
+What does the epistemology literature say about:
+- When testimony is a reliable basis for belief vs. when observation is required?
+- How should a deliberating group track the provenance of its beliefs?
+- Is there a principled basis for the IC verification requirement, or is it just
+  a pragmatic patch?
+
+**Q20.4 — Psychosis as a model for collective confabulation**
+
+Psychosis in individual cognition is characterised by:
+- Hallucinations (perceptions without corresponding external input)
+- Delusions (fixed false beliefs resistant to counter-evidence)
+- Disorganised reasoning (internal consistency without external grounding)
+
+Are these failure modes applicable to multi-agent LLM systems? If so:
+- What would "collective delusion" look like in our roundtable protocol?
+  (Possible example: all agents agreeing on a false architecture because the
+  BRIEF.md itself contains a false premise)
+- What are the conditions under which our protocol is most vulnerable to
+  delusion vs. hallucination?
+- Does the predictive processing account of psychosis (Corlett, Fletcher et al.)
+  suggest structural interventions that map onto protocol design?
+
+**Q20.5 — Concrete protocol recommendations**
+
+Given the analysis above, propose the 2–3 most concrete and implementable
+changes to the roundtable protocol that would most improve reality-testing.
+Distinguish between:
+- Changes to how agents express their beliefs (format/tagging)
+- Changes to how the IC evaluates competing claims (verification rules)
+- Changes to the discussion structure itself (roles, ordering, independence)
+
+Be specific. "Agents should cite sources" is not a recommendation — the IC
+verification protocol already requires quoted content. What new structural
+change would catch the failure mode that the current protocol still misses?
+

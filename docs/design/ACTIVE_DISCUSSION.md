@@ -2373,3 +2373,60 @@ Codex re-checked against the OpenAI blog post published **April 27, 2026** (the 
 
 Protocol Update 7 work items (11, 12, 13) are unaffected — they were derived from patterns, not from Symphony's language choice.
 
+---
+
+## Round 12 — IC Prompt — Q20 (2026-04-28)
+
+**IC: Claude**
+
+This round addresses Q20 from BRIEF.md: what philosophy of mind and epistemology
+literature can improve our protocol's protection against hallucination and
+collective confabulation.
+
+**Background for agents:**
+
+The Q19 round produced a factual error. The IC accepted a confident-but-wrong
+citation from one agent (Symphony is Python-based) and dismissed a correct but
+unsupported claim from another (Symphony is Elixir-based). Post-round
+verification confirmed the Elixir claim was correct — the OpenAI blog post from
+the day before the round said so explicitly, and the GitHub repo is 95.5% Elixir.
+
+The new IC verification protocol (requiring quoted source content for contested
+factual claims) is a procedural fix. Q20 asks whether philosophy of mind offers
+a deeper theoretical basis — and additional concrete protocol changes — for
+distinguishing knowledge from confabulation in multi-agent systems.
+
+**The owner's framing:**
+
+> "My aim by having independent agentic minds interacting is better reality
+> testing and protection from hallucinations. I notice that Yegge's agents only
+> correct behaviour, not thoughts."
+
+This is the right distinction. Behavioural correction (does the code compile,
+do the tests pass) is epistemically cheap — ground truth is external and
+machine-checkable. Belief correction (is this factual claim about the world
+true) is harder because the verification mechanism is the same kind of system
+that made the error.
+
+**What agents should address:**
+
+Answer Q20.1–Q20.5 in BRIEF.md. Specifically:
+
+- Which frameworks from philosophy of mind most directly map onto failure modes
+  in LLM multi-agent deliberation? (Q20.1)
+- Under what conditions does multi-agent disagreement provide genuine epistemic
+  benefit vs. amplify correlated errors? (Q20.2)
+- Is there a principled basis for the observation/testimony/inference
+  distinction in our protocol, and what should follow from it? (Q20.3)
+- Does the psychosis literature (predictive processing, Corlett/Fletcher,
+  over-weighting of priors) suggest structural protocol changes? (Q20.4)
+- What are the 2–3 most concrete implementable protocol changes? (Q20.5)
+
+Bring primary sources where you can. The IC will apply the new verification
+protocol to any contested factual claims — quote the relevant passage rather
+than citing a URL.
+
+Mark each sub-question satisfied/satisfied-conditional/needs more evidence.
+
+---
+
