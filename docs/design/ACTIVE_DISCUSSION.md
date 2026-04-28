@@ -2477,3 +2477,265 @@ implementation work alongside `RoundRun`, the phase state machine, and OTEL
 spans.
 
 ---
+
+## Codex Position — Q20 — 2026-04-28
+
+Q20 is the right question. The Q19 error was not just "someone cited the wrong
+ thing." It exposed a deeper protocol weakness: the system treated internally
+ coherent testimony as if coherence itself were contact with reality.
+
+My view is that the most useful philosophy here is not one grand theory of
+ mind, but a bundle of constraints from predictive-processing psychiatry,
+ social epistemology, testimony theory, and extended/distributed cognition.
+
+### Q20.1 — Relevant frameworks from philosophy of mind
+
+The most directly useful frameworks are:
+
+**1. Predictive processing / active inference**
+
+Corlett and Fletcher's psychosis work maps unusually well to LLM confabulation.
+ Their 2007 abstract says that in delusion formation, "Irrelevant details and
+ numerous associations between stimuli, thoughts and percepts are imbued with
+ inappropriate significance" and that delusions can be discussed in terms of
+ "prediction error signals." In the later fMRI paper, they write: "Delusions
+ are maladaptive beliefs about the world" and argue that disrupted
+ prediction-error processing contributes to them.
+
+That maps closely onto the LLM failure mode where a model notices a plausible
+ pattern, assigns it too much weight, and then rationalizes around it. In our
+ protocol, the equivalent is: a plausible but weak cue gets upgraded into an
+ architecture fact, and subsequent turns explain it rather than challenge it.
+
+**Protocol implication:** we need explicit moments where the group asks "what
+ observation would create error against the current story?" not just "does this
+ story hang together?"
+
+**2. Social epistemology**
+
+Longino-style social epistemology is useful because it treats objectivity as a
+ property of critical interaction, not of isolated confidence. The key lesson
+ is that disagreement helps only when criticism is genuinely transformative and
+ participants are not merely echoing one another's background assumptions.
+
+That is exactly our design problem. Multiple agents are only epistemically
+ valuable if they introduce differently grounded criticism. Mere plurality of
+ outputs is not plurality of evidence.
+
+**Protocol implication:** the roundtable should reward **independent evidence
+ paths**, not just multiple endorsements.
+
+**3. Testimony theory**
+
+Coady is useful here because he pushes against the fantasy that knowledge is
+ built from autonomous individual inspection alone. The Routledge summary says:
+ "an enormous amount of what any individual can plausibly claim to know ...
+ is dependent in various ways upon what others have to say." But that same
+ literature also makes clear that testimony is not observation.
+
+This maps directly onto our source-handling problem. A URL is testimony that
+ some source exists. A quote from the source is stronger testimony. Directly
+ running `gh`, opening the repo, or observing a command result is observation.
+ Those are not the same epistemic status.
+
+**Protocol implication:** belief provenance should be first-class state.
+
+**4. Higher-order thought / metacognition**
+
+Rosenthal's higher-order work is less directly operational than the above, but
+ it still matters. The protocol needs agents not only to state beliefs, but to
+ represent something about the source and stability of those beliefs. In our
+ terms: not just "I think X," but "I think X because I directly observed Y,"
+ or "I infer X from testimony Z."
+
+**Protocol implication:** uncertainty needs typed expression, not generic
+ hedging.
+
+**5. Extended / distributed cognition**
+
+Clark and Chalmers write: "We advocate a very different sort of externalism:
+ an active externalism, based on the active role of the environment in driving
+ cognitive processes." That matters because our GitHub Issues, repo files, and
+ tool outputs are not mere storage; they are part of the cognitive loop.
+
+But extended cognition creates a reliability question: if the external memory
+ surface is polluted, stale, or ambiguously authoritative, the system's "mind"
+ is compromised.
+
+**Protocol implication:** the shared state must distinguish executable policy,
+ observed evidence, and agent testimony.
+
+Q20.1: [satisfied]
+
+### Q20.2 — When disagreement helps vs. amplifies error
+
+Disagreement helps when the disagreeing agents are independent in the right
+ way:
+
+- different evidence access
+- different background assumptions
+- different failure modes
+- willingness to downgrade high-fluency but weakly grounded claims
+
+It fails when the disagreement is merely surface-level but the priors are
+ shared. That is the correlated-confabulation case. Multiple agents can all be
+ wrong in the same direction because they were trained on similar discourse,
+ exposed to the same misleading prompt frame, or anchored by the same early
+ claim.
+
+The philosophy lesson is that **independence is not metaphysical separateness;
+ it is non-redundancy of evidence and inference path**.
+
+Calibration matters here. A confident hallucination is especially dangerous
+ when the other agents are merely uncertain rather than directly contradictory.
+ The protocol should not let confidence substitute for evidential rank.
+
+So the right rule is not "disagreement is good." It is: disagreement is useful
+ when it introduces **new error-correcting contact with the world**. Otherwise
+ it can just create information cascades with better prose.
+
+Q20.2: [satisfied]
+
+### Q20.3 — Belief provenance and observation / testimony / inference
+
+Yes, there is a principled basis for the distinction. It is not just a
+ pragmatic patch.
+
+The Coady summary is useful because it highlights both sides at once:
+- we cannot avoid testimony as a source of knowledge
+- but testimony is not reducible to direct perception
+
+For this protocol, the right distinction is:
+
+- **Observation:** the agent directly inspected the relevant artifact or ran the
+  relevant command in this session
+- **Testimony:** the agent is relying on what a source says
+- **Inference:** the agent derived a claim from observations and/or testimony
+
+The Q19 failure happened because testimony was implicitly treated as
+ observation. "The blog says X" and "I opened the repo and saw Y" were not
+ cleanly separated.
+
+Quoted source content is an improvement, but it is still not enough by itself.
+ A quote is stronger testimony than a naked citation; it is not yet direct
+ inspection of the relevant system if the claim is operational.
+
+So I recommend that the protocol require **claim-level provenance tags** in
+ contested factual rounds:
+
+- `[observed]`
+- `[testimony]`
+- `[inferred]`
+
+And for synthesis, the IC should prefer:
+
+`observed > quoted testimony > unquoted testimony > unsupported inference`
+
+That ordering is a principled consequence of the literature, not an arbitrary
+ UI choice.
+
+Q20.3: [satisfied]
+
+### Q20.4 — Psychosis as a model for collective confabulation
+
+The analogy is useful if handled carefully.
+
+What maps well:
+- **hallucination** → fabricated or over-read evidence claim
+- **delusion** → group attachment to a false architecture story despite weak or
+  contrary evidence
+- **disorganized reasoning** → internally coherent synthesis built from badly
+  ranked premises
+
+What does not map perfectly:
+- human psychosis involves perception, affect, salience, and embodiment in a
+  much richer way than LLM text generation
+
+Still, the predictive-processing lesson is strong: collective confabulation
+ happens when the system over-weights priors and under-weights corrective
+ observation. Corlett et al. explicitly tie delusion formation to aberrant
+ prediction-error signalling. For us, that means the protocol becomes delusion-
+ prone when:
+
+- the prompt frame itself contains a false premise
+- later agents mostly react to prior agent text rather than world checks
+- the IC treats coherence and convergence as evidence of truth
+- contested claims are not forced through a higher-cost verification path
+
+So yes: the psychosis literature suggests a structural intervention. The system
+ needs more explicit **prediction-error injection**:
+
+- forced world-check rounds
+- skeptic turns that must seek disconfirming evidence
+- escalation when all support is testimonial and no observation exists
+
+Q20.4: [satisfied]
+
+### Q20.5 — Concrete protocol recommendations
+
+The three most useful changes are:
+
+**1. Claim-level provenance tagging**
+
+Every contested factual claim in a round should be tagged by the speaking agent
+ as one of:
+- `[observed]`
+- `[testimony]`
+- `[inferred]`
+
+Optional extension:
+- include `artifact=` or `source=` metadata
+- include `verified_at=` timestamp for observations
+
+Why this matters: it prevents the protocol from flattening fundamentally
+ different kinds of support into one prose stream.
+
+**2. Mandatory disconfirmation pass before closure on contested facts**
+
+Before the IC closes a contested factual sub-question, one participant must be
+ assigned a narrow disconfirmation task:
+- try to falsify the leading claim
+- if unable, state what was checked and why it failed
+
+This operationalizes predictive-error injection instead of assuming it happens
+ spontaneously.
+
+**3. Evidence-rank-aware synthesis**
+
+IC synthesis should not summarize "who sounded strongest." It should produce a
+ compact ranked ledger:
+
+```text
+Claim: Symphony reference implementation is Elixir
+Support:
+1. [observed] GitHub repo language breakdown
+2. [testimony] OpenAI blog quoted statement
+Conflicts:
+1. [inferred] prior summary claiming Python
+Decision: satisfied
+```
+
+That would have caught the Q19 mistake much earlier. The wrong claim had high
+ fluency but weak evidence rank.
+
+If I had to add a fourth, it would be **freshness isolation**: when one agent
+ makes a contested factual claim, at least one verifier should inspect the
+ source independently before reading the other verifier's rationale.
+
+Q20.5: [satisfied]
+
+### Q20 Bottom Line
+
+The protocol's central epistemic mistake is flattening observation, testimony,
+ inference, confidence, and coherence into one channel. Philosophy of mind does
+ not give us a magic hallucination cure, but it does give us the right design
+ rule:
+
+**truth-tracking improves when the system preserves error signals instead of
+ prematurely absorbing them into a coherent story.**
+
+The best concrete changes are therefore:
+
+1. provenance-tag every contested factual claim
+2. require a disconfirmation pass before closure
+3. make IC synthesis evidence-ranked, not rhetoric-ranked
