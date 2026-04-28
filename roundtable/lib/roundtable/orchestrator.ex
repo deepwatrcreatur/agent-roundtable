@@ -101,7 +101,11 @@ defmodule Roundtable.Orchestrator do
       gh_config
     )
 
-    Gh.edit_issue_labels(question.issue_number, ["needs-human-review"], [], gh_config)
+    case Gh.edit_issue_labels(question.issue_number, ["needs-human-review"], [], gh_config) do
+      :ok -> :ok
+      {:error, reason} -> notify(opts, {:label_error, "needs-human-review", reason})
+    end
+
     notify(opts, {:question_max_rounds, question.id})
     %{question | state: :needs_human_review}
   end
@@ -109,33 +113,36 @@ defmodule Roundtable.Orchestrator do
   defp do_rounds(question, brief, agents, max_rounds, gh_config, opts, round) do
     notify(opts, {:round_start, question.id, round})
 
-    {:ok, issue} = Gh.view_issue(question.issue_number, [], gh_config)
+    case Gh.view_issue(question.issue_number, [], gh_config) do
+      {:error, reason} ->
+        notify(opts, {:gh_error, :view_issue, reason})
+        %{question | state: :needs_human_review}
 
-    final_issue =
-      Enum.reduce(agents, issue, fn agent, current_issue ->
-        case run_agent_turn(question.issue_number, current_issue, brief, agent, gh_config, opts) do
-          {:ok, updated_issue} ->
-            updated_issue
+      {:ok, issue} ->
+        final_issue =
+          Enum.reduce(agents, issue, fn agent, current_issue ->
+            case run_agent_turn(question.issue_number, current_issue, brief, agent, gh_config, opts) do
+              {:ok, updated_issue} -> updated_issue
+              {:error, reason} ->
+                notify(opts, {:agent_error, agent, reason})
+                current_issue
+            end
+          end)
 
-          {:error, reason} ->
-            notify(opts, {:agent_error, agent, reason})
-            current_issue
+        labels = extract_label_names(final_issue)
+
+        if Satisfaction.consensus?(labels) do
+          Gh.close_issue(
+            question.issue_number,
+            [comment: "All agents satisfied. Closed after #{round} round(s)."],
+            gh_config
+          )
+
+          notify(opts, {:question_satisfied, question.id, round})
+          %{question | state: :satisfied}
+        else
+          do_rounds(question, brief, agents, max_rounds, gh_config, opts, round + 1)
         end
-      end)
-
-    labels = extract_label_names(final_issue)
-
-    if Satisfaction.consensus?(labels) do
-      Gh.close_issue(
-        question.issue_number,
-        [comment: "All agents satisfied. Closed after #{round} round(s)."],
-        gh_config
-      )
-
-      notify(opts, {:question_satisfied, question.id, round})
-      %{question | state: :satisfied}
-    else
-      do_rounds(question, brief, agents, max_rounds, gh_config, opts, round + 1)
     end
   end
 
@@ -154,13 +161,18 @@ defmodule Roundtable.Orchestrator do
     case RunCliAgent.run(params, %{}) do
       {:ok, %{stdout: raw}} ->
         text = extract_text(raw, agent)
-        :ok = Gh.comment_issue(issue_number, format_comment(agent, text), gh_config)
-        notify(opts, {:agent_done, agent, issue_number})
 
-        label = detect_or_triage_label(issue_number, text, agent, gh_config, opts)
-        apply_label(issue_number, label, gh_config)
+        with :ok <- Gh.comment_issue(issue_number, format_comment(agent, text), gh_config) do
+          notify(opts, {:agent_done, agent, issue_number})
+          label = detect_or_triage_label(issue_number, text, agent, gh_config, opts)
 
-        Gh.view_issue(issue_number, [], gh_config)
+          case apply_label(issue_number, label, gh_config) do
+            :ok -> :ok
+            {:error, reason} -> notify(opts, {:label_error, label, reason})
+          end
+
+          Gh.view_issue(issue_number, [], gh_config)
+        end
 
       {:error, reason} ->
         {:error, reason}

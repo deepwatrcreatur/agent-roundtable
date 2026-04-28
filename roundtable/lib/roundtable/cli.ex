@@ -58,7 +58,12 @@ defmodule Roundtable.CLI do
 
   defp parse_flags([], acc), do: acc
   defp parse_flags(["--repo", repo | rest], acc), do: parse_flags(rest, [{:repo, repo} | acc])
-  defp parse_flags(["--max-rounds", n | rest], acc), do: parse_flags(rest, [{:max_rounds, String.to_integer(n)} | acc])
+  defp parse_flags(["--max-rounds", n | rest], acc) do
+    case Integer.parse(n) do
+      {int, ""} -> parse_flags(rest, [{:max_rounds, int} | acc])
+      _ -> parse_flags(rest, acc)
+    end
+  end
   defp parse_flags([_ | rest], acc), do: parse_flags(rest, acc)
 
   # ----------------------------------------------------------------
@@ -85,8 +90,7 @@ defmodule Roundtable.CLI do
   """
   @spec start_discussion(String.t(), keyword()) :: {:ok, list()} | {:error, term()}
   def start_discussion(brief_path, opts \\ []) do
-    with {:ok, brief} <- File.read(brief_path),
-         {:ok, questions} <- load_or_create_issues(brief, brief_path, opts) do
+    with {:ok, questions} <- load_or_create_issues(brief_path, opts) do
       results = Orchestrator.run(brief_path, questions, opts)
       {:ok, results}
     end
@@ -164,7 +168,7 @@ defmodule Roundtable.CLI do
 
   # Reads BRIEF.md for existing issue mappings in ACTIVE_DISCUSSION.md
   # or creates new issues for questions that have no issue yet.
-  defp load_or_create_issues(_brief, brief_path, opts) do
+  defp load_or_create_issues(brief_path, opts) do
     repo = Keyword.get(opts, :repo)
     gh_config = %{repo: repo}
 
@@ -213,8 +217,11 @@ defmodule Roundtable.CLI do
             case Gh.create_issue(trimmed_title, trimmed_body, ["roundtable", "needs-more-evidence"], gh_config) do
               {:ok, issue_number} ->
                 IO.puts("Created issue ##{issue_number} for #{trimmed_title}")
-                id = Regex.run(~r/Q\d+/, trimmed_title) |> List.first()
-                {:ok, %{id: id || trimmed_title, issue_number: issue_number, state: :open}}
+                id = case Regex.run(~r/Q\d+/, trimmed_title) do
+                  [match | _] -> match
+                  _ -> trimmed_title
+                end
+                {:ok, %{id: id, issue_number: issue_number, state: :open}}
 
               {:error, reason} ->
                 {:error, reason}

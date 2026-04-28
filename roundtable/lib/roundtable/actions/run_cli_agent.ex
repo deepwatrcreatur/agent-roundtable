@@ -15,6 +15,16 @@ defmodule Roundtable.Actions.RunCliAgent do
              Application.get_env(:roundtable, :cmd_runner, Roundtable.SystemCmdRunner)
 
     case build_command(params) do
+      {:ok, {cmd, args, exec_opts, tmp}} ->
+        result =
+          case runner.cmd(cmd, args, exec_opts) do
+            {stdout, 0} -> {:ok, %{stdout: stdout}}
+            {stdout, status} -> {:error, {:command_failed, status, stdout}}
+          end
+
+        File.rm(tmp)
+        result
+
       {:ok, {cmd, args, exec_opts}} ->
         case runner.cmd(cmd, args, exec_opts) do
           {stdout, 0} -> {:ok, %{stdout: stdout}}
@@ -41,7 +51,7 @@ defmodule Roundtable.Actions.RunCliAgent do
       :ok ->
         cmd = params[:cli_path] || "codex"
         args = ["exec", tmp, "--json"]
-        {:ok, {cmd, args, [cd: root, stderr_to_stdout: true]}}
+        {:ok, {cmd, args, [cd: root, stderr_to_stdout: true], tmp}}
 
       {:error, reason} ->
         {:error, {:tmp_file_write_failed, reason}}

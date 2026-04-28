@@ -142,8 +142,7 @@ defmodule Roundtable.Actions.Gh do
   defp maybe_repo_args(nil), do: []
   defp maybe_repo_args(repo), do: ["-R", repo]
 
-  defp maybe_add_repo(args, nil), do: args
-  defp maybe_add_repo(args, repo), do: args ++ ["-R", repo]
+  defp maybe_add_repo(args, repo), do: args ++ maybe_repo_args(repo)
 
   defp maybe_add_comments(args, true), do: args ++ ["--comments"]
   defp maybe_add_comments(args, false), do: args

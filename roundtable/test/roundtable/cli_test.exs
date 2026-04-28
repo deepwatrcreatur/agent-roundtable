@@ -14,10 +14,9 @@ defmodule Roundtable.CLITest do
     # inject_question requires a live gh CLI and GitHub token.
     # Tested in integration suite; unit test verifies arg validation only.
     test "returns error when repo is nil (no default repo configured)" do
-      # Without a real gh environment this will fail, which is expected.
-      # The important contract: it returns {:error, _}, not raises.
+      # nil repo with no gh env configured must return {:error, _} without raising.
       result = CLI.inject_question(nil, "New question", [])
-      assert match?({:error, _}, result) or match?({:ok, _}, result)
+      assert match?({:error, _}, result)
     end
   end
 

@@ -3,21 +3,6 @@ defmodule Roundtable.OrchestratorTest do
 
   alias Roundtable.Orchestrator
 
-  # Helpers to build fake issue JSON
-  defp issue(labels \\ []) do
-    label_maps = Enum.map(labels, &%{"name" => &1})
-    %{
-      "title" => "Q1 — Test question",
-      "body" => "Describe the system",
-      "state" => "OPEN",
-      "labels" => label_maps,
-      "comments" => [],
-      "url" => "https://github.com/owner/repo/issues/1"
-    }
-  end
-
-  defp json(map), do: JSON.encode!(map)
-
   setup do
     brief_path = Path.join(System.tmp_dir!(), "test_brief_#{System.unique_integer()}.md")
     File.write!(brief_path, "# Brief\n\n### Q1 — Test question\n\nDescribe the system.\n")
@@ -40,17 +25,11 @@ defmodule Roundtable.OrchestratorTest do
   end
 
   describe "run_question/6 with fake runner" do
-    test "closes issue when all agents reply [satisfied]", %{brief_path: brief_path} do
-      events = []
-      agent_ref = make_ref()
-      parent = self()
-
-      # We can't easily inject the runner into RunCliAgent without a process,
-      # so we test the satisfaction detection path via Application env.
-      # This is an integration-boundary test that verifies the loop terminates.
-      # Full end-to-end requires a live gh CLI; tested in integration suite.
-      assert is_binary(brief_path)
+    # Full end-to-end requires a live gh CLI and is covered by the integration suite.
+    # This placeholder verifies the brief file fixture is set up correctly.
+    test "brief fixture is valid", %{brief_path: brief_path} do
       assert File.exists?(brief_path)
+      assert String.contains?(File.read!(brief_path), "Q1")
     end
   end
 
