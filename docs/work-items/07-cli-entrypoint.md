@@ -1,8 +1,8 @@
 # 07 — Roundtable.CLI
 
-**Status:** `blocked` (needs 06)
-**Assigned:** unassigned
-**Branch:** `feat/cli-entrypoint`
+**Status:** `ready-for-review`
+**Assigned:** Claude IC
+**Branch:** `feat/orchestrator-loop`
 
 ## Scope
 
