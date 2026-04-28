@@ -67,6 +67,42 @@ defmodule Roundtable.Actions.Gh do
     end
   end
 
+  @spec list_issues(keyword(), config()) :: {:ok, [map()]} | {:error, error_reason()}
+  def list_issues(opts \\ [], config \\ %{}) do
+    state = Keyword.get(opts, :state, "open")
+    label = Keyword.get(opts, :label)
+
+    args =
+      ["issue", "list", "--state", state, "--json",
+       "number,title,state,labels,url,comments"]
+      |> maybe_add_repo(config[:repo])
+      |> maybe_add_option("--label", label)
+
+    with {:ok, stdout} <- run(args, config),
+         {:ok, decoded} <- decode_json(stdout) do
+      {:ok, decoded}
+    end
+  end
+
+  @spec create_issue(String.t(), String.t(), [label()], config()) ::
+          {:ok, pos_integer()} | {:error, error_reason()}
+  def create_issue(title, body, labels, config \\ %{}) do
+    label_flag = if labels != [], do: ["--label", Enum.join(labels, ",")], else: []
+
+    args =
+      ["issue", "create", "--title", title, "--body", body] ++
+        label_flag ++
+        maybe_repo_args(config[:repo])
+
+    with {:ok, stdout} <- run(args, config) do
+      # gh issue create outputs the issue URL; extract the number from it
+      case Regex.run(~r|/issues/(\d+)|, String.trim(stdout)) do
+        [_, n] -> {:ok, String.to_integer(n)}
+        _ -> {:error, {:unexpected_output, stdout}}
+      end
+    end
+  end
+
   @spec close_issue(issue_number(), keyword(), config()) :: :ok | {:error, error_reason()}
   def close_issue(issue_number, opts \\ [], config \\ %{}) do
     args =
@@ -103,8 +139,10 @@ defmodule Roundtable.Actions.Gh do
     end
   end
 
-  defp maybe_add_repo(args, nil), do: args
-  defp maybe_add_repo(args, repo), do: args ++ ["-R", repo]
+  defp maybe_repo_args(nil), do: []
+  defp maybe_repo_args(repo), do: ["-R", repo]
+
+  defp maybe_add_repo(args, repo), do: args ++ maybe_repo_args(repo)
 
   defp maybe_add_comments(args, true), do: args ++ ["--comments"]
   defp maybe_add_comments(args, false), do: args
