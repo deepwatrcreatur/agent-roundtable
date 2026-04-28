@@ -1,26 +1,245 @@
 defmodule Roundtable.CLI do
   @moduledoc """
-  Entry point for the roundtable CLI.
+  Public API and CLI entry point for the roundtable orchestrator.
+
+  This module exposes three functions used by both the Mix task entry point
+  and the Phoenix LiveView web dashboard (item 10):
+
+    * `start_discussion/2` — parse BRIEF.md, load or create GitHub Issues for
+      each question, then run the orchestrator loop.
+    * `get_discussion_state/1` — return current satisfaction state for all open
+      issues in the given repo, keyed by issue number.
+    * `inject_question/3` — create a new GitHub Issue from a question string
+      and return its issue number.
+
+  ## Mix task entry point
+
+      mix run -e 'Roundtable.CLI.main(["docs/design/BRIEF.md"])'
+      # or via flake app wrapper:
+      roundtable docs/design/BRIEF.md
   """
 
+  alias Roundtable.Actions.Gh
+  alias Roundtable.Orchestrator
+
+  # ----------------------------------------------------------------
+  # Mix task / shell entry point
+  # ----------------------------------------------------------------
+
+  @doc false
   def main(args) do
     case parse_args(args) do
-      {:ok, brief_path} ->
-        run_roundtable(brief_path)
+      {:ok, {brief_path, opts}} ->
+        case start_discussion(brief_path, opts) do
+          {:ok, results} ->
+            IO.puts("\nDiscussion complete.")
+            Enum.each(results, fn r ->
+              IO.puts("  #{r.id} (issue ##{r.issue_number}): #{r.state}")
+            end)
+
+          {:error, reason} ->
+            IO.puts("Error: #{inspect(reason)}")
+            System.halt(1)
+        end
+
       {:error, reason} ->
         IO.puts("Error: #{reason}")
+        IO.puts("Usage: roundtable <brief.md> [--repo owner/repo] [--max-rounds N]")
         System.halt(1)
     end
   end
 
-  defp parse_args([path]), do: {:ok, path}
-  defp parse_args(_), do: {:error, "Usage: roundtable <brief.md>"}
+  defp parse_args([]), do: {:error, "brief path required"}
 
-  defp run_roundtable(brief_path) do
-    IO.puts("Starting roundtable for #{brief_path}...")
-    # 1. Parse BRIEF.md (placeholder)
-    # 2. Initialize Jido Agent
-    # 3. Run the loop
-    :ok
+  defp parse_args([brief_path | rest]) do
+    opts = parse_flags(rest, [])
+    {:ok, {brief_path, opts}}
+  end
+
+  defp parse_flags([], acc), do: acc
+  defp parse_flags(["--repo", repo | rest], acc), do: parse_flags(rest, [{:repo, repo} | acc])
+  defp parse_flags(["--max-rounds", n | rest], acc), do: parse_flags(rest, [{:max_rounds, String.to_integer(n)} | acc])
+  defp parse_flags([_ | rest], acc), do: parse_flags(rest, acc)
+
+  # ----------------------------------------------------------------
+  # Public module API (used by web dashboard)
+  # ----------------------------------------------------------------
+
+  @doc """
+  Starts a discussion for the given BRIEF.md.
+
+  Reads the `## Questions` section of the brief to discover questions.
+  For each question, finds or creates a GitHub Issue. Then runs the
+  orchestrator loop to completion.
+
+  Returns `{:ok, [result]}` where each result is
+  `%{id: String.t(), issue_number: pos_integer(), state: atom()}`.
+
+  ## Options
+
+    * `:repo` — GitHub repo slug (`"owner/repo"`); required unless `gh`
+      defaults to the current repo
+    * `:max_rounds` — integer (default 5)
+    * `:agents` — list of agent atoms (default `[:codex, :gemini, :claude_ic]`)
+    * `:on_event` — `(event -> any)` progress callback
+  """
+  @spec start_discussion(String.t(), keyword()) :: {:ok, list()} | {:error, term()}
+  def start_discussion(brief_path, opts \\ []) do
+    with {:ok, brief} <- File.read(brief_path),
+         {:ok, questions} <- load_or_create_issues(brief, brief_path, opts) do
+      results = Orchestrator.run(brief_path, questions, opts)
+      {:ok, results}
+    end
+  end
+
+  @doc """
+  Returns the current discussion state for a repo.
+
+  Queries all open GitHub Issues labelled with roundtable markers and
+  returns a map of `issue_number => state_map` where `state_map` has:
+
+    * `:title` — issue title
+    * `:state` — `:open` | `:closed`
+    * `:labels` — list of label name strings
+    * `:comment_count` — integer
+    * `:satisfaction` — `:satisfied | :satisfied_conditional | :needs_more_evidence | :unknown`
+    * `:url` — issue URL
+  """
+  @spec get_discussion_state(String.t()) :: {:ok, map()} | {:error, term()}
+  def get_discussion_state(repo) do
+    gh_config = %{repo: repo}
+
+    case Gh.list_issues([state: "all", label: "roundtable"], gh_config) do
+      {:ok, issues} ->
+        state =
+          Map.new(issues, fn issue ->
+            labels = Enum.map(issue["labels"] || [], & &1["name"])
+            {
+              issue["number"],
+              %{
+                title: issue["title"],
+                state: if(issue["state"] == "OPEN", do: :open, else: :closed),
+                labels: labels,
+                comment_count: length(issue["comments"] || []),
+                satisfaction: infer_satisfaction(labels),
+                url: issue["url"]
+              }
+            }
+          end)
+
+        {:ok, state}
+
+      {:error, _} = err ->
+        err
+    end
+  end
+
+  @doc """
+  Creates a new GitHub Issue for an injected question and returns its number.
+
+  The issue is labelled `roundtable` so it is discoverable by
+  `get_discussion_state/1`.
+  """
+  @spec inject_question(String.t(), String.t(), keyword()) ::
+          {:ok, pos_integer()} | {:error, term()}
+  def inject_question(repo, question_text, opts \\ []) do
+    gh_config = %{repo: repo}
+    title = question_text |> String.split("\n") |> List.first() |> String.slice(0, 120)
+    body = "#{question_text}\n\n*Injected via roundtable web interface.*"
+
+    case Gh.create_issue(title, body, ["roundtable", "needs-more-evidence"], gh_config) do
+      {:ok, issue_number} ->
+        on_event = Keyword.get(opts, :on_event)
+        if on_event, do: on_event.({:question_injected, issue_number, title})
+        {:ok, issue_number}
+
+      {:error, _} = err ->
+        err
+    end
+  end
+
+  # ----------------------------------------------------------------
+  # Private helpers
+  # ----------------------------------------------------------------
+
+  # Reads BRIEF.md for existing issue mappings in ACTIVE_DISCUSSION.md
+  # or creates new issues for questions that have no issue yet.
+  defp load_or_create_issues(_brief, brief_path, opts) do
+    repo = Keyword.get(opts, :repo)
+    gh_config = %{repo: repo}
+
+    # Look for ACTIVE_DISCUSSION.md next to BRIEF.md
+    discussion_path = Path.join(Path.dirname(brief_path), "ACTIVE_DISCUSSION.md")
+
+    existing = load_issue_index(discussion_path)
+
+    if map_size(existing) > 0 do
+      questions =
+        Enum.map(existing, fn {id, issue_number} ->
+          %{id: id, issue_number: issue_number, state: :open}
+        end)
+
+      {:ok, questions}
+    else
+      # No index found — create issues from BRIEF.md questions
+      create_issues_from_brief(brief_path, gh_config)
+    end
+  end
+
+  # Parses ACTIVE_DISCUSSION.md for lines like:
+  #   | Q1 | #12 | ... |
+  # Returns %{"Q1" => 12, ...}
+  defp load_issue_index(path) do
+    case File.read(path) do
+      {:ok, content} ->
+        Regex.scan(~r/\|\s*(Q\d+)\s*\|\s*#(\d+)/, content)
+        |> Enum.into(%{}, fn [_, id, num] -> {id, String.to_integer(num)} end)
+
+      {:error, _} ->
+        %{}
+    end
+  end
+
+  # Creates GitHub Issues for each ### Q\d+ section heading in BRIEF.md.
+  defp create_issues_from_brief(brief_path, gh_config) do
+    case File.read(brief_path) do
+      {:ok, content} ->
+        questions =
+          Regex.scan(~r/###\s+(Q\d+[^\n]*)\n+(.*?)(?=\n###|\z)/ms, content)
+          |> Enum.map(fn [_, title, body] ->
+            trimmed_title = String.trim(title)
+            trimmed_body = String.trim(body)
+
+            case Gh.create_issue(trimmed_title, trimmed_body, ["roundtable", "needs-more-evidence"], gh_config) do
+              {:ok, issue_number} ->
+                IO.puts("Created issue ##{issue_number} for #{trimmed_title}")
+                id = Regex.run(~r/Q\d+/, trimmed_title) |> List.first()
+                {:ok, %{id: id || trimmed_title, issue_number: issue_number, state: :open}}
+
+              {:error, reason} ->
+                {:error, reason}
+            end
+          end)
+
+        errors = Enum.filter(questions, &match?({:error, _}, &1))
+
+        if errors == [] do
+          {:ok, Enum.map(questions, fn {:ok, q} -> q end)}
+        else
+          {:error, {:issue_creation_failed, errors}}
+        end
+
+      {:error, reason} ->
+        {:error, {:brief_read_failed, reason}}
+    end
+  end
+
+  defp infer_satisfaction(labels) do
+    cond do
+      "needs-more-evidence" in labels -> :needs_more_evidence
+      "satisfied-conditional" in labels -> :satisfied_conditional
+      "satisfied" in labels -> :satisfied
+      true -> :unknown
+    end
   end
 end
