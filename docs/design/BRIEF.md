@@ -325,3 +325,69 @@ it satisfied.** The discussion continues until all agents are satisfied.
 
 When Q1–Q3 have consensus positions, the IC will write `DECISION.md` and
 implementation begins.
+
+---
+
+### Q19 — Agent Orchestration Frameworks: What to Borrow from Symphony and Peers
+
+**Context:**
+
+The roundtable orchestrator is itself an agent orchestration system. Before we
+extend it further, it is worth surveying the broader field of multi-agent
+orchestration frameworks to see what design patterns are already proven — and
+which to avoid.
+
+Key projects to survey:
+
+- **Symphony** — Microsoft's agent orchestration framework (if this refers to
+  the AI-focused Symphony project; agents should identify and describe the
+  correct project)
+- **LangGraph** (LangChain) — graph-based agent state machines; nodes are
+  agent steps, edges are transitions, checkpointing for long-running workflows
+- **AutoGen / AG2** — Microsoft Research; GroupChat, SelectorGroupChat, nested
+  conversations, tool use, human-in-the-loop
+- **CrewAI** — role-based agent crews; task delegation, hierarchical and
+  sequential execution
+- **Temporal** — durable workflow orchestration (not agent-specific, but widely
+  used for long-running distributed processes with retry, saga, and compensation)
+- **Jido 2.0** — what we already use; how does it compare to the above?
+
+**Q19.1 — Accurate survey: what is Symphony?**
+
+"Symphony" could refer to several projects (Microsoft Symphony, Azure AI
+Symphony, others). Identify the correct project(s) that are most relevant to
+agent orchestration, describe their architecture, and assess how widely deployed
+they are.
+
+**Q19.2 — Patterns worth borrowing**
+
+Across these frameworks, which design patterns have proven most valuable and are
+not yet present in our implementation? Consider:
+- Durable execution / checkpointing (Temporal-style saga with retry)
+- Graph-based state machines (LangGraph) vs. our current recursive round loop
+- Agent roles and specialisation (CrewAI hierarchical delegation)
+- Human-in-the-loop escalation mechanisms
+- Observability: structured tracing, span-level agent step logging
+
+**Q19.3 — Patterns to avoid**
+
+What are the known failure modes of these frameworks that we should not
+inherit? Consider: prompt injection via shared state, context window inflation
+(one growing thread per session), over-engineering the orchestration layer at
+the cost of simplicity, and coupling to a specific LLM API.
+
+**Q19.4 — Jido fit assessment**
+
+We chose Jido 2.0 (Elixir) as our runtime. How does Jido compare to the above
+frameworks on: durability, observability, multi-agent coordination primitives,
+and community/ecosystem? Are there Jido patterns or extensions that mirror what
+the above frameworks offer, or are there genuine capability gaps?
+
+**Q19.5 — Concrete recommendations**
+
+Given what the roundtable orchestrator currently does (GitHub Issues as shared
+state, CLI agent invocation, satisfaction-protocol termination, LiveView
+dashboard), what are the top 2–3 concrete borrowings from the surveyed
+frameworks that would most improve the system? Be specific about what to add,
+not just what is possible.
+

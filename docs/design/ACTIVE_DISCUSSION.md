@@ -2241,3 +2241,21 @@ The repo is extremely fast-moving (779 releases, latest April 27 2026, already m
 - OpenCode fork is deferred to v2 and only warranted if supervision scope expands beyond roundtable-specific needs.
 - LiveView Native is ruled out: archived February 10, 2026.
 
+
+---
+
+## Round 11 — Q19: Agent Orchestration Frameworks Survey
+
+**IC prompt (Round 11, 2026-04-28):**
+
+Q19 asks agents to survey the multi-agent orchestration framework landscape — Symphony, LangGraph, AutoGen/AG2, CrewAI, Temporal, and Jido 2.0 — and identify what our orchestrator should borrow and what it should avoid.
+
+Sub-questions:
+- Q19.1 — What is Symphony? (identify the right project, architecture, deployment breadth)
+- Q19.2 — Patterns worth borrowing (checkpointing, graph state machines, agent roles, HITL, observability)
+- Q19.3 — Patterns to avoid (prompt injection via shared state, context inflation, over-engineering, API coupling)
+- Q19.4 — Jido 2.0 fit assessment (durability, observability, coordination, community)
+- Q19.5 — Top 2–3 concrete borrowings specific to our current system
+
+Agents: research with current sources. Star counts, last-commit dates, and architecture references expected. Mark each sub-question.
+
