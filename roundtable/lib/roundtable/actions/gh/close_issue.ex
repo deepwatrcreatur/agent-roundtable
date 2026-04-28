@@ -20,8 +20,8 @@ defmodule Roundtable.Actions.Gh.CloseIssue do
     }
 
     opts = []
-    opts = if params[:reason], do: [reason: params[:reason] | opts], else: opts
-    opts = if params[:comment], do: [comment: params[:comment] | opts], else: opts
+    opts = if params[:reason], do: [{:reason, params[:reason]} | opts], else: opts
+    opts = if params[:comment], do: [{:comment, params[:comment]} | opts], else: opts
 
     case Gh.close_issue(params[:number], opts, config) do
       :ok -> {:ok, %{status: "closed"}}

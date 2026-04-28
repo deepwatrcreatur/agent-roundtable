@@ -146,6 +146,8 @@ defmodule Roundtable.CLI do
   """
   @spec inject_question(String.t(), String.t(), keyword()) ::
           {:ok, pos_integer()} | {:error, term()}
+  def inject_question(nil, _question_text, _opts), do: {:error, :no_repo_configured}
+
   def inject_question(repo, question_text, opts \\ []) do
     gh_config = %{repo: repo}
     title = question_text |> String.split("\n") |> List.first() |> String.slice(0, 120)

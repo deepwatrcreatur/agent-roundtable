@@ -4,8 +4,8 @@ defmodule Roundtable.Satisfaction do
   """
 
   @markers [
-    {"satisfied", "satisfied"},
     {"satisfied-conditional", "satisfied-conditional"},
+    {"satisfied", "satisfied"},
     {"needs more evidence", "needs-more-evidence"}
   ]
 

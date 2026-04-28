@@ -7,6 +7,8 @@ defmodule Roundtable.Application do
 
   @impl true
   def start(_type, _args) do
+    Roundtable.RoundRun.init()
+
     children =
       [
         {Phoenix.PubSub, name: Roundtable.PubSub},

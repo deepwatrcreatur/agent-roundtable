@@ -5,4 +5,5 @@ config :roundtable, RoundtableWeb.Endpoint,
   server: false
 
 config :roundtable, web_enabled: false
+config :roundtable, state_dir: "/tmp/roundtable_test_state"
 config :logger, level: :warning
