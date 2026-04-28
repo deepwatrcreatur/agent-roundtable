@@ -1,8 +1,8 @@
 # 08 — flake.nix
 
-**Status:** `blocked` (needs 01)
+**Status:** `ready`
 **Assigned:** Codex
-**Branch:** `feat/scaffold` (part of item 01)
+**Branch:** `feat/flake-pins`
 
 ## Scope
 

@@ -233,17 +233,63 @@ before or alongside those questions.
 
 ---
 
-## How To Contribute a Position
+### Q18 — Mobile Agent Supervision
 
-Write a signed position to `ACTIVE_DISCUSSION.md` in this directory. Address
-one or more questions above with primary evidence (CLI help output, source code
-references, or live test results). Follow the format in the discussion file.
+The web dashboard (item 10) solves the laptop/desktop relay problem. But the
+owner also wants to supervise rounds from a phone or iPad — watching progress,
+injecting questions, and triggering new rounds while away from a desk.
 
-Mark each question you address as `[satisfied]`, `[satisfied-conditional: X]`,
-or `[needs more evidence: X]` at the end of your position.
+The common pattern in the community today is SSH via Termius + Tailscale into a
+running Claude Code session. That works but is awkward on small screens and
+requires a persistent terminal session.
 
-**The IC will not close any question until all contributing agents have marked
-it satisfied.** The discussion continues until all agents are satisfied.
+The LiveView dashboard is already a step forward. But browser-on-iPhone is a
+poor form factor for ongoing supervision. A native or near-native mobile
+interface is desirable.
+
+**Q18.1 — State of the art for mobile agent supervision**
+
+What do developers actually use today to supervise CLI agents from mobile
+devices? Survey the landscape: Termius/Tailscale SSH, purpose-built apps
+(e.g. Prompt, Blink, ShellFish), web-based dashboards, and any native iOS/
+Android agent apps that have emerged. What works well and what is the hardest
+part to replicate without a terminal?
+
+**Q18.2 — Phoenix LiveView's mobile interface options**
+
+LiveView's WebSocket connection is built on Phoenix Channels. Can a native iOS
+or Android app connect to Phoenix Channels directly and drive the same event
+model the browser uses (`phx-click`, `phx-submit`, server pushes)? Are there
+maintained Swift/Kotlin Phoenix Channel client libraries? What does a minimal
+native client need to implement to replace the LiveView browser session?
+
+Alternatively: should we expose a lightweight REST + Server-Sent Events (SSE)
+or WebSocket JSON API alongside LiveView, so any HTTP client (Shortcuts, a
+custom app, or an existing tool) can poll state and send commands without a
+browser?
+
+**Q18.3 — Minimum viable mobile supervision feature set**
+
+Given the use cases — watch a round run, receive a push alert when consensus is
+reached or when human review is needed, inject a question, trigger a round —
+what is the minimum interface that covers them? Which of these require
+real-time push and which can be poll-based? Is there an existing app
+(e.g. ntfy.sh, Pushover, Home Assistant, a custom Shortcut) that already covers
+the alerting half without any custom native code?
+
+**Q18.4 — Recommended path: native, PWA, or companion API**
+
+Should the project:
+(a) Make the LiveView dashboard a Progressive Web App (PWA) with offline cache
+    and home-screen install — covers iPad well, partial phone coverage,
+    zero native code;
+(b) Expose a JSON/SSE companion API and document it so the owner can build a
+    Shortcut or small SwiftUI app;
+(c) Invest in a Phoenix Channels Swift client and a purpose-built iOS app;
+(d) Rely on push notifications via ntfy.sh / Pushover triggered by orchestrator
+    events, with the browser dashboard for any action that needs a screen?
+
+What is the minimum useful step versus the ideal end state?
 
 ---
 

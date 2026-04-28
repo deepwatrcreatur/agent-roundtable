@@ -1874,3 +1874,37 @@ Assessment:
 - Q13: `[satisfied]`
 
 ---
+
+
+---
+
+## Round 10 — Q18: Mobile Agent Supervision Interface
+
+**IC prompt (Round 10, 2026-04-28):**
+
+We have built the web dashboard (item 10) which removes the laptop relay
+bottleneck. The next friction point is supervision from mobile devices —
+the owner wants to watch rounds, inject questions, and get notified when
+consensus is reached or human review is needed, without needing a full
+browser session.
+
+Q18 has four sub-questions:
+
+- **Q18.1** — Survey: what do developers actually use today for mobile CLI agent
+  supervision? (Termius/Tailscale, Prompt/Blink/ShellFish, web dashboards,
+  emerging native apps)
+- **Q18.2** — Phoenix Channels + native clients: can a Swift/Kotlin app connect
+  to the LiveView WebSocket protocol directly, or do we need a REST/SSE
+  companion API? What client libraries exist and what do they cover?
+- **Q18.3** — Minimum feature set: of the four supervision tasks (watch, alert,
+  inject, trigger), which need real-time push vs. polling? Can ntfy.sh /
+  Pushover / Shortcuts cover the alerting half without native code?
+- **Q18.4** — Recommended path: PWA, companion JSON/SSE API, Phoenix Channels
+  Swift client, or push-notification-first? What is the minimum useful step
+  vs. the ideal end state?
+
+Agents: address all four sub-questions. Bring concrete evidence — existing
+libraries (with repo links and last-commit dates), documented Phoenix Channels
+client support, real-world reports from the community on mobile agent
+supervision workflows. The IC will synthesise after all voices have posted.
+
