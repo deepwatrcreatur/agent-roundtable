@@ -275,3 +275,73 @@ Authentication: bearer token in `Authorization` header; token set via `ROUNDTABL
 
 Apple Shortcuts can drive Inject and Trigger against the companion API with no native app required.
 
+
+---
+
+## Protocol Update 7 — Orchestrator Structural Improvements (Q19, 2026-04-28)
+
+**Decision:** Three concrete structural improvements derived from the agent orchestration framework survey (Symphony, LangGraph, AutoGen/AG2, CrewAI, Temporal).
+
+### New work items to implement (items 11, 12, 13)
+
+**Item 11 — `Roundtable.RoundRun` persisted state**
+```elixir
+%Roundtable.RoundRun{
+  issue_number: pos_integer(),
+  phase: :awaiting_turns | :triage_missing_markers | :consensus_check
+        | :closed | :needs_human_review | :needs_human_input,
+  expected_speakers: [atom()],
+  completed_speakers: [atom()],
+  last_comment_ids: [String.t()],
+  satisfaction_map: %{atom() => atom()},
+  retry_count: non_neg_integer()
+}
+```
+Persisted to ETS + periodic flush to `state/` git-tracked directory. On restart, reconcile from `gh issue view --json labels,state,comments`.
+
+**Item 12 — Explicit phase state machine in `Roundtable.Orchestrator`**
+Replace recursive `do_rounds/7` with named phase transition functions. Each phase function is pure: takes `RoundRun`, returns `{next_run, [effect]}`. Effects (gh calls, CLI invocations) are applied separately. Makes phases testable and replay-safe.
+
+Phase transitions:
+```
+:awaiting_turns
+  → all expected speakers completed → :triage_missing_markers
+  → max_rounds exceeded → :needs_human_review
+
+:triage_missing_markers
+  → all markers present → :consensus_check
+  → IC triage completes → :consensus_check
+
+:consensus_check
+  → all [satisfied|satisfied-conditional], no [needs-more-evidence] → :closed
+  → any [needs-more-evidence] → :awaiting_turns (next round)
+  → max_rounds → :needs_human_review
+
+:needs_human_input  (new — HITL interrupt)
+  → operator approves/dismisses → resumes from suspended phase
+```
+
+**Item 13 — OTEL span taxonomy**
+Define and emit spans for each orchestrator event:
+```
+roundtable.issue.poll       — gh issue view call
+roundtable.agent.turn       — RunCliAgent invocation (includes agent, issue_number)
+roundtable.gh.comment       — gh issue comment post
+roundtable.satisfaction.parse — marker extraction from agent response
+roundtable.ic.triage        — IC classification call
+roundtable.consensus.check  — Satisfaction.consensus? evaluation
+roundtable.issue.close      — gh issue close
+```
+Wire via Jido telemetry. Export to OTEL collector in prod; log to structured stdout in dev.
+
+### LiveView dashboard updates (item 10 extension)
+- Display current `RoundRun.phase` per question alongside satisfaction badge
+- Show `completed_speakers` vs `expected_speakers` progress
+- Add approve/dismiss button for `:needs_human_input` phase
+
+### What was ruled out
+- Importing LangGraph, Temporal, or AutoGen as runtimes — borrow patterns, not runtimes
+- Conductor pre-stage (Symphony-style agent selector) — deferred to v2
+- Directed IC routing (re-invoke specific agent) — deferred to v2
+- Replacing Jido with another runtime — Jido is the right substrate
+
