@@ -2,7 +2,6 @@ defmodule Roundtable.OrchestratorTest do
   use ExUnit.Case, async: true
 
   alias Roundtable.Orchestrator
-  alias Roundtable.TestSupport.FakeRunner
 
   # Helpers to build fake issue JSON
   defp issue(labels \\ []) do

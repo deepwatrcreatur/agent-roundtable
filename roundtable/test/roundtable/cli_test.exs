@@ -21,7 +21,7 @@ defmodule Roundtable.CLITest do
     end
   end
 
-  describe "infer_satisfaction (via get_discussion_state)" do
+  describe "module API exports" do
     # get_discussion_state requires gh CLI; tested via satisfaction label inference
     # which is exposed indirectly. We verify the module loads and exports the right API.
     test "module exports start_discussion/2" do
