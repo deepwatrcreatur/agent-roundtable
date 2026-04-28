@@ -21,13 +21,7 @@ defmodule Roundtable.Application do
   end
 
   defp web_enabled? do
-    Mix.env() in [:dev, :prod] or System.get_env("ROUNDTABLE_WEB") == "true"
-  end
-
-  defp web_port do
-    case System.get_env("PORT") do
-      nil -> 4000
-      p -> String.to_integer(p)
-    end
+    Application.get_env(:roundtable, :web_enabled, true) or
+      System.get_env("ROUNDTABLE_WEB") == "true"
   end
 end

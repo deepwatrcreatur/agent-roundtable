@@ -43,6 +43,12 @@ defmodule RoundtableWeb.DiscussionLive do
   end
 
   @impl true
+  def handle_info({:roundtable_event, {:round_complete, _n} = event}, socket) do
+    msg = format_event(event)
+    {:noreply, assign(socket, running: false, flash_msg: msg)}
+  end
+
+  @impl true
   def handle_info({:roundtable_event, event}, socket) do
     msg = format_event(event)
     {:noreply, assign(socket, :flash_msg, msg)}
@@ -93,13 +99,8 @@ defmodule RoundtableWeb.DiscussionLive do
         send(lv_pid, {:roundtable_event, {:round_complete, length(questions)}})
       end)
 
-      {:noreply, assign(socket, :running, true, :flash_msg, "Round started…")}
+      {:noreply, assign(socket, running: true, flash_msg: "Round started…")}
     end
-  end
-
-  @impl true
-  def handle_event("set_inject_text", %{"value" => v}, socket) do
-    {:noreply, assign(socket, :inject_text, v)}
   end
 
   @impl true
@@ -144,13 +145,11 @@ defmodule RoundtableWeb.DiscussionLive do
         <form phx-submit="inject_question" style="display: flex; gap: 0.5rem; align-items: flex-start;">
           <textarea
             name="text"
-            value={@inject_text}
-            phx-keyup="set_inject_text"
             placeholder="New question text…"
             rows="3"
             style="flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 6px;
                    color: #c9d1d9; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.9rem; resize: vertical;"
-          />
+          >{@inject_text}</textarea>
           <button type="submit" style={btn_style(:primary)}>Add</button>
         </form>
       </section>

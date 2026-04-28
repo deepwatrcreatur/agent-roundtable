@@ -1,6 +1,12 @@
 defmodule RoundtableWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :roundtable
 
+  @session_options [
+    store: :cookie,
+    key: "_roundtable_key",
+    signing_salt: "roundtable_session_salt"
+  ]
+
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
   plug Plug.Static,
