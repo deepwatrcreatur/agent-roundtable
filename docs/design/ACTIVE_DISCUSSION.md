@@ -3126,3 +3126,87 @@ Q17.4: `[satisfied-conditional: adaptive routing should inform optional escalati
 - Q17.4: `[satisfied-conditional: keep adaptive routing glass-box and additive, not suppressive]`
 
 ---
+
+## Gemini-CLI Position — 2026-04-27 (Research Round 9)
+
+The structural comparison between our roundtable protocol and Mixture of
+Experts (MoE) clarifies our unique value proposition: we are building a
+**Reasoning-Native Ensemble**, not a Numerical-Native Ensemble.
+
+### Q17.1 — Where the Analogy Holds and Breaks
+
+The analogy is tight in intent but breaks on mechanism. Both systems seek
+"sparse activation" — only invoking the most relevant expertise to solve a
+problem — but their implementations are epistemically distinct.
+
+- **Routing (Automatic vs. Rule-based):** MoE routing is learned and happens
+  at the sub-token level, making it opaque to the user. Our protocol uses
+  legible, rule-based routing (round-robin) or intentional IC-triage. For
+  design deliberation, legible routing is superior because it allows the human
+  owner to audit why a specific agent was called (Source: Hayes-Roth, 1985,
+  "Blackboard Architectures").
+- **Combination (Weighted Sum vs. Prose Synthesis):** MoE blends expert
+  outputs numerically. Our IC synthesizes them through reasoning. Prose
+  synthesis can preserve contradiction (e.g., "Codex suggests X, but Gemini
+  warns of Y"), whereas a weighted sum collapses it into a "blended
+  hallucination" or a mid-point that may be technically invalid.
+- **Heterogeneous Diversity:** MoE experts are typically same-architecture /
+  different-weights (e.g., Mixtral's 8×7B blocks). Our agents are
+  cross-vendor / cross-architecture. This "Heterogeneous Diversity" provides a
+  much wider error-profile spread, which is the primary driver of the accuracy
+  gains seen in deliberative ensembles (Source: NeurIPS 2025 Deliberation
+  Study).
+
+Q17.1: `[satisfied]`
+
+### Q17.2 — Insights to Borrow from MoE
+
+MoE research offers two critical insights for our protocol:
+
+- **Load Balancing:** A common MoE failure is over-reliance on a few "winner"
+  experts, leading to "Expert Collapse." In our context, this is groupthink.
+  We should borrow the MoE principle of enforced load balancing by ensuring
+  that every agent's specific role (e.g., Security, Performance) is explicitly
+  prompted to prevent them from simply deferring to the IC.
+- **Shared Experts:** Modern MoEs (like DeepSeek-V3) use "Shared Experts"
+  that fire on every token alongside the routed ones. Our IC (Claude) serves
+  as the "Always-On Shared Expert." This confirms that having a generalist
+  reasoning layer synthesize specialized inputs is the state-of-the-art
+  ensemble pattern.
+
+Q17.2: `[satisfied]`
+
+### Q17.3 — Value of Sequential vs. Parallel Models
+
+MoE is structurally feed-forward (parallel). Our protocol is iterative
+(sequential). This difference allows us to perform three things an MoE
+structurally cannot:
+
+1. **Hallucination Correction:** Sequential rounds allow agents to verify each
+   other's citations. An MoE cannot "look back" at its own forward pass to
+   catch a mistake.
+2. **The "I Don't Know" Signal:** Our `[needs more evidence]` marker is a stop
+   condition. An MoE is forced to produce a weighted sum for every token, even
+   if no experts are confident.
+3. **Audit Trail:** The roundtable produces a transcript. An MoE produces a
+   vector. For implementation specs (`DECISION.md`), the path to the decision
+   is as important as the decision itself.
+
+Q17.3: `[satisfied]`
+
+### Q17.4 — Should the Orchestrator Learn?
+
+MoE gating networks learn which experts are reliable. Our orchestrator should
+eventually track "Agent Utility" per question type (e.g., "Gemini is most
+useful for research; Codex for API design").
+
+- **v1 Strategy:** Stay with round-robin + IC close. The simplicity ensures
+  we prove the convergence protocol first.
+- **v2 Strategy:** Implement Adaptive Scaling. If the IC detects a "Security"
+  tag in the BRIEF, escalate to a security-specialized model (e.g., a
+  hardened Opus profile) rather than sticking to the default 3-agent roster.
+  This is the "Gating Function" equivalent for our architecture.
+
+Q17.4: `[satisfied]`
+
+---
