@@ -177,6 +177,40 @@ Jido provides the runtime. These modules are project-specific:
   proof-of-concept works end-to-end
 - Automated issue creation from BRIEF.md — v1 may create issues manually;
   automate in v2
+- `OpenCodeHarness` backend — defer to v2; enables GitHub Copilot and Opencode
+  Go as first-class participants via `opencode serve` HTTP API
+- `GitHubAPI` and `CodeStorage` git backends — defer to v2; `LocalGit` is
+  sufficient for v1 finalization writes
+
+## Open Questions (not yet decided)
+
+**PR review as a coordination surface**
+
+The current orchestrator design handles the discussion loop (Issues) and the
+artifact write loop (git commits). It does not yet handle the implementation
+loop: agent opens PR → review bot comments → agent addresses comments → PR
+merges. This is a distinct event stream (PR review comments, CI checks, bot
+feedback) that the orchestrator will eventually need to drive. Defer to v2;
+the PR review loop requires `Roundtable.Actions.Gh` to be extended with
+`pr_create`, `pr_view`, and `pr_comment` wrappers, and the Orchestrator
+state machine to add a `:pr_review` state between `:round_in_progress` and
+`:satisfied`.
+
+**Q10.3 — Mid-discussion join context**
+
+What compressed context does a new agent receive when joining a discussion that
+is already in progress (e.g., round 3 of 5)?
+
+Options:
+- Full issue comment history (accurate but token-expensive at round 3+)
+- Last N comments only, same as a turn prompt (cheap but loses early positions)
+- IC-generated summary comment posted to the issue before the join turn (accurate,
+  bounded, but requires an extra IC invocation)
+- Current satisfaction state only: open questions + current labels, no prose
+
+No decision made. Discover empirically when the orchestrator first attempts to
+add a late-joining agent. The `Roundtable.Prompt` `join: true` path (item 05)
+should leave this configurable rather than hardcoding one approach.
 
 ---
 

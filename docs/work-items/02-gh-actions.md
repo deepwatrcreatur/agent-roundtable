@@ -1,7 +1,6 @@
 # 02 — Roundtable.Actions.Gh
 
-**Status:** `ready`
-**Assigned:** Gemini
+**Status:** `ready-for-review` (Gemini)
 **Branch:** `feat/gh-actions`
 
 ## Scope
