@@ -59,6 +59,7 @@ defmodule Roundtable.RoundRunTest do
         :awaiting_turns,
         :triage_missing_markers,
         :consensus_check,
+        :coordinator_unavailable,
         :needs_human_input,
         :closed,
         :needs_human_review
@@ -256,6 +257,166 @@ defmodule Roundtable.RoundRunTest do
 
       run = RoundRun.build_from_issue(42, [:codex, :gemini], issue)
       assert run.completed_speakers == [:codex]
+    end
+
+    test "infers :coordinator_unavailable from label" do
+      issue = %{
+        "state" => "open",
+        "labels" => [%{"name" => "coordinator-unavailable"}],
+        "comments" => []
+      }
+
+      run = RoundRun.build_from_issue(42, [], issue)
+      assert run.phase == :coordinator_unavailable
+    end
+  end
+
+  # ------------------------------------------------------------------
+  # Coordinator lease / failover
+  # ------------------------------------------------------------------
+
+  describe "claim_coordinator/3" do
+    test "claims when no coordinator is active" do
+      run = RoundRun.new(@test_issue, [:codex])
+      assert {:ok, claimed} = RoundRun.claim_coordinator(run, :claude_ic, 300)
+
+      assert claimed.coordinator == :claude_ic
+      assert %DateTime{} = claimed.coordinator_lease_expires_at
+      assert %DateTime{} = claimed.last_progress_at
+    end
+
+    test "fails when an active coordinator holds a valid lease" do
+      run = RoundRun.new(@test_issue, [:codex])
+      {:ok, run} = RoundRun.claim_coordinator(run, :claude_ic, 300)
+
+      assert {:error, :coordinator_active} = RoundRun.claim_coordinator(run, :codex, 300)
+    end
+
+    test "succeeds when existing lease has expired" do
+      run = RoundRun.new(@test_issue, [:codex])
+      past = DateTime.add(DateTime.utc_now(), -10, :second)
+
+      run = %{
+        run
+        | coordinator: :claude_ic,
+          coordinator_lease_expires_at: past
+      }
+
+      assert {:ok, claimed} = RoundRun.claim_coordinator(run, :codex, 300)
+      assert claimed.coordinator == :codex
+    end
+  end
+
+  describe "heartbeat/2" do
+    test "refreshes lease expiry and last_progress_at" do
+      run = RoundRun.new(@test_issue, [:codex])
+      {:ok, run} = RoundRun.claim_coordinator(run, :claude_ic, 10)
+      old_expires = run.coordinator_lease_expires_at
+
+      Process.sleep(2)
+      refreshed = RoundRun.heartbeat(run, 300)
+
+      assert DateTime.compare(refreshed.coordinator_lease_expires_at, old_expires) == :gt
+      assert DateTime.compare(refreshed.last_progress_at, run.last_progress_at) == :gt
+    end
+  end
+
+  describe "coordinator_timed_out?/2" do
+    test "returns false when no lease set" do
+      run = RoundRun.new(@test_issue, [:codex])
+      refute RoundRun.coordinator_timed_out?(run, DateTime.utc_now())
+    end
+
+    test "returns false before expiry" do
+      run = RoundRun.new(@test_issue, [:codex])
+      {:ok, run} = RoundRun.claim_coordinator(run, :claude_ic, 300)
+
+      refute RoundRun.coordinator_timed_out?(run, DateTime.utc_now())
+    end
+
+    test "returns true after expiry" do
+      run = RoundRun.new(@test_issue, [:codex])
+      {:ok, run} = RoundRun.claim_coordinator(run, :claude_ic, 300)
+      future = DateTime.add(DateTime.utc_now(), 400, :second)
+
+      assert RoundRun.coordinator_timed_out?(run, future)
+    end
+  end
+
+  describe "enter_coordinator_unavailable/1" do
+    test "suspends current phase and transitions to :coordinator_unavailable" do
+      run = RoundRun.new(@test_issue, [:codex]) |> RoundRun.put_phase(:consensus_check)
+      {:ok, run} = RoundRun.claim_coordinator(run, :claude_ic, 300)
+
+      unavailable = RoundRun.enter_coordinator_unavailable(run)
+
+      assert unavailable.phase == :coordinator_unavailable
+      assert unavailable.suspended_phase == :consensus_check
+      assert unavailable.coordinator == nil
+      assert unavailable.coordinator_lease_expires_at == nil
+    end
+  end
+
+  describe "takeover/2" do
+    test "resumes suspended phase with new coordinator" do
+      run =
+        RoundRun.new(@test_issue, [:codex])
+        |> RoundRun.put_phase(:consensus_check)
+        |> RoundRun.enter_coordinator_unavailable()
+
+      assert {:ok, resumed} = RoundRun.takeover(run, :codex)
+
+      assert resumed.phase == :consensus_check
+      assert resumed.coordinator == :codex
+      assert resumed.suspended_phase == nil
+      assert resumed.takeover_count == 1
+    end
+
+    test "increments takeover_count on each takeover" do
+      run =
+        RoundRun.new(@test_issue, [:codex])
+        |> RoundRun.enter_coordinator_unavailable()
+
+      {:ok, run} = RoundRun.takeover(run, :codex)
+      run = RoundRun.enter_coordinator_unavailable(run)
+      {:ok, run} = RoundRun.takeover(run, :gemini)
+
+      assert run.takeover_count == 2
+    end
+
+    test "returns error when no suspended phase" do
+      run = RoundRun.new(@test_issue, [:codex])
+      assert {:error, :no_suspended_phase} = RoundRun.takeover(run, :codex)
+    end
+  end
+
+  describe "coordinator fields JSON round-trip" do
+    test "coordinator fields survive persist/load cycle" do
+      run = RoundRun.new(@test_issue, [:codex, :gemini])
+      {:ok, run} = RoundRun.claim_coordinator(run, :claude_ic, 300)
+      run = %{run | takeover_count: 1}
+
+      assert :ok = RoundRun.persist(run)
+      :ets.delete(:roundtable_round_runs, @test_issue)
+      assert {:ok, loaded} = RoundRun.load(@test_issue)
+
+      assert loaded.coordinator == :claude_ic
+      assert %DateTime{} = loaded.coordinator_lease_expires_at
+      assert %DateTime{} = loaded.last_progress_at
+      assert loaded.takeover_count == 1
+    end
+
+    test "nil coordinator fields round-trip as nil" do
+      run = RoundRun.new(@test_issue, [:codex])
+      assert :ok = RoundRun.persist(run)
+      :ets.delete(:roundtable_round_runs, @test_issue)
+      assert {:ok, loaded} = RoundRun.load(@test_issue)
+
+      assert loaded.coordinator == nil
+      assert loaded.coordinator_lease_expires_at == nil
+      assert loaded.last_progress_at == nil
+      assert loaded.suspended_phase == nil
+      assert loaded.takeover_count == 0
     end
   end
 end
