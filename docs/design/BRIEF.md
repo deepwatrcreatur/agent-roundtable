@@ -192,6 +192,13 @@ platform is clearly better, why?
 
 ### Q5 — Shared State Medium: Filesystem Blackboard vs GitHub Issues (blocking)
 
+> **Note (2026-04-28):** Q23 reopens the core assumption of this question.
+> The original framing assumed discussion and service code live in the same
+> repo. Q23 proposes they are separate repos. Under that model, the
+> concurrent-write problem motivating GitHub Issues (multiple CLI processes
+> writing to the same file simultaneously) does not apply — the orchestrator
+> is a single server-side process. Read Q5 alongside Q23.
+
 The current design uses a markdown file (`ACTIVE_DISCUSSION.md`) committed to
 git as the shared state. This was inherited from the prior blackboard model,
 where it worked well for human-paced discussions. For automated turn-taking it
@@ -730,3 +737,163 @@ For whichever you recommend: describe what new abstractions the codebase needs
 (adapter interface, auth middleware, backup job), and which are work items for
 the next sprint.
 
+
+---
+
+### Q23 — Discussion Repos as First-Class Citizens: Architecture and Storage Model
+
+**Context and motivation (2026-04-28):**
+
+The current implementation conflates two things: the *service* (the Elixir app
+that runs the orchestrator) and the *discussion* (the questions, debate, and
+decisions). Both live in `agent-roundtable/`. This coupling prevents the core
+social feature the owner wants: a discussion that is forkable on GitHub,
+selectable as an entry point from the app, shareable with collaborators, and
+optionally private.
+
+The owner's intent:
+
+> "Each roundtable belongs in a GitHub repository that can be entered into the
+> app and selected as entry point for prompts — forkable by people interested
+> in their own follow-up discussions, possible to give people permission to
+> participate, and also the option to make the discussion repo private."
+
+Additionally, the owner notes:
+
+> "There is now an opportunity to revisit the suitability or need to use the
+> GitHub Issues infrastructure as an integral part of our system."
+
+This question addresses both: what should a discussion repo look like, and does
+GitHub Issues remain the right live-discussion medium under this new model?
+
+**The GitHub Issues fork problem:**
+
+When a GitHub repository is forked, Issues are **not copied** to the fork.
+A fork of a discussion repo whose history lives primarily in Issues would
+arrive empty of discussion history. For discussions to be genuinely forkable
+at a point in time, the durable record must be in **committed files**, not
+issues. This fundamentally changes the storage model from the Q5 decision.
+
+**The concurrent-write assumption revisited:**
+
+Q5 chose GitHub Issues partly to avoid merge conflicts from simultaneous
+agent writes. But in the current architecture, agents are invoked sequentially
+by a single server-side orchestrator process — there is no concurrent write
+problem. The orchestrator controls all writes; it can commit files in sequence
+without races.
+
+**Q23.1 — Discussion repo standard structure**
+
+Define the canonical layout for a standalone discussion repository:
+
+```
+<discussion-repo>/
+├── BRIEF.md            # Questions (read by the app)
+├── DECISION.md         # IC decisions (written by the app)
+├── rounds/
+│   ├── round-01.md     # Full IC synthesis committed after each closed round
+│   ├── round-02.md
+│   └── ...
+└── README.md           # Optional: human description of what this discussion is
+```
+
+Assess: is this layout sufficient? Should `BRIEF.md` use frontmatter (YAML/TOML)
+for machine-readable question IDs, status, and agent configuration? Should there
+be a `roundtable.toml` config file in the repo root specifying agents, max rounds,
+and other orchestration parameters — removing those from the service app config?
+
+**Q23.2 — Revisiting GitHub Issues: necessary, optional, or removed?**
+
+Given that:
+- The concurrent-write problem that motivated Issues is resolved by a
+  single-process orchestrator
+- Issues don't fork, so they cannot carry discussion history to a forked repo
+- The file-based approach (`rounds/round-NN.md`) provides a richer, diffs-friendly,
+  git-native archive than issue comment threads
+
+Is there still a role for GitHub Issues in the architecture? Consider:
+
+(a) **Fully file-based:** Discussion lives entirely in committed files. The
+orchestrator reads `BRIEF.md`, writes `rounds/`, commits after each round.
+No Issues. Labels and state live in YAML frontmatter of `BRIEF.md` or
+`DECISION.md`. No `gh` CLI dependency for the discussion layer.
+
+(b) **Issues as optional notification layer only:** Files are the canonical
+store. Issues are optionally opened as lightweight "discussion thread" pointers
+— one issue per question, linking to the relevant round files — to give GitHub
+notification infrastructure and comment threading for human participants.
+The orchestrator does not depend on Issues for its state machine.
+
+(c) **Hybrid (current model evolved):** Issues remain the live-orchestration
+layer during a round; after IC closes a question, the synthesis is committed
+to a `rounds/` file. The repo contains both. Forks inherit the file history
+but not the Issues. Forkers can then run new rounds.
+
+(d) **Something else.**
+
+For each option: describe how the orchestrator reads current state, how it
+writes a round result, what breaks if GitHub is unavailable, and what a fork
+receives.
+
+**Q23.3 — Service app changes for discussion repo adoption**
+
+The app currently takes a local `BRIEF.md` file path as input. Under the new
+model, it needs to accept a GitHub repo slug (`owner/repo`) and work against
+that repo.
+
+Design the `DiscussionRepo` model for the app:
+- How does a user register a discussion repo in the LiveView dashboard?
+- How does the app read `BRIEF.md` — via `gh api` / GitHub REST, or by
+  cloning the repo locally?
+- When the IC closes a question, how does the app commit `DECISION.md` and
+  the round file — via `git` operations, GitHub API (`PUT /repos/:owner/:repo/
+  contents/:path`), or by push from a local working copy?
+- What credentials are required (GitHub token with `contents:write`)?
+- How are multiple discussion repos managed — can the app track several repos
+  simultaneously and let the user switch between them?
+
+**Q23.4 — Forkability mechanics**
+
+Describe the end-to-end fork-and-continue flow:
+
+1. An interested person forks a discussion repo on GitHub
+2. They run their own instance of the roundtable service (or use a shared
+   hosted instance the owner makes available)
+3. They register their fork as a discussion repo in the app
+4. They inject new questions or trigger new rounds on their fork
+5. The fork's round files diverge from the upstream discussion
+
+What does the app need to support this flow? Specifically:
+- Does the app need to track `fork_of` provenance (pointing to the upstream
+  repo and commit)?
+- Should the app allow a fork's new rounds to be submitted as a PR to the
+  upstream discussion repo?
+- How does a collaborator (with `repo:write` access) participate in an
+  existing discussion rather than forking — what is their auth flow?
+
+**Q23.5 — Migration path from current architecture**
+
+The current `agent-roundtable` repo contains both service code and the design
+discussion (BRIEF.md, ACTIVE_DISCUSSION.md, DECISION.md). Propose:
+
+- How to migrate the existing discussion files out of the service repo into a
+  standalone discussion repo
+- Whether the existing GitHub Issues (current discussion threads) can or
+  should be migrated, or simply left as-is while new discussions use the
+  file-based model
+- What existing code modules need the most significant rework: `Roundtable.CLI`,
+  `Roundtable.Orchestrator`, `Roundtable.Actions.Gh` (which currently assumes
+  Issues as the live state medium), and `Roundtable.RoundRun` (currently
+  persists to a local `state/` directory)
+- A prioritised list of work items for the transition
+
+**Constraints for Q23:**
+- The service app itself stays in `agent-roundtable` (or a renamed service repo)
+- Discussion repos must work as ordinary GitHub repos (no special GitHub App
+  or webhook required to read them — a GitHub token with read access is enough)
+- The solution must remain compatible with the owner's homelab deployment
+  (self-hosted service, Authentik for auth, Mega S4 for backups)
+- Brief premise challenge required before closing (per Protocol Update 9):
+  *What if the discussion repo model makes it harder, not easier, for
+  contributors to participate? E.g. friction of finding the right repo, forking
+  vs. collaborating ambiguity, no single canonical discussion URL?*
