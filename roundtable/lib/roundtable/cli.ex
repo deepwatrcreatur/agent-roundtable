@@ -270,6 +270,7 @@ defmodule Roundtable.CLI do
       "needs-more-evidence" in labels -> :needs_more_evidence
       "satisfied-conditional" in labels -> :satisfied_conditional
       "satisfied" in labels -> :satisfied
+      "no-objection" in labels -> :no_objection
       true -> :unknown
     end
   end

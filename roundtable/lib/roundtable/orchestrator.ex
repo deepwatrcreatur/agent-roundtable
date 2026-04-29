@@ -63,9 +63,10 @@ defmodule Roundtable.Orchestrator do
   @default_max_takeovers 2
 
   @label_conflicts %{
-    "satisfied" => ["needs-more-evidence", "satisfied-conditional"],
-    "satisfied-conditional" => ["needs-more-evidence", "satisfied"],
-    "needs-more-evidence" => ["satisfied", "satisfied-conditional"]
+    "satisfied" => ["needs-more-evidence", "satisfied-conditional", "no-objection"],
+    "satisfied-conditional" => ["needs-more-evidence", "satisfied", "no-objection"],
+    "no-objection" => ["needs-more-evidence", "satisfied", "satisfied-conditional"],
+    "needs-more-evidence" => ["satisfied", "satisfied-conditional", "no-objection"]
   }
 
   @type effect ::
@@ -350,11 +351,7 @@ defmodule Roundtable.Orchestrator do
   defp satisfaction_map_to_labels(sat_map) do
     sat_map
     |> Map.values()
-    |> Enum.map(fn
-      :satisfied -> "satisfied"
-      :satisfied_conditional -> "satisfied-conditional"
-      :needs_more_evidence -> "needs-more-evidence"
-    end)
+    |> Enum.map(&satisfaction_to_label/1)
     |> Enum.uniq()
   end
 
@@ -425,6 +422,7 @@ defmodule Roundtable.Orchestrator do
 
   defp label_string_to_atom("satisfied"), do: :satisfied
   defp label_string_to_atom("satisfied-conditional"), do: :satisfied_conditional
+  defp label_string_to_atom("no-objection"), do: :no_objection
   defp label_string_to_atom("needs-more-evidence"), do: :needs_more_evidence
   defp label_string_to_atom(_), do: nil
 
@@ -897,6 +895,7 @@ defmodule Roundtable.Orchestrator do
 
   defp satisfaction_to_label(:satisfied), do: "satisfied"
   defp satisfaction_to_label(:satisfied_conditional), do: "satisfied-conditional"
+  defp satisfaction_to_label(:no_objection), do: "no-objection"
   defp satisfaction_to_label(:needs_more_evidence), do: "needs-more-evidence"
   defp satisfaction_to_label(other), do: to_string(other)
 
