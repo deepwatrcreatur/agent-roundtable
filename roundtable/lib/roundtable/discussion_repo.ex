@@ -1,0 +1,88 @@
+defmodule Roundtable.DiscussionRepo do
+  @moduledoc """
+  Represents a GitHub repository that holds a roundtable discussion.
+
+  A discussion repo follows the canonical layout (Q23 / Protocol Update 10):
+
+      roundtable.toml    — machine config: agents, max_rounds, coordinator
+      BRIEF.md           — questions
+      DECISION.md        — IC decisions written after each round closes
+      rounds/            — one committed file per closed round
+      .roundtable/state/ — transient RoundRun JSON snapshots (gitignored)
+
+  ## Backend
+
+  The `backend` field determines which `DiscussionRepo.Backend` implementation
+  handles all I/O. Default is `Roundtable.Adapters.GitHub`. Swap to a stub
+  in tests or to `Roundtable.Adapters.Forgejo` for a self-hosted deployment.
+
+  ## Usage
+
+      repo = DiscussionRepo.new("owner/my-discussion", token: System.get_env("GH_TOKEN"))
+      {:ok, brief} = DiscussionRepo.read_file(repo, "BRIEF.md")
+  """
+
+  @type t :: %__MODULE__{
+          gh_slug: String.t(),
+          local_path: String.t() | nil,
+          token: String.t() | nil,
+          issues_enabled: boolean(),
+          head_sha: String.t() | nil,
+          backend: module(),
+          config: map()
+        }
+
+  defstruct [
+    :gh_slug,
+    :local_path,
+    :token,
+    :head_sha,
+    issues_enabled: false,
+    backend: Roundtable.Adapters.GitHub,
+    config: %{}
+  ]
+
+  @doc """
+  Build a `DiscussionRepo` from a GitHub slug (`"owner/repo"`).
+
+  ## Options
+
+  - `:token`          — GitHub PAT; when nil the `gh` CLI's ambient auth is used
+  - `:local_path`     — local working-copy path (optional; used for git operations)
+  - `:issues_enabled` — whether the GitHub Issues overlay is active (default `false`)
+  - `:backend`        — the `Backend` module to use (default `Adapters.GitHub`)
+  """
+  @spec new(String.t(), keyword()) :: t()
+  def new(gh_slug, opts \\ []) do
+    %__MODULE__{
+      gh_slug: gh_slug,
+      token: Keyword.get(opts, :token),
+      local_path: Keyword.get(opts, :local_path),
+      issues_enabled: Keyword.get(opts, :issues_enabled, false),
+      head_sha: nil,
+      backend: Keyword.get(opts, :backend, Roundtable.Adapters.GitHub),
+      config: Keyword.get(opts, :config, %{})
+    }
+  end
+
+  @doc "Read a file at `path` using the configured backend."
+  @spec read_file(t(), String.t()) :: {:ok, binary()} | {:error, term()}
+  def read_file(%__MODULE__{backend: backend} = repo, path),
+    do: backend.read_file(repo, path)
+
+  @doc "Write `content` to `path`, committing with `message`."
+  @spec write_file(t(), String.t(), binary(), String.t()) ::
+          {:ok, t()} | {:error, term()}
+  def write_file(%__MODULE__{backend: backend} = repo, path, content, message),
+    do: backend.write_file(repo, path, content, message)
+
+  @doc "List entry names at `path` (non-recursive)."
+  @spec list_files(t(), String.t()) :: {:ok, [String.t()]} | {:error, term()}
+  def list_files(%__MODULE__{backend: backend} = repo, path),
+    do: backend.list_files(repo, path)
+
+  @doc "Return `true` if the repo contains a `roundtable.toml`."
+  @spec valid?(t()) :: boolean()
+  def valid?(%__MODULE__{backend: backend} = repo),
+    do: backend.discussion_repo?(repo)
+end
