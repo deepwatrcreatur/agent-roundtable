@@ -31,6 +31,7 @@ defmodule Roundtable.Orchestrator do
   alias Roundtable.Actions.RunCliAgent
   alias Roundtable.Satisfaction
   alias Roundtable.Prompt
+  alias Roundtable.Telemetry
 
   @default_agents [:codex, :gemini, :claude_ic]
   @default_max_rounds 5
@@ -95,6 +96,7 @@ defmodule Roundtable.Orchestrator do
 
   defp do_rounds(question, _brief, _agents, max_rounds, gh_config, opts, round)
        when round > max_rounds do
+    Telemetry.issue_close(question.issue_number, round - 1, :max_rounds)
     Gh.comment_issue(
       question.issue_number,
       "**Roundtable:** Max rounds (#{max_rounds}) reached without consensus. Flagging for human review.",
@@ -113,6 +115,8 @@ defmodule Roundtable.Orchestrator do
   defp do_rounds(question, brief, agents, max_rounds, gh_config, opts, round) do
     notify(opts, {:round_start, question.id, round})
 
+    Telemetry.issue_poll(question.issue_number, gh_config[:repo])
+
     case Gh.view_issue(question.issue_number, [], gh_config) do
       {:error, reason} ->
         notify(opts, {:gh_error, :view_issue, reason})
@@ -121,7 +125,7 @@ defmodule Roundtable.Orchestrator do
       {:ok, issue} ->
         final_issue =
           Enum.reduce(agents, issue, fn agent, current_issue ->
-            case run_agent_turn(question.issue_number, current_issue, brief, agent, gh_config, opts) do
+            case run_agent_turn(question.issue_number, current_issue, brief, agent, gh_config, opts, round) do
               {:ok, updated_issue} -> updated_issue
               {:error, reason} ->
                 notify(opts, {:agent_error, agent, reason})
@@ -130,8 +134,11 @@ defmodule Roundtable.Orchestrator do
           end)
 
         labels = extract_label_names(final_issue)
+        consensus = Satisfaction.consensus?(labels)
+        Telemetry.consensus_check(question.issue_number, labels, consensus)
 
-        if Satisfaction.consensus?(labels) do
+        if consensus do
+          Telemetry.issue_close(question.issue_number, round, :consensus)
           Gh.close_issue(
             question.issue_number,
             [comment: "All agents satisfied. Closed after #{round} round(s)."],
@@ -146,11 +153,12 @@ defmodule Roundtable.Orchestrator do
     end
   end
 
-  defp run_agent_turn(issue_number, issue, brief, agent, gh_config, opts) do
+  defp run_agent_turn(issue_number, issue, brief, agent, gh_config, opts, round) do
     repo_root = Map.get(gh_config, :repo_root, File.cwd!())
     prompt = Prompt.build(brief, issue, agent_role(agent))
 
     notify(opts, {:agent_start, agent, issue_number})
+    Telemetry.agent_turn(agent, issue_number, round)
 
     params = %{
       agent: cli_agent_atom(agent),
@@ -161,10 +169,14 @@ defmodule Roundtable.Orchestrator do
     case RunCliAgent.run(params, %{}) do
       {:ok, %{stdout: raw}} ->
         text = extract_text(raw, agent)
+        comment_body = format_comment(agent, text)
 
-        with :ok <- Gh.comment_issue(issue_number, format_comment(agent, text), gh_config) do
+        Telemetry.gh_comment(issue_number, agent, byte_size(comment_body))
+
+        with :ok <- Gh.comment_issue(issue_number, comment_body, gh_config) do
           notify(opts, {:agent_done, agent, issue_number})
-          label = detect_or_triage_label(issue_number, text, agent, gh_config, opts)
+          {label, method} = detect_or_triage_label(issue_number, text, agent, gh_config, opts)
+          Telemetry.satisfaction_parse(agent, label, method)
 
           case apply_label(issue_number, label, gh_config) do
             :ok -> :ok
@@ -186,14 +198,15 @@ defmodule Roundtable.Orchestrator do
   defp detect_or_triage_label(issue_number, text, agent, gh_config, opts) do
     case Satisfaction.parse_marker(text) do
       nil ->
-        triage_with_ic(issue_number, text, agent, gh_config, opts)
+        label = triage_with_ic(issue_number, text, agent, gh_config, opts)
+        {label, :triage}
 
       label ->
-        label
+        {label, :marker}
     end
   end
 
-  defp triage_with_ic(_issue_number, text, _agent, gh_config, opts) do
+  defp triage_with_ic(issue_number, text, _agent, gh_config, opts) do
     repo_root = Map.get(gh_config, :repo_root, File.cwd!())
     triage_prompt = """
     You are an Incident Commander reviewing an agent's response in a roundtable discussion.
@@ -212,12 +225,16 @@ defmodule Roundtable.Orchestrator do
       {:ok, %{stdout: raw}} ->
         triage_text = extract_text(raw, :claude_ic)
 
-        cond do
-          String.contains?(triage_text, "needs-more-evidence") -> "needs-more-evidence"
-          String.contains?(triage_text, "satisfied-conditional") -> "satisfied-conditional"
-          String.contains?(triage_text, "satisfied") -> "satisfied"
-          true -> notify(opts, {:triage_unclear, triage_text}); nil
-        end
+        result =
+          cond do
+            String.contains?(triage_text, "needs-more-evidence") -> "needs-more-evidence"
+            String.contains?(triage_text, "satisfied-conditional") -> "satisfied-conditional"
+            String.contains?(triage_text, "satisfied") -> "satisfied"
+            true -> notify(opts, {:triage_unclear, triage_text}); nil
+          end
+
+        Telemetry.ic_triage(issue_number, result)
+        result
 
       {:error, _} ->
         nil
