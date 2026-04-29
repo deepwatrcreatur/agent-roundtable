@@ -251,6 +251,77 @@ defmodule Roundtable.OrchestratorTest do
   end
 
   # ------------------------------------------------------------------
+  # :coordinator_unavailable
+  # ------------------------------------------------------------------
+
+  describe "step/3 :coordinator_unavailable" do
+    test "standby takeover resumes suspended phase with continuity note" do
+      r = run(
+        phase: :coordinator_unavailable,
+        suspended_phase: :consensus_check,
+        coordinator: :claude_ic,
+        takeover_count: 0
+      )
+
+      {next_run, effects} =
+        Orchestrator.step(r, issue(), standby_coordinators: [:codex, :gemini], max_takeovers: 2)
+
+      # Resumes at consensus_check (or awaiting_turns — whatever suspended_phase was)
+      assert next_run.phase == :consensus_check
+      assert next_run.coordinator == :codex
+      assert next_run.takeover_count == 1
+      assert Enum.any?(effects, &match?({:gh_comment, 1001, _}, &1))
+      assert Enum.any?(effects, &match?({:notify, {:coordinator_takeover, 1001, :codex}}, &1))
+    end
+
+    test "escalates to :needs_human_input when no standbys configured" do
+      r = run(
+        phase: :coordinator_unavailable,
+        suspended_phase: :awaiting_turns,
+        takeover_count: 0
+      )
+
+      {next_run, effects} =
+        Orchestrator.step(r, issue(), standby_coordinators: [], max_takeovers: 2)
+
+      assert next_run.phase == :needs_human_input
+      assert Enum.any?(effects, &match?({:notify, {:coordinator_unavailable, 1001}}, &1))
+    end
+
+    test "escalates to :needs_human_review when max takeovers exceeded" do
+      r = run(
+        phase: :coordinator_unavailable,
+        suspended_phase: :awaiting_turns,
+        takeover_count: 2
+      )
+
+      {next_run, effects} =
+        Orchestrator.step(r, issue(), standby_coordinators: [:codex], max_takeovers: 2)
+
+      assert next_run.phase == :needs_human_review
+      assert Enum.any?(effects, &match?({:notify, {:coordinator_max_takeovers, 1001}}, &1))
+    end
+
+    test "standby excludes the timed-out coordinator from candidates" do
+      # claude_ic timed out; codex is standby but claude_ic should not re-claim
+      r = run(
+        phase: :coordinator_unavailable,
+        suspended_phase: :awaiting_turns,
+        coordinator: :claude_ic,
+        takeover_count: 0
+      )
+
+      {next_run, _effects} =
+        Orchestrator.step(r, issue(),
+          standby_coordinators: [:claude_ic, :codex],
+          max_takeovers: 2
+        )
+
+      assert next_run.coordinator == :codex
+    end
+  end
+
+  # ------------------------------------------------------------------
   # Compatibility tests kept from original file
   # ------------------------------------------------------------------
 
