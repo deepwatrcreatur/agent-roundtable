@@ -52,8 +52,8 @@ defmodule Roundtable.Orchestrator do
       {:notify,       event}
   """
 
-  alias Roundtable.Actions.{Gh, RunCliAgent}
-  alias Roundtable.{Satisfaction, Prompt, RoundRun, Telemetry}
+  alias Roundtable.Actions.{Gh, RunCliAgent, DiscussionGit}
+  alias Roundtable.{DiscussionRepo, Satisfaction, Prompt, RoundRun, Telemetry}
 
   @default_agents [:codex, :gemini, :claude_ic]
   @default_max_rounds 5
@@ -132,6 +132,358 @@ defmodule Roundtable.Orchestrator do
     result = %{question | state: phase_to_state(result_run.phase)}
     notify(opts, {:question_done, question.id, result.state})
     result
+  end
+
+  # ------------------------------------------------------------------
+  # File-based entry point (discussion repo model — Protocol Update 10)
+  # ------------------------------------------------------------------
+
+  @doc """
+  Run the full discussion for a `DiscussionRepo`.
+
+  Reads `BRIEF.md` and `roundtable.toml` from the repo, derives questions from
+  the brief, runs each question through rounds, and commits round files after
+  each round closes. `DECISION.md` is updated after each question reaches
+  consensus.
+
+  ## Options
+
+  All options from `run/3` are accepted and take precedence over values in
+  `roundtable.toml`.
+
+  ## GitHub Issues overlay
+
+  GitHub Issues are used only when `repo.issues_enabled` is `true`. Otherwise
+  the discussion lives entirely in committed files and this function requires
+  no `gh` CLI access.
+  """
+  @spec run_with_repo(DiscussionRepo.t(), keyword()) ::
+          {:ok, [map()]} | {:error, term()}
+  def run_with_repo(%DiscussionRepo{} = repo, opts \\ []) do
+    with {:ok, brief} <- DiscussionGit.read_brief(repo),
+         {:ok, config} <- DiscussionGit.read_config(repo) do
+      agents     = Keyword.get(opts, :agents, config.agents)
+      max_rounds = Keyword.get(opts, :max_rounds, config.max_rounds)
+      questions  = parse_questions_from_brief(brief)
+
+      results =
+        questions
+        |> Enum.with_index(1)
+        |> Enum.map(fn {question, q_idx} ->
+          run_question_with_repo(repo, question, q_idx, brief, agents, max_rounds, opts)
+        end)
+
+      {:ok, results}
+    end
+  end
+
+  # Run one question through all rounds in the file-based model.
+  defp run_question_with_repo(repo, question, q_idx, brief, agents, max_rounds, opts) do
+    notify(opts, {:question_start, question.id, q_idx})
+
+    repo_path = repo.local_path
+
+    run =
+      case RoundRun.load(q_idx) do
+        {:ok, existing} -> existing
+        {:error, :not_found} ->
+          RoundRun.new(q_idx, agents, discussion_repo_path: repo_path)
+      end
+
+    context = %{
+      repo: repo,
+      brief: brief,
+      question: question,
+      opts: Keyword.merge(opts, max_rounds: max_rounds, agents: agents)
+    }
+
+    {result_run, _buffer, _repo} = run_repo_loop(run, "", repo, context)
+    result = %{id: question.id, q_idx: q_idx, state: phase_to_state(result_run.phase)}
+    notify(opts, {:question_done, question.id, result.state})
+    result
+  end
+
+  # The file-based step/apply loop. Carries the round buffer as state.
+  defp run_repo_loop(run, buffer, repo, context) do
+    if run.phase in @terminal_phases do
+      {run, buffer, repo}
+    else
+      synthetic_issue = build_synthetic_issue(run, buffer)
+      {next_run, effects} = step(run, synthetic_issue, context.opts)
+      RoundRun.persist(next_run)
+
+      {final_run, final_buffer, final_repo} =
+        Enum.reduce(effects, {next_run, buffer, repo}, fn effect, {r, b, rp} ->
+          apply_repo_effect(effect, r, b, rp, context)
+        end)
+
+      run_repo_loop(final_run, final_buffer, final_repo, context)
+    end
+  end
+
+  # Apply one effect in the file-based model.
+  # Returns {updated_run, updated_buffer, updated_repo}.
+  defp apply_repo_effect({:run_agent, agent, _q_idx}, run, buffer, repo, context) do
+    opts     = context.opts
+    repo_root = Keyword.get(opts, :repo_root, File.cwd!())
+    round_n  = run.retry_count
+    q_idx    = run.issue_number
+    Telemetry.agent_turn(agent, q_idx, round_n)
+
+    prompt = build_file_prompt(context.brief, buffer, agent)
+
+    case RunCliAgent.run(%{agent: cli_agent_atom(agent), prompt: prompt, repo_root: repo_root}, %{}) do
+      {:ok, %{stdout: raw}} ->
+        text = extract_text(raw, agent)
+        contribution = "\n## #{agent_name(agent)}\n\n#{text}\n"
+        new_buffer = buffer <> contribution
+
+        {label, method} = detect_or_triage_label_text(q_idx, text, agent, repo_root, opts)
+        Telemetry.satisfaction_parse(agent, label || "nil", method)
+        sat = label_string_to_atom(label)
+
+        updated_run = RoundRun.mark_speaker_done(run, agent, sat)
+        notify(opts, {:agent_done, agent, q_idx})
+
+        # Optional Gh overlay
+        if repo.issues_enabled do
+          gh_config = build_gh_config(opts)
+          comment_body = format_comment(agent, text)
+          Telemetry.gh_comment(q_idx, agent, byte_size(comment_body))
+          Gh.comment_issue(q_idx, comment_body, gh_config)
+          if label, do: apply_label(q_idx, label, gh_config)
+        end
+
+        {updated_run, new_buffer, repo}
+
+      {:error, reason} ->
+        notify(opts, {:agent_error, agent, reason})
+        {run, buffer, repo}
+    end
+  end
+
+  defp apply_repo_effect({:triage_agent, agent, q_idx, comment_text}, run, buffer, repo, context) do
+    opts      = context.opts
+    repo_root = Keyword.get(opts, :repo_root, File.cwd!())
+    label     = triage_with_ic(q_idx, comment_text, agent, %{repo_root: repo_root}, opts)
+    sat       = label_string_to_atom(label)
+    Telemetry.satisfaction_parse(agent, label || "nil", :triage)
+
+    updated_run = RoundRun.mark_speaker_done(run, agent, sat)
+
+    if repo.issues_enabled and label do
+      apply_label(q_idx, label, build_gh_config(opts))
+    end
+
+    {updated_run, buffer, repo}
+  end
+
+  defp apply_repo_effect({:notify, {:round_complete, _q_idx}}, run, buffer, repo, context) do
+    opts  = context.opts
+    round = run.retry_count - 1
+    slug  = String.downcase(String.replace(context.question.id, ~r/[^a-z0-9]+/i, "-"))
+
+    case DiscussionGit.commit_round(repo, round, slug, buffer) do
+      {:ok, updated_repo} ->
+        notify(opts, {:round_committed, round, slug})
+        {run, "", updated_repo}
+
+      {:error, reason} ->
+        notify(opts, {:commit_error, reason})
+        {run, "", repo}
+    end
+  end
+
+  defp apply_repo_effect({:gh_close, q_idx, comment}, run, buffer, repo, context) do
+    opts = context.opts
+    decision_section = build_decision_section(context.question, run)
+
+    updated_repo =
+      case DiscussionGit.append_decision(repo, decision_section) do
+        {:ok, r} -> r
+        {:error, _} -> repo
+      end
+
+    Telemetry.issue_close(q_idx, run.retry_count, :consensus)
+    notify(opts, {:question_satisfied, context.question.id, run.retry_count})
+
+    if updated_repo.issues_enabled do
+      gh_config = build_gh_config(opts)
+      Gh.comment_issue(q_idx, comment, gh_config)
+      Gh.close_issue(q_idx, [], gh_config)
+    end
+
+    {run, buffer, updated_repo}
+  end
+
+  defp apply_repo_effect({:gh_comment, q_idx, body}, run, buffer, repo, context) do
+    if repo.issues_enabled do
+      Gh.comment_issue(q_idx, body, build_gh_config(context.opts))
+    end
+    {run, buffer, repo}
+  end
+
+  defp apply_repo_effect({:gh_label, q_idx, add, remove}, run, buffer, repo, context) do
+    if repo.issues_enabled do
+      Gh.edit_issue_labels(q_idx, add, remove, build_gh_config(context.opts))
+    end
+    {run, buffer, repo}
+  end
+
+  defp apply_repo_effect({:notify, event}, run, buffer, repo, context) do
+    notify(context.opts, event)
+    {run, buffer, repo}
+  end
+
+  defp apply_repo_effect(_unknown, run, buffer, repo, _context),
+    do: {run, buffer, repo}
+
+  # Build a synthetic issue map from RoundRun + round buffer for step/3.
+  defp build_synthetic_issue(run, buffer) do
+    %{
+      "state" => if(run.phase == :closed, do: "closed", else: "open"),
+      "labels" => satisfaction_map_to_labels(run.satisfaction_map),
+      "comments" => parse_buffer_to_comments(buffer)
+    }
+  end
+
+  defp satisfaction_map_to_labels(sat_map) do
+    sat_map
+    |> Map.values()
+    |> Enum.map(fn
+      :satisfied -> "satisfied"
+      :satisfied_conditional -> "satisfied-conditional"
+      :needs_more_evidence -> "needs-more-evidence"
+    end)
+    |> Enum.uniq()
+  end
+
+  defp parse_buffer_to_comments(buffer) do
+    ~r/^## (.+)$/m
+    |> Regex.split(buffer, include_captures: true)
+    |> Enum.chunk_every(2)
+    |> Enum.flat_map(fn
+      [header, body] -> [%{"id" => header, "body" => header <> "\n\n" <> String.trim(body)}]
+      _ -> []
+    end)
+  end
+
+  # Build a prompt for the file-based model (brief + accumulated round text).
+  defp build_file_prompt(brief, buffer, agent) do
+    role = agent_role(agent)
+    prior = if buffer == "", do: "", else: "\n\n## Prior contributions this round\n\n#{buffer}"
+
+    """
+    #{role}
+
+    ## Discussion Brief
+
+    #{String.slice(brief, 0, 8000)}
+    #{prior}
+
+    ## Your turn
+
+    Please respond with your position. End your response with one of:
+    - `[satisfied]`
+    - `[satisfied-conditional: <condition>]`
+    - `[needs more evidence: <what>]`
+    """
+  end
+
+  # Build the decision section committed to DECISION.md after consensus.
+  defp build_decision_section(question, run) do
+    sat_lines =
+      Enum.map(run.satisfaction_map, fn {agent, result} ->
+        "- **#{agent_name(agent)}**: #{result}"
+      end)
+      |> Enum.join("\n")
+
+    """
+
+    ## #{question.id} (Round #{run.retry_count}, #{Date.to_iso8601(Date.utc_today())})
+
+    Consensus reached after #{run.retry_count} round(s).
+
+    ### Satisfaction summary
+
+    #{sat_lines}
+    """
+  end
+
+  # Parse ### Q\\d+ section headings from a BRIEF.md string.
+  defp parse_questions_from_brief(brief) do
+    ~r/###\s+(Q\d+[^\n]*)/
+    |> Regex.scan(brief)
+    |> Enum.map(fn [_, title] ->
+      id = case Regex.run(~r/Q\d+/, title) do
+        [match | _] -> match
+        _ -> title
+      end
+      %{id: id, title: String.trim(title)}
+    end)
+  end
+
+  defp label_string_to_atom("satisfied"), do: :satisfied
+  defp label_string_to_atom("satisfied-conditional"), do: :satisfied_conditional
+  defp label_string_to_atom("needs-more-evidence"), do: :needs_more_evidence
+  defp label_string_to_atom(_), do: nil
+
+  defp detect_or_triage_label_text(q_idx, text, agent, repo_root, opts) do
+    case Satisfaction.parse_marker(text) do
+      nil ->
+        label = triage_with_ic(q_idx, text, agent, %{repo_root: repo_root}, opts)
+        {label, :triage}
+      label ->
+        {label, :marker}
+    end
+  end
+
+  # Run the IC triage sub-agent to classify a response that has no inline marker.
+  # Returns a label string ("satisfied", "satisfied-conditional", "needs-more-evidence")
+  # or nil on failure. No I/O beyond the agent call.
+  defp triage_with_ic(_q_idx, text, agent, context, opts) do
+    repo_root = Map.get(context, :repo_root, File.cwd!())
+
+    triage_prompt = """
+    You are an Incident Commander reviewing an agent's response in a roundtable discussion.
+    Classify the response below with EXACTLY ONE of:
+      satisfied
+      satisfied-conditional
+      needs-more-evidence
+
+    Respond with only that one word/phrase on a single line. No explanation.
+
+    Agent response:
+    #{String.slice(text, 0, 2000)}
+    """
+
+    case RunCliAgent.run(%{agent: :claude, prompt: triage_prompt, repo_root: repo_root}, %{}) do
+      {:ok, %{stdout: raw}} ->
+        triage_text = extract_text(raw, :claude_ic)
+
+        result =
+          cond do
+            String.contains?(triage_text, "needs-more-evidence") -> "needs-more-evidence"
+            String.contains?(triage_text, "satisfied-conditional") -> "satisfied-conditional"
+            String.contains?(triage_text, "satisfied") -> "satisfied"
+            true ->
+              notify(opts, {:triage_unclear, triage_text})
+              nil
+          end
+
+        if result, do: Telemetry.satisfaction_parse(agent, result, :triage)
+        result
+
+      {:error, reason} ->
+        notify(opts, {:triage_error, agent, reason})
+        nil
+    end
+  end
+
+  # Apply a satisfaction label to a GitHub issue, removing conflicting labels.
+  defp apply_label(issue_number, label, gh_config) do
+    remove = Map.get(@label_conflicts, label, [])
+    Gh.edit_issue_labels(issue_number, [label], remove, gh_config)
   end
 
   # ------------------------------------------------------------------
@@ -431,47 +783,17 @@ defmodule Roundtable.Orchestrator do
     opts = context.opts
     repo_root = Map.get(gh_config, :repo_root, File.cwd!())
 
-    triage_prompt = """
-    You are an Incident Commander reviewing an agent's response in a roundtable discussion.
-    Classify the response below with EXACTLY ONE of:
-      satisfied
-      satisfied-conditional
-      needs-more-evidence
+    result = triage_with_ic(issue_number, text, agent, %{repo_root: repo_root}, opts)
+    Telemetry.ic_triage(issue_number, result)
 
-    Respond with only that one word/phrase on a single line. No explanation.
+    if result do
+      # Post a short IC triage comment so sync_from_issue picks up the marker.
+      triage_comment =
+        "## Claude IC\n\nIC triage for #{agent_name(agent)}: #{result}\n\n[#{result}]"
 
-    Agent response:
-    #{String.slice(text, 0, 2000)}
-    """
-
-    case RunCliAgent.run(%{agent: :claude, prompt: triage_prompt, repo_root: repo_root}, %{}) do
-      {:ok, %{stdout: raw}} ->
-        triage_text = extract_text(raw, :claude_ic)
-
-        result =
-          cond do
-            String.contains?(triage_text, "needs-more-evidence") -> "needs-more-evidence"
-            String.contains?(triage_text, "satisfied-conditional") -> "satisfied-conditional"
-            String.contains?(triage_text, "satisfied") -> "satisfied"
-            true -> notify(opts, {:triage_unclear, triage_text}); nil
-          end
-
-        Telemetry.ic_triage(issue_number, result)
-
-        if result do
-          Telemetry.satisfaction_parse(agent, result, :triage)
-          # Post a short IC triage comment so sync_from_issue picks up the marker
-          triage_comment =
-            "## Claude IC\n\nIC triage for #{agent_name(agent)}: #{result}\n\n[#{result}]"
-
-          Telemetry.gh_comment(issue_number, :claude_ic, byte_size(triage_comment))
-          Gh.comment_issue(issue_number, triage_comment, gh_config)
-          remove = Map.get(@label_conflicts, result, [])
-          Gh.edit_issue_labels(issue_number, [result], remove, gh_config)
-        end
-
-      {:error, reason} ->
-        notify(opts, {:triage_error, agent, reason})
+      Telemetry.gh_comment(issue_number, :claude_ic, byte_size(triage_comment))
+      Gh.comment_issue(issue_number, triage_comment, gh_config)
+      apply_label(issue_number, result, gh_config)
     end
   end
 

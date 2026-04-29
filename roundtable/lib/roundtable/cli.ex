@@ -20,7 +20,7 @@ defmodule Roundtable.CLI do
   """
 
   alias Roundtable.Actions.Gh
-  alias Roundtable.Orchestrator
+  alias Roundtable.{DiscussionRepo, Orchestrator}
 
   # ----------------------------------------------------------------
   # Mix task / shell entry point
@@ -71,29 +71,50 @@ defmodule Roundtable.CLI do
   # ----------------------------------------------------------------
 
   @doc """
-  Starts a discussion for the given BRIEF.md.
+  Starts a discussion.
 
-  Reads the `## Questions` section of the brief to discover questions.
-  For each question, finds or creates a GitHub Issue. Then runs the
-  orchestrator loop to completion.
-
-  Returns `{:ok, [result]}` where each result is
-  `%{id: String.t(), issue_number: pos_integer(), state: atom()}`.
+  `source` is either:
+  - A **GitHub repo slug** (`"owner/repo"`) — uses the file-based discussion
+    repo model (Protocol Update 10). Reads `BRIEF.md` from the repo via the
+    GitHub API. Does not require local `gh` Issues unless `issues_enabled` is
+    true in `roundtable.toml`.
+  - A **local file path** to `BRIEF.md` — legacy mode; uses GitHub Issues as
+    the state medium.
 
   ## Options
 
-    * `:repo` — GitHub repo slug (`"owner/repo"`); required unless `gh`
-      defaults to the current repo
-    * `:max_rounds` — integer (default 5)
-    * `:agents` — list of agent atoms (default `[:codex, :gemini, :claude_ic]`)
+    * `:repo` — GitHub repo slug; overrides the `source` parameter for the
+      legacy path
+    * `:token` — GitHub PAT; used when `source` is a repo slug
+    * `:local_path` — local clone path for the discussion repo (enables
+      `.roundtable/state/` persistence)
+    * `:max_rounds` — integer (default from `roundtable.toml` or 5)
+    * `:agents` — list of agent atoms (default from `roundtable.toml`)
     * `:on_event` — `(event -> any)` progress callback
   """
   @spec start_discussion(String.t(), keyword()) :: {:ok, list()} | {:error, term()}
-  def start_discussion(brief_path, opts \\ []) do
-    with {:ok, questions} <- load_or_create_issues(brief_path, opts) do
-      results = Orchestrator.run(brief_path, questions, opts)
-      {:ok, results}
+  def start_discussion(source, opts \\ []) do
+    if repo_slug?(source) do
+      repo =
+        DiscussionRepo.new(source,
+          token: Keyword.get(opts, :token),
+          local_path: Keyword.get(opts, :local_path),
+          issues_enabled: Keyword.get(opts, :issues_enabled, false)
+        )
+      Orchestrator.run_with_repo(repo, opts)
+    else
+      # Legacy: brief_path → GitHub Issues
+      with {:ok, questions} <- load_or_create_issues(source, opts) do
+        {:ok, Orchestrator.run(source, questions, opts)}
+      end
     end
+  end
+
+  # Returns true if `s` looks like "owner/repo" rather than a file path.
+  defp repo_slug?(s) do
+    Regex.match?(~r/\A[A-Za-z0-9_.\-]+\/[A-Za-z0-9_.\-]+\z/, s) and
+      not String.starts_with?(s, "/") and
+      not String.starts_with?(s, ".")
   end
 
   @doc """

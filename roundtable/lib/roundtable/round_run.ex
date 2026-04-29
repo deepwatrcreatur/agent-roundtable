@@ -48,12 +48,12 @@ defmodule Roundtable.RoundRun do
           satisfaction_map: %{atom() => satisfaction_result()},
           retry_count: non_neg_integer(),
           updated_at: DateTime.t(),
-          # Coordinator lease fields
           coordinator: atom() | nil,
           coordinator_lease_expires_at: DateTime.t() | nil,
           last_progress_at: DateTime.t() | nil,
           suspended_phase: phase() | nil,
-          takeover_count: non_neg_integer()
+          takeover_count: non_neg_integer(),
+          discussion_repo_path: String.t() | nil
         }
 
   defstruct [
@@ -69,7 +69,8 @@ defmodule Roundtable.RoundRun do
     :coordinator_lease_expires_at,
     :last_progress_at,
     :suspended_phase,
-    takeover_count: 0
+    takeover_count: 0,
+    discussion_repo_path: nil
   ]
 
   @doc """
@@ -90,9 +91,17 @@ defmodule Roundtable.RoundRun do
     end
   end
 
-  @doc "Create a fresh `RoundRun` in the `:awaiting_turns` phase."
-  @spec new(pos_integer(), [atom()]) :: t()
-  def new(issue_number, expected_speakers) do
+  @doc """
+  Create a fresh `RoundRun` in the `:awaiting_turns` phase.
+
+  ## Options
+
+  - `:discussion_repo_path` — local path of the discussion repo; when set,
+    state is persisted under `<path>/.roundtable/state/` instead of the
+    global Application config directory.
+  """
+  @spec new(pos_integer(), [atom()], keyword()) :: t()
+  def new(issue_number, expected_speakers, opts \\ []) do
     %__MODULE__{
       issue_number: issue_number,
       phase: :awaiting_turns,
@@ -106,7 +115,8 @@ defmodule Roundtable.RoundRun do
       coordinator_lease_expires_at: nil,
       last_progress_at: nil,
       suspended_phase: nil,
-      takeover_count: 0
+      takeover_count: 0,
+      discussion_repo_path: Keyword.get(opts, :discussion_repo_path)
     }
   end
 
@@ -301,10 +311,14 @@ defmodule Roundtable.RoundRun do
   # JSON persistence
   # ------------------------------------------------------------------
 
-  defp state_dir, do: Application.get_env(:roundtable, :state_dir, "state")
+  defp state_dir(%__MODULE__{discussion_repo_path: nil}),
+    do: Application.get_env(:roundtable, :state_dir, "state")
+
+  defp state_dir(%__MODULE__{discussion_repo_path: repo_path}),
+    do: Path.join(repo_path, ".roundtable/state")
 
   defp flush_json(%__MODULE__{} = run) do
-    dir = state_dir()
+    dir = state_dir(run)
     File.mkdir_p!(dir)
     path = Path.join(dir, "round_run_#{run.issue_number}.json")
 
@@ -340,7 +354,7 @@ defmodule Roundtable.RoundRun do
   end
 
   defp load_from_json(issue_number) do
-    path = Path.join(state_dir(), "round_run_#{issue_number}.json")
+    path = Path.join(state_dir(%__MODULE__{issue_number: issue_number}), "round_run_#{issue_number}.json")
 
     with {:ok, json} <- File.read(path),
          {:ok, data} <- Jason.decode(json) do
