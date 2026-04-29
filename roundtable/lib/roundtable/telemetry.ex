@@ -165,6 +165,8 @@ defmodule Roundtable.Telemetry do
     entry =
       metadata
       |> Map.new(fn
+        # Preserve booleans and nil so Jason emits true/false/null, not strings.
+        {k, v} when is_boolean(v) or is_nil(v) -> {k, v}
         {k, v} when is_atom(v) -> {k, Atom.to_string(v)}
         {k, v} when is_list(v) -> {k, Enum.map(v, &to_string/1)}
         kv -> kv
@@ -173,7 +175,10 @@ defmodule Roundtable.Telemetry do
       |> Map.put(:timestamp, DateTime.to_iso8601(DateTime.utc_now()))
       |> Map.put(:system_time, Map.get(measurements, :system_time))
 
-    IO.puts(Jason.encode!(entry))
+    case Jason.encode(entry) do
+      {:ok, json} -> IO.puts(json)
+      {:error, _} -> IO.inspect(entry, label: "[roundtable] telemetry encoding error")
+    end
   end
 
   # ------------------------------------------------------------------
