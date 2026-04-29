@@ -1,47 +1,72 @@
 defmodule Roundtable.Orchestrator do
   @moduledoc """
-  Core orchestration loop for the roundtable discussion.
+  Phase state machine orchestrator for roundtable discussions.
 
-  Drives questions through agent rounds until all are satisfied or
-  max_rounds is reached. Each question corresponds to one GitHub Issue.
+  ## Architecture
 
-  ## Agent turn order
+  Orchestration is split into two concerns:
 
-  Default: `[:codex, :gemini, :claude_ic]` — IC runs last to synthesise.
-  `:claude_ic` maps to the `:claude` CLI with an IC role prompt.
+  - `step/3` — **pure**. Takes the current `RoundRun` + GitHub issue snapshot +
+    options, returns `{next_run, [effect]}`. No I/O. Fully unit-testable with
+    fixture data.
 
-  ## Satisfaction detection
+  - `apply_effects/2` — **impure**. Executes a list of effects (gh CLI calls,
+    CLI agent invocations, event callbacks). Returns `:ok`.
 
-  After each agent posts, the orchestrator reads the satisfaction marker
-  from the response text and applies it as a GitHub label. If no marker
-  is detected, an IC triage call classifies the response.
+  The driver loop in `run_issue_loop/2` fetches a fresh issue snapshot,
+  syncs the `RoundRun` from comments, calls `step/3`, persists the updated
+  run, applies effects, then repeats until a terminal phase is reached.
 
-  Consensus is reached when all active labels include `satisfied` or
-  `satisfied-conditional` and none include `needs-more-evidence`.
+  ## Phase transitions
 
-  ## Events
+      :awaiting_turns
+        pending agents remain        → emit {:run_agent, agent, n}
+        all done, round < max_rounds → :triage_missing_markers
+        all done, max_rounds reached → :needs_human_review
 
-  Pass `on_event: fn event -> ... end` in opts to receive progress
-  notifications. Events: `{:round_start, id, n}`, `{:agent_done, agent, issue}`,
-  `{:question_satisfied, id, round}`, `{:question_max_rounds, id}`,
-  `{:agent_error, agent, reason}`.
+      :triage_missing_markers
+        all markers present          → :consensus_check
+        some missing                 → emit {:triage_agent, ...} per missing agent
+
+      :consensus_check
+        all satisfied/conditional    → :closed
+        any needs-more-evidence      → :awaiting_turns (next round, reset speakers)
+        max_rounds reached           → :needs_human_review
+
+      :needs_human_input             (HITL interrupt — resume via LiveView)
+      :closed                        (terminal)
+      :needs_human_review            (terminal)
+
+  ## Effect types
+
+      {:run_agent,    agent, issue_number}
+      {:triage_agent, agent, issue_number, comment_text}
+      {:gh_comment,   issue_number, body}
+      {:gh_label,     issue_number, add :: [String.t()], remove :: [String.t()]}
+      {:gh_close,     issue_number, comment}
+      {:notify,       event}
   """
 
-  alias Roundtable.Actions.Gh
-  alias Roundtable.Actions.RunCliAgent
-  alias Roundtable.Satisfaction
-  alias Roundtable.Prompt
-  alias Roundtable.Telemetry
+  alias Roundtable.Actions.{Gh, RunCliAgent}
+  alias Roundtable.{Satisfaction, Prompt, RoundRun, Telemetry}
 
   @default_agents [:codex, :gemini, :claude_ic]
   @default_max_rounds 5
+  @terminal_phases [:closed, :needs_human_review, :needs_human_input]
 
-  # Maps each satisfaction label to the labels it replaces on the issue.
   @label_conflicts %{
     "satisfied" => ["needs-more-evidence", "satisfied-conditional"],
     "satisfied-conditional" => ["needs-more-evidence", "satisfied"],
     "needs-more-evidence" => ["satisfied", "satisfied-conditional"]
   }
+
+  @type effect ::
+          {:run_agent, atom(), pos_integer()}
+          | {:triage_agent, atom(), pos_integer(), String.t()}
+          | {:gh_comment, pos_integer(), String.t()}
+          | {:gh_label, pos_integer(), [String.t()], [String.t()]}
+          | {:gh_close, pos_integer(), String.t()}
+          | {:notify, term()}
 
   @type question :: %{
           id: String.t(),
@@ -55,18 +80,12 @@ defmodule Roundtable.Orchestrator do
           state: :satisfied | :needs_human_review
         }
 
+  # ------------------------------------------------------------------
+  # Public entry points
+  # ------------------------------------------------------------------
+
   @doc """
   Runs the full discussion for all questions sequentially.
-
-  Returns a list of result maps with `:id`, `:issue_number`, and `:state`.
-
-  ## Options
-
-    * `:repo` — GitHub repo slug (`owner/repo`) passed to `gh`
-    * `:agents` — list of agent atoms; defaults to `#{inspect(@default_agents)}`
-    * `:max_rounds` — integer; defaults to `#{@default_max_rounds}`
-    * `:repo_root` — working directory for CLI agent invocations
-    * `:on_event` — `(event -> any)` callback for progress notifications
   """
   @spec run(String.t(), [question()], keyword()) :: [result()]
   def run(brief_path, questions, opts \\ []) do
@@ -81,133 +100,250 @@ defmodule Roundtable.Orchestrator do
   end
 
   @doc """
-  Runs a single question through rounds to completion.
+  Runs a single question through phases to completion.
   """
   @spec run_question(question(), String.t(), [atom()], pos_integer(), map(), keyword()) ::
           result()
   def run_question(question, brief, agents, max_rounds, gh_config, opts \\ []) do
     notify(opts, {:question_start, question.id, question.issue_number})
-    result = do_rounds(question, brief, agents, max_rounds, gh_config, opts, 1)
+
+    run =
+      case RoundRun.load(question.issue_number) do
+        {:ok, existing} -> existing
+        {:error, :not_found} -> RoundRun.new(question.issue_number, agents)
+      end
+
+    context = %{
+      brief: brief,
+      gh_config: gh_config,
+      opts: Keyword.merge(opts, max_rounds: max_rounds, agents: agents)
+    }
+
+    result_run = run_issue_loop(run, context)
+
+    result = %{question | state: phase_to_state(result_run.phase)}
     notify(opts, {:question_done, question.id, result.state})
     result
   end
 
-  # ----- private -----
+  # ------------------------------------------------------------------
+  # Pure step function
+  # ------------------------------------------------------------------
 
-  defp do_rounds(question, _brief, _agents, max_rounds, gh_config, opts, round)
-       when round > max_rounds do
-    Telemetry.issue_close(question.issue_number, round - 1, :max_rounds)
-    Gh.comment_issue(
-      question.issue_number,
-      "**Roundtable:** Max rounds (#{max_rounds}) reached without consensus. Flagging for human review.",
-      gh_config
-    )
+  @doc """
+  Pure phase transition function.
 
-    case Gh.edit_issue_labels(question.issue_number, ["needs-human-review"], [], gh_config) do
-      :ok -> :ok
-      {:error, reason} -> notify(opts, {:label_error, "needs-human-review", reason})
+  Given the current `RoundRun` (already synced from GitHub), the current
+  GitHub issue map, and options, returns `{next_run, [effect]}`.
+
+  No I/O. Safe to call from tests with fixture data.
+  """
+  @spec step(RoundRun.t(), map(), keyword()) :: {RoundRun.t(), [effect()]}
+  def step(%RoundRun{phase: :awaiting_turns} = run, _issue, opts) do
+    max_rounds = Keyword.get(opts, :max_rounds, @default_max_rounds)
+    pending = run.expected_speakers -- run.completed_speakers
+
+    cond do
+      pending != [] ->
+        [next_agent | _] = pending
+        {run, [{:run_agent, next_agent, run.issue_number}]}
+
+      run.retry_count >= max_rounds ->
+        next_run = RoundRun.put_phase(run, :needs_human_review)
+        comment =
+          "**Roundtable:** Max rounds (#{max_rounds}) reached without consensus. " <>
+            "Flagging for human review."
+
+        {next_run,
+         [
+           {:gh_comment, run.issue_number, comment},
+           {:gh_label, run.issue_number, ["needs-human-review"], []},
+           {:notify, {:question_max_rounds, run.issue_number}}
+         ]}
+
+      true ->
+        next_run =
+          run
+          |> Map.put(:retry_count, run.retry_count + 1)
+          |> RoundRun.put_phase(:triage_missing_markers)
+
+        {next_run, [{:notify, {:round_complete, run.issue_number}}]}
     end
-
-    notify(opts, {:question_max_rounds, question.id})
-    %{question | state: :needs_human_review}
   end
 
-  defp do_rounds(question, brief, agents, max_rounds, gh_config, opts, round) do
-    notify(opts, {:round_start, question.id, round})
+  def step(%RoundRun{phase: :triage_missing_markers} = run, issue, _opts) do
+    missing = run.expected_speakers -- Map.keys(run.satisfaction_map)
 
-    Telemetry.issue_poll(question.issue_number, gh_config[:repo])
+    if missing == [] do
+      {RoundRun.put_phase(run, :consensus_check), []}
+    else
+      comments = Map.get(issue, "comments", [])
 
-    case Gh.view_issue(question.issue_number, [], gh_config) do
+      effects =
+        Enum.flat_map(missing, fn agent ->
+          case find_latest_agent_comment(comments, agent) do
+            nil -> []
+            text -> [{:triage_agent, agent, run.issue_number, text}]
+          end
+        end)
+
+      if effects == [] do
+        # No comments to triage from — proceed to consensus with what we have
+        {RoundRun.put_phase(run, :consensus_check), []}
+      else
+        {run, effects}
+      end
+    end
+  end
+
+  def step(%RoundRun{phase: :consensus_check} = run, _issue, opts) do
+    max_rounds = Keyword.get(opts, :max_rounds, @default_max_rounds)
+    labels = run.satisfaction_map |> Map.values() |> Enum.map(&satisfaction_to_label/1)
+    consensus = Satisfaction.consensus?(labels)
+    Telemetry.consensus_check(run.issue_number, labels, consensus)
+
+    cond do
+      consensus ->
+        Telemetry.issue_close(run.issue_number, run.retry_count, :consensus)
+        next_run = RoundRun.put_phase(run, :closed)
+        comment = "All agents satisfied. Closed after #{run.retry_count} round(s)."
+
+        {next_run,
+         [
+           {:gh_close, run.issue_number, comment},
+           {:notify, {:question_satisfied, run.issue_number, run.retry_count}}
+         ]}
+
+      run.retry_count >= max_rounds ->
+        Telemetry.issue_close(run.issue_number, run.retry_count, :max_rounds)
+        next_run = RoundRun.put_phase(run, :needs_human_review)
+        comment =
+          "**Roundtable:** Max rounds (#{max_rounds}) reached without consensus. " <>
+            "Flagging for human review."
+
+        {next_run,
+         [
+           {:gh_comment, run.issue_number, comment},
+           {:gh_label, run.issue_number, ["needs-human-review"], []},
+           {:notify, {:question_max_rounds, run.issue_number}}
+         ]}
+
+      true ->
+        # Reset speakers for the next round; back to awaiting_turns
+        next_run =
+          run
+          |> Map.put(:completed_speakers, [])
+          |> Map.put(:satisfaction_map, %{})
+          |> RoundRun.put_phase(:awaiting_turns)
+
+        {next_run, [{:notify, {:round_start, run.issue_number, run.retry_count + 1}}]}
+    end
+  end
+
+  def step(%RoundRun{phase: phase} = run, _issue, _opts)
+      when phase in @terminal_phases do
+    {run, []}
+  end
+
+  # ------------------------------------------------------------------
+  # Effect executor
+  # ------------------------------------------------------------------
+
+  @doc """
+  Applies a list of effects produced by `step/3`.
+
+  `context` must contain `:brief`, `:gh_config`, and `:opts`. The
+  `:issue` key should hold the current GitHub issue map (used to build
+  agent prompts). `:round` (optional, default 1) is threaded into the
+  `agent_turn` telemetry span.
+  """
+  @spec apply_effects([effect()], map()) :: :ok
+  def apply_effects([], _context), do: :ok
+
+  def apply_effects([effect | rest], context) do
+    apply_effect(effect, context)
+    apply_effects(rest, context)
+  end
+
+  # ------------------------------------------------------------------
+  # Driver loop (private)
+  # ------------------------------------------------------------------
+
+  defp run_issue_loop(%RoundRun{phase: phase} = run, _context)
+       when phase in @terminal_phases,
+       do: run
+
+  defp run_issue_loop(run, context) do
+    Telemetry.issue_poll(run.issue_number, context.gh_config[:repo])
+
+    case Gh.view_issue(run.issue_number, [], context.gh_config) do
       {:error, reason} ->
-        notify(opts, {:gh_error, :view_issue, reason})
-        %{question | state: :needs_human_review}
+        notify(context.opts, {:gh_error, :view_issue, reason})
+        fallback = RoundRun.put_phase(run, :needs_human_review)
+        RoundRun.persist(fallback)
+        fallback
 
       {:ok, issue} ->
-        final_issue =
-          Enum.reduce(agents, issue, fn agent, current_issue ->
-            case run_agent_turn(question.issue_number, current_issue, brief, agent, gh_config, opts, round) do
-              {:ok, updated_issue} -> updated_issue
-              {:error, reason} ->
-                notify(opts, {:agent_error, agent, reason})
-                current_issue
-            end
-          end)
-
-        labels = extract_label_names(final_issue)
-        consensus = Satisfaction.consensus?(labels)
-        Telemetry.consensus_check(question.issue_number, labels, consensus)
-
-        if consensus do
-          Telemetry.issue_close(question.issue_number, round, :consensus)
-          Gh.close_issue(
-            question.issue_number,
-            [comment: "All agents satisfied. Closed after #{round} round(s)."],
-            gh_config
-          )
-
-          notify(opts, {:question_satisfied, question.id, round})
-          %{question | state: :satisfied}
-        else
-          do_rounds(question, brief, agents, max_rounds, gh_config, opts, round + 1)
-        end
+        synced = sync_from_issue(run, issue)
+        {next_run, effects} = step(synced, issue, context.opts)
+        RoundRun.persist(next_run)
+        apply_effects(effects, Map.put(context, :issue, issue))
+        run_issue_loop(next_run, context)
     end
   end
 
-  defp run_agent_turn(issue_number, issue, brief, agent, gh_config, opts, round) do
-    repo_root = Map.get(gh_config, :repo_root, File.cwd!())
-    prompt = Prompt.build(brief, issue, agent_role(agent))
+  # ------------------------------------------------------------------
+  # Individual effect handlers (private)
+  # ------------------------------------------------------------------
 
-    notify(opts, {:agent_start, agent, issue_number})
+  defp apply_effect({:run_agent, agent, issue_number}, context) do
+    issue = Map.get(context, :issue, %{})
+    gh_config = context.gh_config
+    opts = context.opts
+    brief = context.brief
+    repo_root = Map.get(gh_config, :repo_root, File.cwd!())
+    round = Keyword.get(opts, :_current_round, 1)
+
+    prompt = Prompt.build(brief, issue, agent_role(agent))
     Telemetry.agent_turn(agent, issue_number, round)
 
-    params = %{
-      agent: cli_agent_atom(agent),
-      prompt: prompt,
-      repo_root: repo_root
-    }
-
-    case RunCliAgent.run(params, %{}) do
+    case RunCliAgent.run(
+           %{agent: cli_agent_atom(agent), prompt: prompt, repo_root: repo_root},
+           %{}
+         ) do
       {:ok, %{stdout: raw}} ->
         text = extract_text(raw, agent)
         comment_body = format_comment(agent, text)
-
         Telemetry.gh_comment(issue_number, agent, byte_size(comment_body))
 
-        with :ok <- Gh.comment_issue(issue_number, comment_body, gh_config) do
-          notify(opts, {:agent_done, agent, issue_number})
-          {label, method} = detect_or_triage_label(issue_number, text, agent, gh_config, opts)
-          Telemetry.satisfaction_parse(agent, label, method)
+        case Gh.comment_issue(issue_number, comment_body, gh_config) do
+          :ok ->
+            # Attempt inline satisfaction detection; apply label immediately if found.
+            # Agents without a marker will be handled in :triage_missing_markers.
+            case Satisfaction.parse_marker(text) do
+              nil ->
+                :ok
 
-          case apply_label(issue_number, label, gh_config) do
-            :ok -> :ok
-            {:error, reason} -> notify(opts, {:label_error, label, reason})
-          end
+              label ->
+                Telemetry.satisfaction_parse(agent, label, :marker)
+                remove = Map.get(@label_conflicts, label, [])
+                Gh.edit_issue_labels(issue_number, [label], remove, gh_config)
+            end
 
-          Gh.view_issue(issue_number, [], gh_config)
+          {:error, reason} ->
+            notify(opts, {:gh_error, :comment_issue, reason})
         end
 
       {:error, reason} ->
-        {:error, reason}
+        notify(opts, {:agent_error, agent, reason})
     end
   end
 
-  # ------------------------------------------------------------------
-  # Label helpers
-  # ------------------------------------------------------------------
-
-  defp detect_or_triage_label(issue_number, text, agent, gh_config, opts) do
-    case Satisfaction.parse_marker(text) do
-      nil ->
-        label = triage_with_ic(issue_number, text, agent, gh_config, opts)
-        {label, :triage}
-
-      label ->
-        {label, :marker}
-    end
-  end
-
-  defp triage_with_ic(issue_number, text, _agent, gh_config, opts) do
+  defp apply_effect({:triage_agent, agent, issue_number, text}, context) do
+    gh_config = context.gh_config
+    opts = context.opts
     repo_root = Map.get(gh_config, :repo_root, File.cwd!())
+
     triage_prompt = """
     You are an Incident Commander reviewing an agent's response in a roundtable discussion.
     Classify the response below with EXACTLY ONE of:
@@ -234,19 +370,118 @@ defmodule Roundtable.Orchestrator do
           end
 
         Telemetry.ic_triage(issue_number, result)
-        result
 
-      {:error, _} ->
-        nil
+        if result do
+          Telemetry.satisfaction_parse(agent, result, :triage)
+          # Post a short IC triage comment so sync_from_issue picks up the marker
+          triage_comment =
+            "## Claude IC\n\nIC triage for #{agent_name(agent)}: #{result}\n\n[#{result}]"
+
+          Telemetry.gh_comment(issue_number, :claude_ic, byte_size(triage_comment))
+          Gh.comment_issue(issue_number, triage_comment, gh_config)
+          remove = Map.get(@label_conflicts, result, [])
+          Gh.edit_issue_labels(issue_number, [result], remove, gh_config)
+        end
+
+      {:error, reason} ->
+        notify(opts, {:triage_error, agent, reason})
     end
   end
 
-  defp apply_label(_issue_number, nil, _gh_config), do: :ok
-
-  defp apply_label(issue_number, label, gh_config) do
-    remove = Map.get(@label_conflicts, label, [])
-    Gh.edit_issue_labels(issue_number, [label], remove, gh_config)
+  defp apply_effect({:gh_comment, issue_number, body}, context) do
+    case Gh.comment_issue(issue_number, body, context.gh_config) do
+      :ok -> :ok
+      {:error, reason} -> notify(context.opts, {:gh_error, :comment_issue, reason})
+    end
   end
+
+  defp apply_effect({:gh_label, issue_number, add, remove}, context) do
+    case Gh.edit_issue_labels(issue_number, add, remove, context.gh_config) do
+      :ok -> :ok
+      {:error, reason} -> notify(context.opts, {:gh_error, :edit_labels, reason})
+    end
+  end
+
+  defp apply_effect({:gh_close, issue_number, comment}, context) do
+    case Gh.close_issue(issue_number, [comment: comment], context.gh_config) do
+      :ok -> :ok
+      {:error, reason} -> notify(context.opts, {:gh_error, :close_issue, reason})
+    end
+  end
+
+  defp apply_effect({:notify, event}, context) do
+    notify(context.opts, event)
+  end
+
+  # ------------------------------------------------------------------
+  # State sync helpers (pure)
+  # ------------------------------------------------------------------
+
+  # Updates completed_speakers and satisfaction_map from current issue comments.
+  # Called at the start of each driver loop iteration so step() always sees
+  # up-to-date state without performing any I/O.
+  defp sync_from_issue(run, issue) do
+    comments = Map.get(issue, "comments", [])
+    {completed, sat_map, comment_ids} = RoundRun.parse_comments(comments)
+
+    %{
+      run
+      | completed_speakers: completed,
+        satisfaction_map: sat_map,
+        last_comment_ids: comment_ids
+    }
+  end
+
+  # Returns the text of the most recent comment posted by `agent`, or nil.
+  defp find_latest_agent_comment(comments, agent) do
+    agent_header = "## #{agent_name(agent)}"
+
+    comments
+    |> Enum.filter(fn c -> String.starts_with?(Map.get(c, "body", ""), agent_header) end)
+    |> List.last()
+    |> case do
+      nil -> nil
+      comment -> Map.get(comment, "body", "")
+    end
+  end
+
+  # ------------------------------------------------------------------
+  # Satisfaction helpers
+  # ------------------------------------------------------------------
+
+  defp satisfaction_to_label(:satisfied), do: "satisfied"
+  defp satisfaction_to_label(:satisfied_conditional), do: "satisfied-conditional"
+  defp satisfaction_to_label(:needs_more_evidence), do: "needs-more-evidence"
+  defp satisfaction_to_label(other), do: to_string(other)
+
+  # ------------------------------------------------------------------
+  # Agent config helpers
+  # ------------------------------------------------------------------
+
+  @agent_roles %{
+    codex:
+      "You are Codex, an OpenAI-based agent with expertise in API design, code architecture, " <>
+        "and implementation detail. Bring your perspective as an independent reviewer.",
+    gemini:
+      "You are Gemini, a Google-based agent with expertise in research, context synthesis, " <>
+        "and system-level reasoning. Bring your perspective as an independent reviewer.",
+    claude_ic:
+      "You are the Incident Commander (IC), a Claude-based agent responsible for synthesising " <>
+        "positions, identifying gaps, and deciding whether the question has reached consensus. " <>
+        "You speak last each round."
+  }
+
+  defp agent_role(agent), do: Map.get(@agent_roles, agent, "You are an independent AI reviewer.")
+
+  defp cli_agent_atom(:claude_ic), do: :claude
+  defp cli_agent_atom(agent), do: agent
+
+  defp agent_name(:claude_ic), do: "Claude IC"
+  defp agent_name(:codex), do: "Codex"
+  defp agent_name(:gemini), do: "Gemini"
+  defp agent_name(other), do: other |> to_string() |> String.capitalize()
+
+  defp format_comment(agent, text), do: "## #{agent_name(agent)}\n\n#{text}"
 
   # ------------------------------------------------------------------
   # Text extraction from agent JSON output
@@ -280,47 +515,11 @@ defmodule Roundtable.Orchestrator do
   end
 
   # ------------------------------------------------------------------
-  # Agent config helpers
+  # Config + misc helpers
   # ------------------------------------------------------------------
 
-  @agent_roles %{
-    codex: "You are Codex, an OpenAI-based agent with expertise in API design, code architecture, and implementation detail. Bring your perspective as an independent reviewer.",
-    gemini: "You are Gemini, a Google-based agent with expertise in research, context synthesis, and system-level reasoning. Bring your perspective as an independent reviewer.",
-    claude_ic: "You are the Incident Commander (IC), a Claude-based agent responsible for synthesising positions, identifying gaps, and deciding whether the question has reached consensus. You speak last each round."
-  }
-
-  defp agent_role(agent), do: Map.get(@agent_roles, agent, "You are an independent AI reviewer.")
-
-  # `:claude_ic` invokes the `:claude` CLI binary
-  defp cli_agent_atom(:claude_ic), do: :claude
-  defp cli_agent_atom(agent), do: agent
-
-  defp agent_name(:claude_ic), do: "Claude IC"
-  defp agent_name(:codex), do: "Codex"
-  defp agent_name(:gemini), do: "Gemini"
-  defp agent_name(other), do: to_string(other)
-
-  defp format_comment(agent, text) do
-    "## #{agent_name(agent)}\n\n#{text}"
-  end
-
-  # ------------------------------------------------------------------
-  # Issue data helpers
-  # ------------------------------------------------------------------
-
-  defp extract_label_names(%{"labels" => labels}) when is_list(labels) do
-    Enum.map(labels, fn
-      %{"name" => name} -> name
-      name when is_binary(name) -> name
-      _ -> ""
-    end)
-  end
-
-  defp extract_label_names(_), do: []
-
-  # ------------------------------------------------------------------
-  # Config helpers
-  # ------------------------------------------------------------------
+  defp phase_to_state(:closed), do: :satisfied
+  defp phase_to_state(_), do: :needs_human_review
 
   defp build_gh_config(opts) do
     %{}
