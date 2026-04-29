@@ -31,6 +31,7 @@ defmodule Roundtable.RoundRun do
           :awaiting_turns
           | :triage_missing_markers
           | :consensus_check
+          | :coordinator_unavailable
           | :needs_human_input
           | :closed
           | :needs_human_review
@@ -46,7 +47,13 @@ defmodule Roundtable.RoundRun do
           last_comment_ids: [String.t()],
           satisfaction_map: %{atom() => satisfaction_result()},
           retry_count: non_neg_integer(),
-          updated_at: DateTime.t()
+          updated_at: DateTime.t(),
+          # Coordinator lease fields
+          coordinator: atom() | nil,
+          coordinator_lease_expires_at: DateTime.t() | nil,
+          last_progress_at: DateTime.t() | nil,
+          suspended_phase: phase() | nil,
+          takeover_count: non_neg_integer()
         }
 
   defstruct [
@@ -57,7 +64,12 @@ defmodule Roundtable.RoundRun do
     :last_comment_ids,
     :satisfaction_map,
     :retry_count,
-    :updated_at
+    :updated_at,
+    :coordinator,
+    :coordinator_lease_expires_at,
+    :last_progress_at,
+    :suspended_phase,
+    takeover_count: 0
   ]
 
   @doc """
@@ -89,8 +101,109 @@ defmodule Roundtable.RoundRun do
       last_comment_ids: [],
       satisfaction_map: %{},
       retry_count: 0,
-      updated_at: DateTime.utc_now()
+      updated_at: DateTime.utc_now(),
+      coordinator: nil,
+      coordinator_lease_expires_at: nil,
+      last_progress_at: nil,
+      suspended_phase: nil,
+      takeover_count: 0
     }
+  end
+
+  @doc """
+  Claim the coordinator role for `agent`.
+
+  Succeeds when no coordinator is active or the existing lease has expired.
+  Returns `{:error, :coordinator_active}` when another coordinator holds a
+  valid lease. Compare-and-set safe for single-node BEAM.
+  """
+  @spec claim_coordinator(t(), atom(), pos_integer()) ::
+          {:ok, t()} | {:error, :coordinator_active}
+  def claim_coordinator(%__MODULE__{} = run, agent, lease_seconds \\ 300) do
+    now = DateTime.utc_now()
+    expires = DateTime.add(now, lease_seconds, :second)
+
+    cond do
+      run.coordinator == nil ->
+        updated = %{
+          run
+          | coordinator: agent,
+            coordinator_lease_expires_at: expires,
+            last_progress_at: now,
+            updated_at: now
+        }
+
+        {:ok, updated}
+
+      coordinator_timed_out?(run, now) ->
+        updated = %{
+          run
+          | coordinator: agent,
+            coordinator_lease_expires_at: expires,
+            last_progress_at: now,
+            updated_at: now
+        }
+
+        {:ok, updated}
+
+      true ->
+        {:error, :coordinator_active}
+    end
+  end
+
+  @doc "Refresh the coordinator's lease, stamping `last_progress_at`."
+  @spec heartbeat(t(), pos_integer()) :: t()
+  def heartbeat(%__MODULE__{} = run, lease_seconds \\ 300) do
+    now = DateTime.utc_now()
+    expires = DateTime.add(now, lease_seconds, :second)
+    %{run | coordinator_lease_expires_at: expires, last_progress_at: now, updated_at: now}
+  end
+
+  @doc "True if the coordinator's lease has expired relative to `now`."
+  @spec coordinator_timed_out?(t(), DateTime.t()) :: boolean()
+  def coordinator_timed_out?(%__MODULE__{coordinator_lease_expires_at: nil}, _now), do: false
+
+  def coordinator_timed_out?(%__MODULE__{coordinator_lease_expires_at: exp}, now) do
+    DateTime.compare(now, exp) != :lt
+  end
+
+  @doc """
+  Suspend the current phase and enter `:coordinator_unavailable`.
+
+  Clears the coordinator slot so a standby can claim it.
+  """
+  @spec enter_coordinator_unavailable(t()) :: t()
+  def enter_coordinator_unavailable(%__MODULE__{} = run) do
+    run
+    |> Map.put(:suspended_phase, run.phase)
+    |> Map.put(:coordinator, nil)
+    |> Map.put(:coordinator_lease_expires_at, nil)
+    |> put_phase(:coordinator_unavailable)
+  end
+
+  @doc """
+  Claim coordinator role as standby and resume from `:suspended_phase`.
+
+  Returns `{:error, :no_suspended_phase}` when there is nothing to resume.
+  """
+  @spec takeover(t(), atom()) :: {:ok, t()} | {:error, :no_suspended_phase}
+  def takeover(%__MODULE__{suspended_phase: nil}, _agent), do: {:error, :no_suspended_phase}
+
+  def takeover(%__MODULE__{} = run, agent) do
+    now = DateTime.utc_now()
+    expires = DateTime.add(now, 300, :second)
+    resume_phase = run.suspended_phase
+
+    next_run =
+      run
+      |> Map.put(:coordinator, agent)
+      |> Map.put(:coordinator_lease_expires_at, expires)
+      |> Map.put(:last_progress_at, now)
+      |> Map.put(:takeover_count, run.takeover_count + 1)
+      |> Map.put(:suspended_phase, nil)
+      |> put_phase(resume_phase)
+
+    {:ok, next_run}
   end
 
   @doc "Transition to `phase`, stamping `updated_at` and emitting a telemetry span."
@@ -206,7 +319,18 @@ defmodule Roundtable.RoundRun do
           {Atom.to_string(k), Atom.to_string(v)}
         end),
       retry_count: run.retry_count,
-      updated_at: DateTime.to_iso8601(run.updated_at)
+      updated_at: DateTime.to_iso8601(run.updated_at),
+      coordinator: if(run.coordinator, do: Atom.to_string(run.coordinator), else: nil),
+      coordinator_lease_expires_at:
+        if(run.coordinator_lease_expires_at,
+          do: DateTime.to_iso8601(run.coordinator_lease_expires_at),
+          else: nil
+        ),
+      last_progress_at:
+        if(run.last_progress_at, do: DateTime.to_iso8601(run.last_progress_at), else: nil),
+      suspended_phase:
+        if(run.suspended_phase, do: Atom.to_string(run.suspended_phase), else: nil),
+      takeover_count: run.takeover_count
     }
 
     case Jason.encode(data, pretty: true) do
@@ -231,7 +355,17 @@ defmodule Roundtable.RoundRun do
             {String.to_existing_atom(k), String.to_existing_atom(v)}
           end),
         retry_count: data["retry_count"],
-        updated_at: parse_datetime(data["updated_at"])
+        updated_at: parse_datetime(data["updated_at"]),
+        coordinator:
+          if(data["coordinator"], do: String.to_existing_atom(data["coordinator"]), else: nil),
+        coordinator_lease_expires_at: parse_datetime_nullable(data["coordinator_lease_expires_at"]),
+        last_progress_at: parse_datetime_nullable(data["last_progress_at"]),
+        suspended_phase:
+          if(data["suspended_phase"],
+            do: String.to_existing_atom(data["suspended_phase"]),
+            else: nil
+          ),
+        takeover_count: Map.get(data, "takeover_count", 0)
       }
 
       {:ok, run}
@@ -247,6 +381,9 @@ defmodule Roundtable.RoundRun do
       _ -> DateTime.utc_now()
     end
   end
+
+  defp parse_datetime_nullable(nil), do: nil
+  defp parse_datetime_nullable(str), do: parse_datetime(str)
 
   # ------------------------------------------------------------------
   # Comment parsing
@@ -302,6 +439,7 @@ defmodule Roundtable.RoundRun do
       state == "closed" -> :closed
       "needs-human-review" in labels -> :needs_human_review
       "needs-human-input" in labels -> :needs_human_input
+      "coordinator-unavailable" in labels -> :coordinator_unavailable
       true -> :awaiting_turns
     end
   end
