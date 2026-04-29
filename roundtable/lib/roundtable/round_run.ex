@@ -407,7 +407,8 @@ defmodule Roundtable.RoundRun do
   @agent_headers [
     {"## Claude IC", :claude_ic},
     {"## Codex", :codex},
-    {"## Gemini", :gemini}
+    {"## Gemini", :gemini},
+    {"## DeepSeek", :deepseek}
   ]
 
   @doc false

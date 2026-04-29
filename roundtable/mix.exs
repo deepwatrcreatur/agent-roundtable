@@ -27,7 +27,9 @@ defmodule Roundtable.MixProject do
       {:phoenix_html, "~> 4.0"},
       {:phoenix_pubsub, "~> 2.1"},
       {:bandit, "~> 1.0"},
-      {:jason, "~> 1.4"}
+      {:jason, "~> 1.4"},
+      # HTTP client for DeepSeek API (item 24 Telegram uses same dep)
+      {:req, "~> 0.5"}
     ]
   end
 end

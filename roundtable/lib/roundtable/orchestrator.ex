@@ -55,7 +55,7 @@ defmodule Roundtable.Orchestrator do
   alias Roundtable.Actions.{Gh, RunCliAgent, DiscussionGit}
   alias Roundtable.{DiscussionRepo, Satisfaction, Prompt, RoundRun, Telemetry}
 
-  @default_agents [:codex, :gemini, :claude_ic]
+  @default_agents [:codex, :gemini, :deepseek, :claude_ic]
   @default_max_rounds 5
   @terminal_phases [:closed, :needs_human_review, :needs_human_input]
   @default_standby_coordinators [:codex, :gemini]
@@ -910,6 +910,11 @@ defmodule Roundtable.Orchestrator do
     gemini:
       "You are Gemini, a Google-based agent with expertise in research, context synthesis, " <>
         "and system-level reasoning. Bring your perspective as an independent reviewer.",
+    deepseek:
+      "You are DeepSeek, an AI agent developed by DeepSeek AI. Bring independent analytical " <>
+        "perspective grounded in your distinct training distribution. Focus on rigorous reasoning " <>
+        "and considerations that may be underweighted by agents trained on primarily " <>
+        "English-language corpora. Bring your perspective as an independent reviewer.",
     claude_ic:
       "You are the Incident Commander (IC), a Claude-based agent responsible for synthesising " <>
         "positions, identifying gaps, and deciding whether the question has reached consensus. " <>
@@ -919,11 +924,13 @@ defmodule Roundtable.Orchestrator do
   defp agent_role(agent), do: Map.get(@agent_roles, agent, "You are an independent AI reviewer.")
 
   defp cli_agent_atom(:claude_ic), do: :claude
+  defp cli_agent_atom(:deepseek), do: :deepseek
   defp cli_agent_atom(agent), do: agent
 
   defp agent_name(:claude_ic), do: "Claude IC"
   defp agent_name(:codex), do: "Codex"
   defp agent_name(:gemini), do: "Gemini"
+  defp agent_name(:deepseek), do: "DeepSeek"
   defp agent_name(other), do: other |> to_string() |> String.capitalize()
 
   defp format_comment(agent, text), do: "## #{agent_name(agent)}\n\n#{text}"
