@@ -559,3 +559,174 @@ Be specific. "Agents should cite sources" is not a recommendation — the IC
 verification protocol already requires quoted content. What new structural
 change would catch the failure mode that the current protocol still misses?
 
+---
+
+### Q21 — Voice Entry for Mobile Discussion Prompts
+
+**Context:**
+
+The owner wants to compose roundtable prompts by voice on mobile, specifically
+when injecting questions or triggering rounds from a phone. Typing long,
+structured prompts on a small screen is the current bottleneck. Voice-to-text
+is the natural solution, but the landscape is fragmented.
+
+**Constraints and preferences:**
+- Single user, low volume — likely fewer than 50 voice-to-text requests per day
+- Willing to self-host a local model on existing homelab hardware
+- Also open to paid SaaS if the cost is negligible at this volume
+- Target platforms: iPhone (primary), iPad (secondary)
+- The output will feed into the roundtable app's prompt injection API; accuracy
+  on technical vocabulary (Elixir, OTP, GenServer, roundtable, satisfaction
+  protocol, IC synthesis) matters more than raw WER benchmarks on general speech
+
+**Candidates mentioned by the owner:**
+- **Aqua Voice** — highly rated, real-time transcription overlay; appears to be
+  macOS-only (also iOS?) — confirm platform support, pricing, and whether it
+  integrates with third-party apps or is restricted to its own UI
+- **WhisperFlow** — widely praised; confirm what this refers to (multiple apps
+  use this name), platform support, and whether it exposes a share-sheet or
+  keyboard integration usable from any app
+- **Local Whisper model on homelab** — OpenAI Whisper served via whisper.cpp,
+  faster-whisper, or a similar inference server; the owner already runs inference
+  infrastructure. What server, client library, and iOS integration path makes
+  this practical?
+- **Other paid options** — e.g. Deepgram, AssemblyAI, Rev.ai, Apple Dictation,
+  Google Speech-to-Text. What are the relevant trade-offs at low volume?
+
+**Q21.1 — Platform survey: what actually works on iPhone?**
+
+For each candidate: confirm iOS availability, integration model (keyboard
+extension, share sheet, copy-to-clipboard, API), pricing at <50 requests/day,
+and known limitations for technical vocabulary. Distinguish clearly between
+"runs on macOS only", "runs on iOS", and "has both".
+
+**Q21.2 — Local model path: feasibility and latency**
+
+Describe the architecture for hosting Whisper on homelab and calling it from
+an iPhone app or iOS shortcut. What inference server (whisper.cpp, faster-
+whisper, Parakeet, etc.) offers the best accuracy/latency trade-off for English
+technical speech? What is the realistic round-trip time for a 10-second prompt?
+What iOS client (Shortcuts HTTP action, custom app, third-party app with custom
+endpoint support) makes this usable without a bespoke native app?
+
+**Q21.3 — Technical vocabulary accuracy**
+
+At what model size and quantisation level does Whisper (or a comparable model)
+reliably transcribe Elixir-specific vocabulary: GenServer, OTP, LiveView,
+mix, ExUnit, satisfied-conditional, roundtable? Is fine-tuning or custom
+vocabulary injection practical for a single-user homelab deployment?
+
+**Q21.4 — Recommendation: local vs. hosted, and integration path**
+
+Given the constraints (single user, low volume, homelab available, iPhone
+primary), what is the recommended path? For whichever you recommend:
+- What is the end-to-end user flow from opening the app to the transcribed
+  text appearing in the roundtable prompt injection field?
+- What are the failure modes (no homelab connectivity, model cold start, etc.)
+  and how should they degrade gracefully?
+
+---
+
+### Q22 — Discussion Hosting: Should We Look Beyond GitHub Issues?
+
+**Context:**
+
+The current design uses GitHub Issues as the shared state medium for
+roundtable discussions. This was chosen in Q5 for good reasons (parallel
+writes via `gh issue comment`, labels as state, no merge conflicts, issue
+close as natural termination). This question asks whether that choice should
+be revisited or supplemented.
+
+**The owner's primary use-case for sticking with GitHub:**
+
+> "I like GitHub as one goal is for the roundtable discussions to be
+> forkable, such that an interested person can pick a point in discussion,
+> fork on GitHub, and continue their own discussion with their own prompts
+> using their own hosted version of the roundtable service. Or I can give
+> fellow contributors access to the git repo where discussion is taking
+> place and let them add prompts."
+
+This forkability goal is a strong constraint. Any alternative must either
+support it natively or require an explicit migration/export path.
+
+**Candidates mentioned by the owner:**
+
+- **Graphite** — code review tool built on top of GitHub; stacked PR workflows.
+  Assess whether its issue/discussion model offers anything over raw GitHub
+  Issues, or whether it is strictly a PR tool that doesn't touch issue state.
+- **Radicle.xyz** — peer-to-peer, distributed, no central server. Potentially
+  relevant for self-sovereign forkable discussions. Assess: does it have an
+  issues/comments model? What is the current maturity and tooling? Is there a
+  `rad` CLI? How would the roundtable `gh` calls be ported?
+- **GitLawb.com / GitSocial.org** — assess what these actually are (social
+  layers on top of git?), whether they are production-ready, and their issue
+  model.
+- **Dolt** — a MySQL-compatible database with git-style branching, merging, and
+  forking of data. The owner is willing to host it in the homelab. Evaluate as
+  a shared state backend: could roundtable state (issues, comments, labels,
+  satisfaction markers) be modelled as Dolt tables? What are the access control,
+  backup, and fork semantics?
+
+**On backups and S3:**
+
+> "Backups are important and I would want an abstraction for S3 object stores.
+> I already have a subscription to Mega S4 which is S3-compatible, and there
+> are also S3 self-hosting options for homelabbers."
+
+Any backend recommendation must include a backup story. Note that Mega S4 is
+S3-compatible; the owner also has access to S3-compatible self-hosting options
+(MinIO, Garage, Ceph, SeaweedFS etc.) running in the homelab.
+
+**Collaboration and authentication:**
+
+The owner self-hosts **Authentik** in the homelab. Any authentication for
+discussion participants (allowing contributors to inject prompts, fork a
+discussion, comment on issues) should be able to delegate to Authentik via
+OIDC/SAML. GitHub OAuth is already available as an alternative. The app will
+need to model discussion participants, permission levels, and fork provenance.
+
+**Q22.1 — Honest assessment of alternatives**
+
+For Graphite, Radicle, GitLawb, GitSocial: which are actually production-ready
+issue-tracking systems and which are primarily code review or social layers?
+For each that has an issue model, describe: API or CLI access, comment threading,
+label/state support, and how forks of discussions would work.
+
+**Q22.2 — Dolt as a shared state backend**
+
+Could Dolt replace GitHub Issues as the roundtable state store? Design a minimal
+schema: issues table, comments table, labels table, participants table. Describe
+the fork semantics — if a contributor forks the Dolt database, what does that
+mean for discussion continuity? What is the operational cost of running Dolt in
+a homelab vs. using a managed service?
+
+**Q22.3 — S3-compatible backup abstraction**
+
+Propose an abstraction layer for roundtable state backups. The interface should
+work identically against Mega S4, MinIO, Garage, and AWS S3. What Elixir
+library provides this (ex_aws, waffle, or a thinner HTTP client)? What should
+be backed up and at what frequency for a low-volume single-user deployment?
+
+**Q22.4 — Authentik integration for contributor authentication**
+
+The owner runs Authentik. Design the authentication flow for a contributor who
+wants to: (a) join an existing discussion repo and post prompts, (b) fork a
+discussion at a given point and continue it independently. How does Authentik
+OIDC integrate with the roundtable Phoenix app? What claims/scopes are needed?
+How does fork provenance get attached to a forked contributor's identity?
+
+**Q22.5 — Recommendation: stay on GitHub, migrate, or hybrid**
+
+Given the forkability goal, the homelab capabilities, Authentik availability,
+and the operational preferences expressed, what is the recommended architecture?
+Options include:
+(a) Stay on GitHub Issues with an S3 backup sidecar
+(b) GitHub Issues as primary + Dolt as a mirrored/queryable copy
+(c) Dolt as primary with GitHub as a read-only mirror for forkability
+(d) Radicle or another decentralised option as primary
+(e) Something else
+
+For whichever you recommend: describe what new abstractions the codebase needs
+(adapter interface, auth middleware, backup job), and which are work items for
+the next sprint.
+

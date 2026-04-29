@@ -484,3 +484,84 @@ near closure. Guards against shared delusion from a false BRIEF premise.
   unverifiable count
 - Replacing the discussion format — all four changes are protocol changes,
   not architectural ones
+
+---
+
+## Q21 Decision — Voice Entry for Mobile Discussion Prompts (2026-04-28)
+
+**Decision: Three-tier voice entry architecture**
+
+**Tier 1 — Apple Dictation (start here):** On-device since iOS 16, free, no
+infrastructure. Try this first before adding any service. Adequate for casual
+prompts; may struggle with hyphenated technical terms.
+
+**Tier 2 — whisper.cpp on homelab (primary):** `large-v3-turbo` model with
+`initial_prompt` seeded with Elixir/OTP vocabulary. whisper.cpp `--server`
+mode exposes an OpenAI-compatible `/v1/audio/transcriptions` endpoint.
+iOS Shortcuts: Record Audio → POST to homelab → copy text → paste into app.
+Hardware note: Apple Silicon Mac Mini (homelab) uses Metal acceleration
+(<1s inference for 10s audio).
+
+**Tier 3 — OpenAI Whisper API (cloud fallback):** $0.006/min, ~$0.15/month
+at this volume. Identical Shortcuts integration — just a URL swap. Activates
+automatically when homelab is unreachable.
+
+**What was ruled out:**
+- WhisperFlow iOS — name collision; no clearly maintained iOS product identified
+- AquaVoice as primary — adds cloud dependency and subscription unnecessarily
+  given homelab capability; remains a valid paid UX option if Shortcuts feels
+  clunky
+- Google Speech-to-Text — no advantage over Whisper API at this volume
+
+**Action item:** Owner to run a 5-minute vocabulary benchmark with actual
+roundtable terms before committing to a model size for homelab deployment.
+
+**Open:** GitLawb.com and GitSocial.org (Q22 dependencies) — see below.
+
+---
+
+## Q22 Decision — Discussion Hosting Architecture (2026-04-28)
+
+**Decision: GitHub Issues primary + Dolt mirror + S3 backup + dual auth**
+
+**Shared state:** GitHub Issues remains primary. Forkability via GitHub's
+social infrastructure (fork repo, give contributors access) is preserved.
+
+**Dolt mirror:** Nightly sync of all issues/comments/labels into a self-hosted
+Dolt database. Adds the fork provenance capability GitHub lacks: when someone
+forks a *discussion* (not just the code repo) at a specific point in time,
+Dolt records `parent_commit + forker_identity` in a `forks` table. Also
+enables efficient analytics queries not practical via GitHub API.
+
+**S3 backup:** Nightly JSON export → gzip → ex_aws_s3 → Mega S4 (already
+available). Garage evaluated as a self-hosted S3 replica option (lightweight
+Rust binary, AGPL-free); owner to evaluate against existing homelab storage.
+
+**Authentication:**
+- **Internal participants:** Authentik OIDC (already self-hosted). Groups:
+  `roundtable:viewer`, `roundtable:participant`, `roundtable:moderator`.
+  Requires Ueberauth OIDC strategy + Authentik property mapping for groups claim.
+- **External fork-and-continue contributors:** GitHub OAuth (familiar flow,
+  no Authentik setup required from the forker).
+
+**What was ruled out:**
+- Graphite — PR stacking tool only, not an issue tracker
+- Radicle — forkability semantics are correct but social discoverability is
+  too weak for the "interested person finds and forks" use case; revisit if
+  the owner prioritises sovereignty over reach
+- Dolt as primary (replacing GitHub) — operational overhead not justified yet;
+  use as mirror first
+
+**What requires owner verification before closing:**
+- **GitLawb.com** — cannot be identified as a production issue-tracking system
+  from agent knowledge; owner to verify what this is
+- **GitSocial.org** — same; may be experimental or abandoned
+
+**New work items implied:**
+1. `Roundtable.Store` adapter behaviour with `GitHubStore` impl (and `DoltStore`
+   interface spec for future)
+2. Nightly Dolt sync GenServer (reads GitHub API, writes to Dolt)
+3. S3 backup GenServer (`ex_aws_s3`, configurable endpoint for Mega S4/Garage)
+4. Authentik OIDC Ueberauth strategy + groups claim mapping
+5. GitHub OAuth Ueberauth strategy for external contributors
+6. `forks` table + fork provenance in `Roundtable.Store`
