@@ -565,3 +565,116 @@ Rust binary, AGPL-free); owner to evaluate against existing homelab storage.
 4. Authentik OIDC Ueberauth strategy + groups claim mapping
 5. GitHub OAuth Ueberauth strategy for external contributors
 6. `forks` table + fork provenance in `Roundtable.Store`
+
+---
+
+## Q24 — Messaging Gateway (Round 15, 2026-04-29)
+
+**Decision:** Build outbound Telegram notifications only. No inbound prompt injection via any messaging channel at this stage.
+
+**Rationale:** The LiveView dashboard plus Q21 voice-entry covers prompt injection. Telegram's primary value for tools like Hermes/Openclaw is auth bypass in the absence of a native UI — that problem does not exist here. Outbound-only notifications (round completion, needs-human-review escalation) add genuine mobile utility without a second inbound code path.
+
+**Ruled out:** iMessage (no Apple server API), WhatsApp (Business API overkill for personal use), Signal (unofficial API), email ingestion (not blocked, but deferred — lower UX than native UI).
+
+**Implementation note:** A single outbound Telegram `sendMessage` call in the `apply_effect/2` for `{:notify, ...}` effects is sufficient. Configurable via `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` env vars.
+
+---
+
+## Q25 — Authentication Strategy (Round 15, 2026-04-29)
+
+**Decision:** Authentik as OIDC broker with GitHub as upstream social provider. The roundtable Elixir app is an OIDC relying party to Authentik, not directly to GitHub.
+
+**Implementation:**
+- `assent` library with OpenID Connect provider pointing at Authentik
+- GitHub username extracted from OIDC claims
+- Repo permission checks via service GitHub PAT (`GET /repos/:owner/:repo/collaborators/:username`)
+- No per-user OAuth token stored in the roundtable app
+- `OIDC_ISSUER_URL` env var: Authentik URL for homelab, GitHub OAuth endpoint for Fly.io deployments
+- Local Authentik account available as fallback when GitHub is unreachable
+
+**GitHub PAT scopes required:** `repo` for private discussion repos; `public_repo` for public repos only.
+
+**Telegram identity binding:** Stored as custom attribute in Authentik user profile. Not a roundtable app concern.
+
+**Ruled out:** Direct GitHub OAuth in the Elixir app (blocks homelab access when GitHub is down). Auth0/Okta (paid, unnecessary given Authentik deployment).
+
+---
+
+## Q26 — Service Hosting (Round 15, 2026-04-29)
+
+**Decision:** Homelab (NixOS module or Podman container) for personal use. Fly.io as the standard external deployment path.
+
+**Homelab deployment:** Existing NixOS + Podman infrastructure. Authentik OIDC natively accessible. Mega S4 backups plug in directly. No egress costs.
+
+**External deployment (Fly.io):** First-class Phoenix/LiveView support. Free tier sufficient for this workload. LiveView WebSockets work correctly. `fly launch` generates correct `fly.toml`.
+
+**Config differentiation:** `OIDC_ISSUER_URL` env var distinguishes the two deployment profiles. Same compiled release binary works in both.
+
+**Ruled out:**
+- Vercel: serverless-first, cannot run long-lived OTP processes
+- Gigalixir: valid fallback but smaller community than Fly.io in 2026
+- Render/Railway: no Elixir-specific advantage over Fly.io
+
+---
+
+## Q27 — Discussion Repo Discovery (Round 15, 2026-04-29)
+
+**Decision:** `roundtable.toml` existence checked via GitHub contents API is the canonical identity signal. "Paste owner/repo slug" is the day-one UX. Auto-discovery deferred.
+
+**`roundtable.toml` canonical schema (v1):**
+
+```toml
+schema_version = 1
+
+[discussion]
+title = "Agent Roundtable Orchestrator Design"
+agents = ["codex", "gemini", "claude_ic"]
+max_rounds = 5
+coordinator = "claude_ic"
+issues_enabled = false
+
+[fork]
+upstream = ""
+fork_of_commit = ""
+```
+
+Agent identifiers resolve against the service agent registry (Elixir config). Agent-specific CLI config stays in the service, not in the discussion repo.
+
+**GitHub topic `roundtable-discussion`:** Optional discoverability convention for public repos. Not a technical dependency. Add when there is a public-discovery use case.
+
+**Auto-discovery deferred** until a concrete user need (multiple independent users browsing public discussions) exists.
+
+---
+
+## Q28 — Platform: SourceForge and GitHub Alternatives (Round 15, 2026-04-29)
+
+**Decision:** SourceForge ruled out. GitHub remains the sole supported platform. `DiscussionGit` to be implemented behind `DiscussionRepo.Backend` behaviour.
+
+**SourceForge:** Ruled out. Declining platform, no modern OAuth API, no competitive advantage, reputation damage from 2015 adware incident.
+
+**Other platforms ruled out for now:**
+- GitLab.com: technically viable but no reason to move from GitHub
+- Self-hosted GitLab: 4–8GB RAM minimum, excessive for homelab vs. Forgejo
+- Radicle: p2p model incompatible with GitHub-centric auth
+- GitLawb / GitSocial: could not be verified as active platforms (Q22)
+
+**`DiscussionRepo.Backend` behaviour (added to Q23 work items):**
+
+```elixir
+@callback read_file(repo :: t(), path :: String.t()) :: {:ok, binary()} | {:error, term()}
+@callback write_file(repo :: t(), path :: String.t(), content :: binary(), message :: String.t()) :: :ok | {:error, term()}
+@callback list_files(repo :: t(), path :: String.t()) :: {:ok, [String.t()]} | {:error, term()}
+```
+
+First implementation: `Roundtable.Adapters.GitHub`. Future option: `Roundtable.Adapters.Forgejo` (Forgejo has GitHub-compatible REST API surface). Migration off GitHub possible without touching the orchestrator.
+
+**Updated Q23 work items:**
+1. `Roundtable.DiscussionRepo` struct + schema
+2a. `DiscussionRepo.Backend` behaviour (new — Q28 outcome)
+2. `Roundtable.Adapters.GitHub` (first Backend implementation)
+3. `Roundtable.Actions.DiscussionGit` (orchestrator-facing module, calls Backend)
+4. Orchestrator — swap `Gh` → `DiscussionGit`
+5. `CLI.start_discussion/2` — accept repo slug not file path
+6. `RoundRun` — state_dir → `<local_path>/.roundtable/state/`
+7. `Gh` adapter — demote to optional Issues overlay (now also `Roundtable.Adapters.GitHub`)
+8. LiveView `DiscussionRepo` management UI

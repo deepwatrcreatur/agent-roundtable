@@ -897,3 +897,415 @@ discussion (BRIEF.md, ACTIVE_DISCUSSION.md, DECISION.md). Propose:
   *What if the discussion repo model makes it harder, not easier, for
   contributors to participate? E.g. friction of finding the right repo, forking
   vs. collaborating ambiguity, no single canonical discussion URL?*
+
+---
+
+### Q24 — Messaging Gateway for Prompt Injection (2026-04-29)
+
+**Context and motivation:**
+
+Tools like Hermes and Openclaw expose multiple inbound channels for sending
+prompts to an AI agent: Telegram, iMessage, WhatsApp, email, and others. These
+channels solve a real problem — authentication and reachability — without
+requiring a dedicated native UI. For a single owner operating a homelab service
+with low prompt volume (<50 requests/day), it is worth asking whether a
+messaging gateway is a better primary interface than the LiveView web app, or a
+valuable complement to it.
+
+The owner uses an iPhone as primary mobile device and has expressed interest in
+voice entry (Q21). A messaging channel could serve as the delivery mechanism
+for voice-transcribed prompts: speak → transcribe → send to Telegram bot →
+ingest to orchestrator.
+
+**Q24.1 — Which messaging gateway, if any?**
+
+Telegram, iMessage, WhatsApp, and email each have different characteristics:
+
+- **Telegram**: open API, easy bot creation, no Apple dependency, cross-platform,
+  widely used by self-hosting community. Hermes and Openclaw both support it.
+  Requires Telegram account. Free.
+- **iMessage**: native iOS/macOS UX, no app install friction, but requires a Mac
+  or jailbreak/workaround for server-side receipt; Apple does not expose an
+  official server API.
+- **WhatsApp**: popular globally but the business API has cost and approval
+  complexity for personal use.
+- **Email**: universally available; `imaplib` / SMTP bridges are mature; high
+  latency acceptable for async discussion prompts; no app required.
+- **Signal**: privacy-first but the unofficial API (`signal-cli`) requires
+  phone number registration and is not officially sanctioned.
+
+Which channel(s) are worth building for, and what is the recommended first
+implementation given the owner's constraints (iPhone, homelab, single user,
+Authentik OIDC already deployed)?
+
+**Q24.2 — Does a messaging gateway replace the LiveView UI or complement it?**
+
+The Q22/Q23 architecture includes a LiveView discussion management dashboard.
+If a Telegram bot (or email bridge) already handles prompt ingestion and
+notification delivery, what remains for the LiveView UI to do? Consider:
+
+- Discussion repo registration and management
+- Round history and round-file browsing
+- Satisfaction-state visualization
+- Multi-participant coordination (inviting collaborators by GitHub identity)
+
+Is LiveView still the right choice for those remaining concerns, or does the
+messaging gateway reduce the scope enough that a simpler static or server-side
+rendered interface would suffice?
+
+**Q24.3 — Authentication via messaging channel**
+
+Hermes and Openclaw use the messaging identity (Telegram user ID, phone number)
+as the authentication token — only pre-approved identities can inject prompts.
+How does this interact with the GitHub-based auth model described in Q25? Is
+there a clean way to bind a GitHub identity to a Telegram user ID in the
+Authentik user store?
+
+**Constraints for Q24:**
+- Single owner primary user; occasional collaborators
+- iPhone-first mobile workflow
+- Homelab service with Authentik OIDC already running
+- Must not require Apple infrastructure (no iMessage server dependency)
+- Brief premise challenge required: *Is adding a messaging gateway scope creep
+  that delays the core orchestrator work, given that the native LiveView UI
+  already covers the same use case with better context?*
+
+---
+
+### Q25 — Authentication Strategy: GitHub Auth, Collaborators, and Authentik (2026-04-29)
+
+**Context and motivation:**
+
+Authentication is a first-class concern for the roundtable service because the
+system needs to answer: who is allowed to inject prompts into a discussion, and
+who can read the results? The owner has identified GitHub auth as the preferred
+primary identity provider, for several reasons:
+
+1. Discussion repos live on GitHub — a GitHub identity is already required to
+   fork, read, or collaborate on a repo.
+2. GitHub OAuth is widely understood and low-friction for technically-literate
+   collaborators.
+3. Access control for a discussion can be expressed in terms the owner already
+   uses: "give them `read` or `write` access to the GitHub repo."
+
+The owner also self-hosts Authentik, which is already running in the homelab
+and supporting other services. The question is how GitHub auth, Authentik, and
+the roundtable service fit together.
+
+**Q25.1 — GitHub OAuth as primary identity: what does the service actually need?**
+
+Define the minimal auth flow for the roundtable service:
+
+- Owner (sole administrator) authenticates via GitHub OAuth to the LiveView app
+- Collaborators who have been granted `repo:write` access to a discussion repo
+  can authenticate and inject prompts for that repo
+- The app checks GitHub repo permissions to gate discussion-repo access — no
+  separate permission database required
+
+What GitHub OAuth scopes are needed? (`repo`, `read:user`, `user:email`?) Can
+permission checks be done purely against the GitHub API, or does the service
+need to maintain a local authorization table?
+
+**Q25.2 — Where does Authentik fit?**
+
+Authentik is already deployed. Options:
+
+(a) **Authentik as OIDC proxy for GitHub OAuth**: Authentik federates GitHub
+    as a social provider; the roundtable service authenticates against Authentik
+    via OIDC. All auth flows through Authentik, which gives centralized session
+    management, MFA, and user listing without any custom auth code in the app.
+
+(b) **Direct GitHub OAuth in the Elixir app**: The service implements GitHub
+    OAuth directly (`ueberauth_github` or `assent`). Authentik is used for
+    other homelab services but not for roundtable.
+
+(c) **Both**: Authentik as the OIDC broker, with GitHub as the upstream
+    provider. The roundtable Elixir app is an OIDC relying party to Authentik,
+    not directly to GitHub.
+
+Evaluate each option for: implementation complexity, session UX (single sign-on
+across homelab), and what happens when GitHub is unavailable (can the user still
+access the service locally?).
+
+**Q25.3 — Collaborator invite and authorization flow**
+
+A collaborator wants to participate in a discussion repo they have been given
+`write` access to. End-to-end:
+
+1. Owner grants them `repo:write` on the GitHub discussion repo
+2. Collaborator navigates to the roundtable service
+3. They authenticate via GitHub OAuth
+4. The service discovers which discussion repos they have write access to
+5. Those repos appear in their dashboard
+
+What API calls does step 4 require? Does the service need to store a mapping of
+GitHub usernames to registered discussion repos, or can it query GitHub on each
+login to build the list dynamically? What are the rate-limit implications?
+
+**Q25.4 — Messaging gateway identity binding (cross-reference Q24.3)**
+
+If Telegram or email is used as a prompt-injection channel, how is a messaging
+identity (Telegram user ID, email address) bound to a GitHub identity? Is
+Authentik the right place to store this binding (custom attribute on the user
+profile), or should the roundtable service maintain its own identity table?
+
+**Constraints for Q25:**
+- Must work in homelab with Authentik already deployed
+- GitHub OAuth is the preferred identity provider
+- No paid identity service (Auth0, Okta, etc.)
+- Must support the collaborator model: contributors authenticated by GitHub
+  identity and repo access, not by a manually-maintained user list
+- Brief premise challenge required: *GitHub OAuth tightly couples auth to GitHub
+  availability — if GitHub is down, can the owner access their own homelab
+  service? Is this acceptable for a personal tool?*
+
+---
+
+### Q26 — Service Hosting: Homelab vs. Managed Elixir Hosts (2026-04-29)
+
+**Context and motivation:**
+
+The service is a Phoenix/LiveView Elixir application with OTP process model,
+ETS state, and periodic GitHub API calls. The owner is willing to self-host in
+the homelab but wants managed hosting options evaluated — specifically fly.io
+and Gigalixir, which are frequently mentioned in the Elixir community, alongside
+more general PaaS options.
+
+Key characteristics of this workload:
+- Low traffic: single owner + occasional collaborators
+- Long-running OTP processes (coordinator lease, heartbeat loops)
+- Periodic GitHub API polling (no inbound webhooks required — polling is
+  sufficient)
+- ETS for hot state; JSON files for durable state (or future Postgres)
+- Authentik OIDC for auth (self-hosted, homelab)
+- Mega S4 (S3-compatible) for backups
+
+**Q26.1 — Fly.io**
+
+Fly.io is the most-cited Elixir host in the community (Fly was founded by
+former Phoenix core team members; the Phoenix `fly.toml` generator is
+first-class). Evaluate:
+
+- Free/low-cost tier: Fly's free allowance for a single small VM running 24/7
+- BEAM compatibility: persistent processes, ETS, long-lived connections for
+  LiveView (WebSocket) — does Fly's infrastructure handle this well?
+- Clustering: if a second node is ever needed, does Fly support multi-node
+  BEAM clustering (`libcluster`)?
+- Deployment: `fly deploy` via Docker; GitHub Actions integration
+- Limitations: cold starts (Fly can put free VMs to sleep), egress costs,
+  persistent volume pricing
+
+**Q26.2 — Gigalixir**
+
+Gigalixir markets itself specifically at Elixir/Phoenix apps. Evaluate:
+
+- Free tier: Gigalixir's free tier includes 1 replica with no sleeping
+- BEAM compatibility: Gigalixir explicitly supports `mix release`, distributed
+  Erlang, and persistent connections
+- Deployment workflow vs. Fly.io
+- Limitations: free tier replica count, database options, region selection
+- Community standing: is Gigalixir still actively maintained and growing, or
+  is it stagnating relative to Fly.io?
+
+**Q26.3 — General PaaS (Render, Railway, Vercel)**
+
+Vercel is primarily a frontend/serverless host and is a poor fit for a
+long-running OTP application — explain why, and whether there are any valid
+use cases (e.g., hosting just a static assets layer). Render and Railway are
+more general:
+
+- Render: Docker-based deployment, free tier with spin-down, persistent disks
+- Railway: similar to Render; developer-friendly but less Elixir-specific
+- Are these competitive with Fly.io/Gigalixir for this workload?
+
+**Q26.4 — Homelab self-hosting**
+
+The owner already runs a homelab with NixOS, Podman, Authentik, and other
+services. Evaluate self-hosting the roundtable service:
+
+- NixOS module or Podman container: which is more appropriate?
+- How does the service reach GitHub API from behind a home network (no special
+  NAT config needed for outbound polling)
+- Authentik OIDC integration is a natural fit — no external auth dependency
+- Backup strategy: ETS snapshots + JSON state files to Mega S4
+- Trade-offs: availability (home internet), maintenance burden, no SLA
+
+**Q26.5 — Recommendation**
+
+Given: single owner, low volume, Elixir/Phoenix/OTP workload, Authentik in
+homelab, preference for low cost, what is the recommended hosting strategy?
+
+Is the right answer "homelab first, with a documented path to Fly.io if you
+want to share the service with collaborators publicly"?
+
+**Constraints for Q26:**
+- Free or very low cost (<$10/month) for the primary use case
+- Must support long-running OTP processes and LiveView WebSockets
+- Authentik is homelab-only — any externally-hosted deployment needs to handle
+  auth differently (direct GitHub OAuth) or expose Authentik externally (with
+  its own trade-offs)
+- Brief premise challenge required: *Is evaluating multiple hosting options
+  premature given that the service does not yet exist in deployable form? Should
+  the answer simply be "homelab until you need more"?*
+
+---
+
+### Q27 — Discussion Repo Discovery: GitHub Topics, Labels, and the User Dashboard (2026-04-29)
+
+**Context and motivation:**
+
+When a user authenticates to the roundtable service via GitHub, the app needs
+to present them with a list of discussion repos they can interact with. Two
+sub-problems:
+
+1. **Discovery**: how does the service find GitHub repos that are roundtable
+   discussions, rather than arbitrary code repos?
+2. **Authorization**: how does the service know which of those repos the
+   authenticated user is allowed to interact with?
+
+The owner's intuition: a GitHub topic (like `roundtable-discussion`) applied to
+a discussion repo acts as an opt-in signal that the repo is a managed
+roundtable discussion. The service can then search a user's accessible repos
+filtered by that topic.
+
+**Q27.1 — GitHub topics as the discovery mechanism**
+
+GitHub allows arbitrary topics to be set on any repository. A user or
+organization could add `roundtable-discussion` (or a similar canonical topic)
+to any repo they want the roundtable service to manage.
+
+Evaluate:
+- What GitHub API call returns a user's repos filtered by topic?
+  (`GET /search/repositories?q=topic:roundtable-discussion+user:owner`)
+- Rate limit implications of calling this on each login vs. caching in the
+  service
+- Who controls topic assignment? Only the repo owner can set topics; a
+  collaborator with `write` access cannot. Does this create friction?
+- Alternative: a special file in the repo root (e.g., `roundtable.toml`) as
+  the discovery signal — the service checks for its presence. More reliable
+  than topics (which can be removed), but requires a separate API call per repo.
+
+**Q27.2 — `roundtable.toml` as both config and identity signal**
+
+Q23 proposed `roundtable.toml` in the repo root for machine config (agents,
+max_rounds, coordinator settings, `issues_enabled`). If this file exists, the
+repo is a discussion repo. The service can:
+
+1. Query the user's repos (paginated `GET /user/repos`)
+2. For each repo, check for `roundtable.toml` existence (`GET /repos/:owner/:repo/
+   contents/roundtable.toml`)
+3. Parse the toml and register the repo in the dashboard
+
+Trade-off: O(N) API calls for N repos. For a user with many repos this is slow.
+Is the topic-based search a better first filter, with `roundtable.toml`
+existence as the confirmation step?
+
+**Q27.3 — `roundtable.toml` schema**
+
+Define the minimal schema for `roundtable.toml`:
+
+```toml
+[discussion]
+title = "Agent Roundtable Orchestrator Design"
+agents = ["codex", "gemini", "claude_ic"]
+max_rounds = 5
+coordinator = "claude_ic"
+issues_enabled = false
+
+[fork]
+upstream = ""          # set by app when a repo is registered as a fork
+fork_of_commit = ""    # commit SHA at which the fork was taken
+```
+
+What other fields are needed? Should `agents` be a list of agent identifiers
+resolvable by the service, or full config maps (with model, CLI flags, etc.)?
+
+**Q27.4 — Dashboard UX for repo management**
+
+In the LiveView dashboard:
+- A user logs in and sees a list of discovered discussion repos
+- They can add a repo by pasting a `owner/repo` slug (for repos not
+  auto-discovered by topic/toml scan)
+- They can register a fork and see its relationship to the upstream
+- They can start a new round on any registered repo they have write access to
+
+What state does the service need to maintain per registered repo? (Likely a
+simple ETS/Postgres table with: gh_slug, local_clone_path, last_synced_at,
+issues_enabled, and per-user access cache.)
+
+**Constraints for Q27:**
+- Must work within GitHub API rate limits (5,000 req/hour for authenticated)
+- Discovery must be opt-in (not scanning all public repos)
+- Must not require a GitHub App or webhook — a plain OAuth token is sufficient
+- Brief premise challenge required: *Does auto-discovery add complexity that
+  a simple "paste your repo URL" flow already solves for a single-owner tool?
+  When does auto-discovery pay off?*
+
+---
+
+### Q28 — SourceForge and GitHub Alternatives: Any Reason to Look? (2026-04-29)
+
+**Context and motivation:**
+
+SourceForge was briefly mentioned as a GitHub alternative. This question asks
+whether SourceForge, or any other GitHub alternative, warrants serious
+consideration given the architecture decisions already made.
+
+The relevant constraint: the roundtable service is being built around GitHub
+as first-class infrastructure — GitHub OAuth for authentication, GitHub repos
+for discussion storage, `gh` CLI / REST API for read/write operations. Any
+alternative must either offer equivalent APIs or require significant rework of
+those layers.
+
+**Q28.1 — SourceForge**
+
+SourceForge is one of the oldest open-source hosting platforms. Assess its
+current standing:
+
+- Is SourceForge still actively developed and used for new projects?
+- Does it offer an OAuth-based identity provider comparable to GitHub OAuth?
+- Does it support the Git repo hosting model needed for discussion repos?
+- Is its API comparable to GitHub's REST API in the dimensions the roundtable
+  service depends on?
+- What is its reputation in the current open-source community (2025/2026)?
+
+**Q28.2 — Other GitHub alternatives (GitLab, Codeberg, Forgejo, Gitea)**
+
+The prior discussion (Q22) mentioned Graphite, Radicle, GitLawb, and GitSocial
+but did not fully assess mainstream GitHub alternatives:
+
+- **GitLab**: self-hostable, strong API, offers OAuth. Could serve as a
+  drop-in if the owner wanted to self-host the entire git infrastructure.
+  Trade-off: runs well on homelab hardware? GitLab's memory footprint is large.
+- **Codeberg / Forgejo**: lightweight Gitea fork, open-source, hosted at
+  codeberg.org. Forgejo has a GitHub-compatible API surface. Could the
+  roundtable service work against Forgejo with minimal changes?
+- **Gitea**: similar to Forgejo; self-hostable with low resource requirements.
+
+**Q28.3 — Is GitHub lock-in a risk worth mitigating now?**
+
+The architecture has GitHub as a single dependency for: auth, repo hosting, and
+the discussion storage layer. Evaluate:
+
+- What breaks if GitHub is unavailable (planned maintenance, outage, or account
+  suspension)?
+- Is abstracting behind a `DiscussionRepoBackend` behaviour (with `GitHub` and
+  `Forgejo` implementations) worth the engineering cost at this stage?
+- Given that the owner already uses GitHub for their homelab NixOS config repo
+  and other projects, is the dependency already accepted?
+
+**Q28.4 — Ruling out SourceForge explicitly**
+
+If SourceForge does not offer a compelling advantage over GitHub for the
+specific requirements of this system, state clearly that it is ruled out and
+why, so the question does not resurface in future rounds.
+
+**Constraints for Q28:**
+- GitHub auth is the preferred primary identity provider (Q25)
+- Discussion repos must be on a platform that supports forking (core Q23
+  requirement)
+- Self-hosting the git platform (Gitea/Forgejo) is a valid option only if it
+  does not add significant operational complexity to the homelab
+- Brief premise challenge required: *Given that GitHub is already deeply
+  integrated into the owner's workflow, is evaluating alternatives a
+  distraction? Under what circumstances would switching actually be worth it?*

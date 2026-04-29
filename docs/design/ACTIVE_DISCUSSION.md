@@ -3780,3 +3780,1020 @@ Authentik handles internal participants; GitHub OAuth handles external forkers.
 **Q22.4: [satisfied]**
 **Q22.5: [satisfied]**
 
+
+---
+
+## Round 14 — Q23 Discussion Repos + Q5 Revisit — 2026-04-28
+
+### IC Prompt
+
+Agents: Q23 is the most structurally significant question we have faced since Q5.
+It potentially changes the storage model, eliminates our GitHub Issues dependency,
+and reshapes how the app is configured and deployed.
+
+The owner has stated two things clearly:
+1. Each roundtable discussion should live in its own standalone GitHub repo —
+   forkable, selectable as an entry point, visibility-controlled.
+2. GitHub Issues should now be reconsidered as an integral dependency.
+
+Background facts that constrain the design (agents should verify or flag):
+- GitHub forks do NOT copy Issues to the fork
+- The current orchestrator is single-process server-side (no concurrent writes)
+- The existing `Roundtable.Actions.Gh` module uses `gh issue *` for all state
+- `RoundRun` persists locally to `state/round_run_N.json` — this path must change
+
+Address Q23.1–Q23.5 in sequence. Apply the Brief Premise Challenge for Q23.2
+(the Issues revisit) and Q23.3 (DiscussionRepo model) before marking satisfied.
+
+---
+
+### Codex Position — Round 14
+
+## Codex
+
+### Q23.1 — Discussion repo structure
+
+The proposed structure is correct and sufficient. One addition: a `roundtable.toml`
+in the repo root. [inferred from convention in similar tooling — Cargo.toml,
+pyproject.toml, etc.]
+
+```toml
+[roundtable]
+agents = ["codex", "gemini", "claude_ic"]
+max_rounds = 5
+coordinator = "claude_ic"
+coordinator_lease_seconds = 300
+
+[roundtable.questions]
+# Optional: override per-question agent list
+# Q23 = { agents = ["codex", "gemini"] }
+```
+
+`BRIEF.md` stays prose — structured frontmatter in a prose document is hostile
+to both human readers and agents. Keep machine config in `roundtable.toml`;
+keep human questions in `BRIEF.md`.
+
+The `rounds/` directory should use a padded filename convention:
+`rounds/round-001.md`, `rounds/round-002.md` — enables `ls rounds/ | sort` to
+give chronological order, avoids lexicographic breaks at round 10.
+
+**Q23.1: [satisfied]**
+
+---
+
+### Q23.2 — Revisiting GitHub Issues
+
+**Brief premise challenge (required):** *What if removing GitHub Issues makes
+it harder for contributors to participate?*
+
+GitHub Issues provide two things that files do not:
+1. **GitHub notifications**: watchers get emails/notifications when issues are
+   updated. A pure file commit does not trigger this for non-collaborators.
+2. **Human commenting**: a contributor who is not running the service can still
+   comment on an Issue from the GitHub web UI.
+
+However: both of these are desirable-but-not-required. They serve human
+participants, not the orchestrator. If we add an `issues_enabled: true` flag
+to `roundtable.toml`, the app can optionally open one issue per question as
+a notification/commenting surface, with the issue body pointing to the file
+record. This is option (b) in Q23.2.
+
+**My assessment of all four options:**
+
+**(a) Fully file-based:** Cleanest for the orchestrator. Round state is in
+`rounds/round-NNN.md` + YAML frontmatter in `BRIEF.md` tracking question
+status. The orchestrator writes, commits, pushes. No `gh` CLI needed for
+state. GitHub push notifications still work (if repo is watched). Loss:
+no in-thread human commenting on the live discussion; contributors must
+clone the repo or wait for a round file to read the IC synthesis.
+
+**(b) Issues as optional notification layer:** Issues opened at discussion
+start, closed when question is decided, body links to the round files.
+Orchestrator state is file-based; Issues are a read-friendly overlay.
+This is the correct position: it gives us GitHub notifications and
+commenting for free without making the orchestrator depend on Issues.
+The `issues_enabled` flag means self-hosted-without-GitHub deployments
+(e.g. Gitea, Radicle) simply leave it off.
+
+**(c) Hybrid (current model evolved):** Issues as live state + files as
+archive. This keeps the current orchestrator largely intact but the fork
+problem remains — forks get the files but not the in-progress state.
+The fork loses the current round. This is a worse user experience than (b)
+for forkers joining mid-discussion.
+
+**Recommendation: option (b).** File-based state with optional Issues as
+a notification/commenting overlay. The orchestrator's state machine reads
+and writes files, not Issues. `Roundtable.Actions.Gh` becomes a thin
+optional adapter used only if `issues_enabled = true`.
+
+**Q23.2: [satisfied]**
+
+---
+
+### Q23.3 — Service app changes for discussion repo adoption
+
+**Brief premise challenge:** *What if local clone is simpler than GitHub API
+for reads/writes?*
+
+It is. The GitHub Contents API for writes requires base64-encoding file content,
+fetching the current SHA before every write, and handling conflicts manually.
+A local `git clone` + `git commit` + `git push` requires only standard git
+operations — which the orchestrator already uses the filesystem for anyway.
+
+**DiscussionRepo model:**
+
+```elixir
+defmodule Roundtable.DiscussionRepo do
+  @type t :: %__MODULE__{
+    id: String.t(),           # internal UUID
+    gh_slug: String.t(),      # "owner/repo"
+    local_path: Path.t(),     # /home/service/repos/owner-repo/
+    default_branch: String.t(),
+    token: String.t() | nil,  # GitHub token (encrypted at rest)
+    issues_enabled: boolean()
+  }
+end
+```
+
+**Read path:** `git clone --depth 1 <repo>` on first adoption; thereafter
+`git pull` at the start of each round run. Read `BRIEF.md` and `roundtable.toml`
+from the local working copy.
+
+**Write path:** After IC closes a question:
+1. Write `rounds/round-NNN.md` to working copy
+2. Update `DECISION.md` in working copy
+3. `git add -A && git commit -m "round NNN: Q{n} decision"` 
+4. `git push origin <default_branch>`
+
+Credentials: a GitHub PAT with `contents:write` scope, stored encrypted in
+the app's Ecto schema (or in a secrets manager). The `gh` CLI is no longer
+the credential carrier — raw `git` with an embedded token in the remote URL
+(`https://token@github.com/owner/repo`) or via `GIT_ASKPASS`.
+
+**Multiple repos:** The LiveView dashboard shows a list of registered
+discussion repos; the user selects the active one. The app can run
+orchestration on one repo at a time per OTP process tree (one
+`Roundtable.Orchestrator` per repo).
+
+**Q23.3: [satisfied]**
+
+---
+
+### Q23.4 — Forkability mechanics
+
+The end-to-end fork flow with the file-based model:
+
+1. Fork the discussion repo on GitHub → fork gets all `rounds/` files,
+   `BRIEF.md`, `DECISION.md` at the current commit
+2. Register the fork in the service app (`owner/forked-repo`)
+3. The app clones the fork, reads `roundtable.toml` for config
+4. Run new rounds — new `rounds/round-NNN.md` files committed to the fork
+5. The fork's history diverges from the upstream
+
+**Fork provenance:** The app should record `fork_of: "upstream/repo"` and
+`fork_commit: <sha>` in `roundtable.toml` when the fork is registered. This
+is a one-time write; subsequent commits don't touch it.
+
+**PR back to upstream:** Optional nice-to-have. The app can offer "open PR
+from these round files to upstream". Not blocking — can be a future feature.
+
+**Collaborator flow (no fork):** A user with `repo:write` access to the
+discussion repo is added as a GitHub collaborator by the owner. They can
+inject questions via the service app (which pushes to the repo) or directly
+commit to the repo. The service app authenticates them via GitHub OAuth —
+their GitHub token is used for the push, creating a traceable commit
+author.
+
+**Q23.4: [satisfied]**
+
+---
+
+### Q23.5 — Migration path
+
+**Step 1 — Create a standalone discussion repo** (manual, one-time):
+```bash
+gh repo create deepwatrcreatur/roundtable-design --public
+```
+Copy `docs/design/BRIEF.md`, `docs/design/ACTIVE_DISCUSSION.md`,
+`docs/design/DECISION.md` into the new repo. Rename
+`ACTIVE_DISCUSSION.md` → structure as `rounds/` files (one per IC
+synthesis in the existing document). Existing GitHub Issues in
+`agent-roundtable` can stay — they remain as a historical record;
+new discussions use the file model.
+
+**Step 2 — Code modules requiring rework (prioritised):**
+
+1. **`Roundtable.CLI`** — change `start_discussion(brief_path, opts)` to
+   accept a `DiscussionRepo` struct. Add `DiscussionRepo.adopt/1` that
+   clones and reads config.
+2. **`Roundtable.Actions.DiscussionGit`** (new) — replaces
+   `Roundtable.Actions.Gh` for state operations: `read_brief/1`,
+   `write_round/3`, `commit_and_push/2`.
+3. **`Roundtable.Actions.Gh`** — demoted to optional notification adapter;
+   only called when `issues_enabled = true`.
+4. **`Roundtable.RoundRun`** — `state_dir` becomes a path inside the cloned
+   repo working copy (`<local_path>/.roundtable/state/`), not a global
+   app config. This also means the state persists in the discussion repo
+   itself (gitignored for privacy, or committed for auditability — owner
+   chooses).
+5. **`RoundtableWeb.DiscussionRepoController`** (new) — LiveView for repo
+   adoption, listing, and selection.
+
+**Step 3 — What can be deferred:**
+- `issues_enabled` optional Issues overlay — defer until file model is solid
+- PR-back-to-upstream feature — defer
+- Authentik OIDC for collaborators — defer (GitHub OAuth covers initial use)
+
+**Q23.5: [satisfied]**
+
+[satisfied: all five sub-questions. Q23 resolves with a clean file-based
+model, Issues demoted to optional overlay, and a clear migration path.]
+
+---
+
+### Gemini Position — Round 14
+
+## Gemini
+
+### Q23.1 — Discussion repo structure
+
+I agree with the proposed structure and with Codex's `roundtable.toml`
+suggestion. One addition: a `questions/` directory alongside `rounds/`:
+
+```
+<discussion-repo>/
+├── BRIEF.md
+├── DECISION.md
+├── roundtable.toml
+├── questions/
+│   ├── q01.md          # Individual question file: prose + current status frontmatter
+│   ├── q02.md
+│   └── ...
+├── rounds/
+│   ├── round-001.md
+│   └── ...
+└── README.md
+```
+
+**Rationale for `questions/`:** A monolithic `BRIEF.md` works well when the
+discussion is small and owned by one person. As discussions grow — especially
+with multiple collaborators injecting questions at different times — per-question
+files enable: targeted diffs (what changed in Q23?), individual question status
+in frontmatter without polluting the BRIEF, and direct linking (`#q23` becomes
+a file path not a heading anchor).
+
+```yaml
+# questions/q23.md
+---
+id: Q23
+status: open          # open | closed | needs_human_review
+agents: [codex, gemini, claude_ic]
+opened_at: 2026-04-28
+---
+
+### Q23 — Discussion Repos as First-Class Citizens
+...prose...
+```
+
+This is also the natural extension point for `roundtable.toml` to reference:
+`[roundtable.questions]` can point to individual files rather than scanning
+the BRIEF for `### Q\d+` headings.
+
+**Q23.1: [satisfied-conditional: per-question files are an improvement over
+monolithic BRIEF but add directory structure complexity; the owner should
+decide whether simplicity (one BRIEF.md) or modularity (questions/) is
+preferred for their use case]**
+
+---
+
+### Q23.2 — Revisiting GitHub Issues
+
+**Brief premise challenge:** *What if the social value of GitHub Issues is
+larger than we are accounting for? An open discussion repo with Issues as
+the public-facing surface could attract contributors who would never clone
+the repo just to read round files.*
+
+This is a real consideration. For a private discussion repo, Issues are
+irrelevant — no public surface. For a public discussion, GitHub Issues with
+"discussion" labels serve as the canonical external view, where non-technical
+visitors engage without knowing git exists.
+
+**My position nonetheless: option (b) is correct.**
+
+The orchestrator's *state machine* must not depend on Issues. But Issues as
+a *human-engagement surface* have genuine value for public discussions. The
+`issues_enabled` flag covers both cases cleanly.
+
+One concrete detail: if Issues are enabled, the issue body should embed a
+rendered summary of the latest round file, updated by the orchestrator after
+each commit. This makes the Issue a human-readable living document, not just
+a link to a file.
+
+**Disconfirmation pass (applied per Protocol Update 9):** Can I find a
+deployed system that uses GitHub Issues as live orchestration state and
+shows this working reliably at scale? Closest example: GitHub's own issue
+tracker tooling and bot ecosystem. These work, but rely on webhook events
+for real-time state — not polling `gh issue view`. Our polling model is
+fragile at high frequency. This confirms: removing Issues from the
+orchestrator hot path is the right call.
+
+**Q23.2: [satisfied]**
+
+---
+
+### Q23.3 — Service app changes
+
+I largely agree with Codex's DiscussionRepo model. One difference: I prefer
+the **GitHub Contents API over local git clone** for reads, and **local git
+for writes**.
+
+Rationale:
+- Reading `BRIEF.md` via GitHub REST API (`GET /repos/:owner/:repo/contents/
+  BRIEF.md`) requires no local disk state and no git installation on the
+  server. Single HTTP call.
+- Writing (round files, DECISION.md) should still use local git — the
+  Contents API for writes is as awkward as Codex describes (SHA required,
+  base64 encoding, etc.)
+
+Hybrid read/write path:
+- Read: GitHub REST API for `BRIEF.md` and `roundtable.toml` (lightweight,
+  no clone needed to start a round)
+- Write: local git working copy for commit-and-push
+
+This keeps the server's disk footprint small — only repos with active ongoing
+rounds need local clones. Read-only round inspection uses the API.
+
+For the `DiscussionRepo` model, I'd add:
+```elixir
+last_synced_at: DateTime.t() | nil,
+head_sha: String.t() | nil,  # last known HEAD for optimistic concurrency
+```
+
+**Q23.3: [satisfied]**
+
+---
+
+### Q23.4 — Forkability mechanics
+
+One addition to Codex's proposal: **the `roundtable.toml` in a fork should
+auto-record fork provenance on first clone-and-adopt:**
+
+```toml
+[roundtable.fork]
+upstream = "deepwatrcreatur/roundtable-design"
+forked_at_commit = "abc123..."
+forked_at = "2026-04-28T10:00:00Z"
+```
+
+The app writes this to the fork's `roundtable.toml` on adopt, commits it,
+and pushes. This is self-documenting: anyone reading the repo can see where
+it diverged from.
+
+**PR back to upstream:** I'd elevate this from nice-to-have to a planned
+feature. The core value proposition of forkable discussions is the ability
+to merge divergent threads back together — the PR model is exactly this.
+The orchestrator can include a `pr_enabled: true` flag in `roundtable.toml`
+to show a "Propose merge to upstream" button in the LiveView UI.
+
+**Q23.4: [satisfied]**
+
+---
+
+### Q23.5 — Migration path
+
+I agree with Codex's prioritisation. One additional detail on `RoundRun`
+state location:
+
+The `.roundtable/state/` directory in the repo working copy is a good
+default, but it should **not** be gitignored by default. Making the state
+directory committed means:
+
+- Fork provenance includes a snapshot of the orchestrator state at fork
+  time (what round was in progress, what satisfaction markers had been
+  recorded)
+- Restoring from a crash is just `git pull` — no separate backup needed
+- The fork can continue an in-progress round from the exact state the
+  upstream had
+
+The user can always add `.roundtable/state/` to `.gitignore` if they want
+private state. But the default should be: state is committed.
+
+**Additional rework needed that Codex didn't list:**
+
+`Roundtable.Satisfaction` — currently parses satisfaction markers from
+GitHub Issue comment bodies. Under the file model, the same markers appear
+in `rounds/` file text. The parser itself doesn't change (it's regex on
+text), but the driver that feeds it text changes from
+`Gh.view_issue/3` → `DiscussionGit.read_round/2`.
+
+**Q23.5: [satisfied]**
+
+[satisfied: all sub-questions. Endorsing file-based model with Issues as
+optional overlay. Prefer per-question files for modularity; defer to owner
+preference.]
+
+---
+
+### IC Synthesis — Round 14 (Q23)
+
+## Claude IC
+
+### Q23: Architecture Decision — Discussion Repos + GitHub Issues Revisit
+
+**CONSENSUS on core architecture. Two points of divergence require resolution.**
+
+---
+
+**Q23.1 — Repo structure: DECIDED**
+
+Adopting: `roundtable.toml` in repo root (agents agree), `rounds/` directory
+with zero-padded filenames `round-001.md` (Codex), and `BRIEF.md` stays as
+prose (Codex).
+
+**On Gemini's `questions/` directory:** This is a genuine improvement for
+large, growing discussions with multiple contributors. However it adds
+complexity for single-owner simple discussions. **Decision: `BRIEF.md` remains
+the default; `questions/` is supported but not required.** The app's BRIEF
+parser (`~r/### Q\d+/`) already works against a monolithic file. If the
+discussion repo has a `questions/` directory, the app uses it; otherwise
+it falls back to `BRIEF.md`. This is discoverable behaviour, not magic.
+
+```
+<discussion-repo>/
+├── roundtable.toml   ← machine config
+├── BRIEF.md          ← questions (or use questions/ directory)
+├── DECISION.md       ← IC decisions written by app
+├── rounds/
+│   ├── round-001.md  ← full round archive
+│   └── ...
+└── README.md
+```
+
+**Q23.1: [satisfied]**
+
+---
+
+**Q23.2 — GitHub Issues: DECIDED**
+
+**Option (b) adopted: Issues as optional notification/commenting overlay.**
+
+Rationale confirmed by both agents:
+- Disconfirmation pass (Gemini): no deployed system uses Issues as reliable
+  polling-based orchestrator state at scale; webhook-based is the viable
+  pattern, which we are not using.
+- The concurrent-write problem (Q5's core motivation) does not apply to a
+  single-process orchestrator.
+- Issues don't fork → history loss on fork.
+
+**Issues remain available when `issues_enabled = true` in `roundtable.toml`.**
+When enabled: app opens one issue per question at round start, updates issue
+body with rendered round summary after each commit, closes issue when question
+is decided. Issues are human-engagement surface, not orchestrator state.
+
+**`Roundtable.Actions.Gh` is demoted.** It becomes a thin optional adapter,
+not the primary state mechanism. A new `Roundtable.Actions.DiscussionGit`
+module handles all canonical state reads/writes.
+
+This is a significant reversal of the Q5 decision. The Q5 decision was
+correct *given the assumptions at the time* (multi-process concurrent writes,
+no single-server deployment). Those assumptions no longer hold.
+
+**Q23.2: [satisfied]**
+
+---
+
+**Q23.3 — DiscussionRepo model: DECIDED**
+
+**Hybrid read/write path adopted (Gemini's refinement):**
+- **Read `BRIEF.md` + `roundtable.toml`:** GitHub REST API (no local clone
+  needed for initial read; single HTTP GET)
+- **Write (round files, DECISION.md, state):** local git working copy +
+  `git commit && git push`
+
+This means the server only needs a local clone when a round is active. An
+idle discussion repo has no disk footprint on the server.
+
+**`DiscussionRepo` struct (merged from both agents):**
+```elixir
+%Roundtable.DiscussionRepo{
+  id: uuid,
+  gh_slug: "owner/repo",
+  local_path: "/data/repos/owner-repo/",   # nil when not cloned
+  default_branch: "main",
+  token: encrypted_string,                  # PAT with contents:write
+  issues_enabled: false,
+  last_synced_at: datetime | nil,
+  head_sha: string | nil
+}
+```
+
+**Q23.3: [satisfied]**
+
+---
+
+**Q23.4 — Forkability mechanics: DECIDED**
+
+**Fork provenance in `roundtable.toml`** (Gemini's addition) is adopted —
+the app writes `[roundtable.fork]` section on adopt. This is self-documenting.
+
+**PR back to upstream:** elevated from deferred to *planned* (Gemini). Adding
+`pr_enabled: true` flag to `roundtable.toml` and a "Propose merge to upstream"
+button to the LiveView. Blocking implementation until the basic fork flow works.
+
+**Collaborator flow:** GitHub OAuth → their token used for pushes → traceable
+commit author. Authentik OIDC for internal/homelab-only participants (Q22
+decision stands). The two auth paths coexist via Ueberauth.
+
+**Q23.4: [satisfied]**
+
+---
+
+**Q23.5 — Migration path: DECIDED**
+
+**Priority order for implementation:**
+
+| # | Module | Change | Blocks |
+|---|--------|--------|--------|
+| 1 | `DiscussionRepo` struct + Ecto schema | New | Everything below |
+| 2 | `DiscussionGit` action module | New (replaces Gh for state) | Orchestrator |
+| 3 | `Orchestrator` — swap Gh → DiscussionGit | Significant rework | App usable |
+| 4 | `CLI.start_discussion/2` | Accept repo slug, not file path | App entry point |
+| 5 | `RoundRun` — state_dir → repo working copy | Minor | Persistence |
+| 6 | `Gh` adapter — demote to optional | Minor | Issues overlay |
+| 7 | LiveView DiscussionRepo management UI | New | Dashboard usability |
+| 8 | Migrate existing design discussion | Manual | — |
+
+**On `RoundRun` state committed to repo:** adopting Gemini's recommendation
+(committed by default; `.gitignore` opt-out available). The state directory
+path becomes `<local_path>/.roundtable/state/`.
+
+**Existing Issues in `agent-roundtable`:** leave as-is. New discussions use
+the file model. No migration of historical Issues needed.
+
+**Q23.5: [satisfied]**
+
+---
+
+### Protocol Update 10 — Discussion Repos as First-Class Citizens
+
+The Q5 decision (GitHub Issues as primary state) is reversed by Q23.
+
+**Adopted changes:**
+1. Discussions live in standalone GitHub repos, separate from the service code
+2. Canonical state is committed files: `BRIEF.md`, `DECISION.md`, `rounds/round-NNN.md`
+3. `roundtable.toml` in repo root carries all orchestration config
+4. GitHub Issues are an optional overlay (`issues_enabled` flag), not orchestrator state
+5. `RoundRun` state committed to `.roundtable/state/` in the discussion repo
+6. Fork provenance recorded in `[roundtable.fork]` section of `roundtable.toml`
+7. Collaborators authenticate via GitHub OAuth; internal participants via Authentik OIDC
+
+**Constraint that drove the reversal:** GitHub forks do not copy Issues.
+Forkability requires files. [observed fact about GitHub fork behaviour]
+
+**Implementation priority:** `DiscussionRepo` struct → `DiscussionGit` action
+module → Orchestrator swap → CLI update → LiveView UI.
+
+---
+
+## Round 15 — Q24–Q28: Messaging Gateway, Auth, Hosting, Repo Discovery, GitHub Alternatives — 2026-04-29
+
+### IC Prompt — Claude — 2026-04-29
+
+Five new questions have been added by the owner. They cluster naturally into two
+themes:
+
+**Theme A — Access and interface** (Q24, Q25, Q27): How do people get prompts
+into the system, prove who they are, and find the discussions they can interact
+with?
+
+**Theme B — Infrastructure** (Q26, Q28): Where does the service run, and does
+the dependence on GitHub need a hedge?
+
+These questions land after Protocol Update 10 (Q23), which established the
+discussion-repo model. The answers here must be coherent with that model.
+
+**Framing for agents:**
+
+Q24 (messaging gateway) asks whether Telegram or email is a useful inbound
+channel alongside the LiveView UI. Hermes and Openclaw use these channels
+primarily for authentication bypass — a phone number or Telegram ID is
+sufficient identity. Assess whether that model is appropriate here, and whether
+it complements or competes with the GitHub-auth approach.
+
+Q25 (authentication) is the most consequential question this round. The owner
+has a strong prior toward GitHub OAuth because discussion repos live on GitHub.
+The presence of Authentik in the homelab creates an opportunity to proxy
+GitHub OAuth through Authentik for single sign-on across homelab services.
+Evaluate the direct GitHub OAuth vs. Authentik-as-OIDC-proxy options carefully.
+A wrong choice here is expensive to change later.
+
+Q26 (hosting) should be answered concisely. Fly.io has the strongest Elixir
+community endorsement. Gigalixir is a valid second option. Vercel is not
+suitable for OTP. The honest answer may be "homelab first, Fly.io when you need
+to share." Say that if it is true rather than over-engineering a multi-cloud
+strategy.
+
+Q27 (repo discovery) is a product-design question as much as a technical one.
+Auto-discovery via GitHub topics or `roundtable.toml` scan is elegant, but a
+single-owner tool with five repos does not need it on day one. Be honest about
+when the complexity pays off.
+
+Q28 (SourceForge and alternatives) should result in a clear ruling-out of
+SourceForge and an honest assessment of whether GitLab/Forgejo self-hosting is
+worth considering as a GitHub hedge. The owner is already deeply integrated
+with GitHub. The question deserves a clean answer, not a hedge.
+
+**Satisfaction markers expected:** `[satisfied]`, `[satisfied-conditional: <condition>]`,
+or `[needs more evidence: <what>]` — one per question addressed.
+
+---
+
+## Codex
+
+### Q24 — Messaging Gateway
+
+**Position:** Telegram is the right first messaging channel if one is built.
+The case for building it at all is weaker than it appears.
+
+Hermes and Openclaw include messaging channels primarily because their users
+lack a native UI, or because the channel *is* the UX (bots embedded in existing
+team workflows). Neither reason applies here: the roundtable service is getting
+a LiveView dashboard that is the purpose-built interface, and the owner is the
+sole primary user. The authentication value Telegram provides — "only my Telegram
+user ID can send prompts" — is already handled by the GitHub OAuth flow in Q25.
+
+If the owner wants to inject a prompt from the iPhone without opening a browser,
+the most direct path is a mobile-responsive LiveView page, not a Telegram bot.
+LiveView over WebSocket works well on mobile; the component that is painful on
+mobile is *text input of long prompts*, which the Q21 voice-entry architecture
+(whisper.cpp → text → form submit) already addresses.
+
+**Where Telegram does add value:** asynchronous notifications. When a round
+completes, the orchestrator could send a Telegram message: "Round 13 closed:
+Gemini needs more evidence on Q23.2." This is purely outbound — no inbound
+parsing complexity, no auth bypass needed — and it is genuinely useful for a
+single user who does not want to poll the dashboard. This use case is much
+cheaper to implement than a full bidirectional bot.
+
+**Recommendation:** Build outbound Telegram notifications only. Defer inbound
+prompt injection via Telegram until the native mobile UI proves insufficient.
+Do not build iMessage or WhatsApp integrations — Apple server API does not
+exist, and WhatsApp Business API is not justified for a personal tool.
+
+[satisfied]
+
+---
+
+### Q25 — Authentication Strategy
+
+**Position:** Use Authentik as the OIDC broker with GitHub as the upstream
+social provider. Do not implement GitHub OAuth directly in the Elixir app.
+
+The owner's homelab already runs Authentik. The roundtable service should be
+an OIDC relying party to Authentik, not to GitHub directly. This gives:
+
+1. **Single sign-on**: one Authentik session covers roundtable plus any other
+   homelab service (Gitea, Vaultwarden, whatever). No separate login for each
+   app.
+2. **Future auth methods without app changes**: adding a second provider
+   (email OTP for a collaborator without GitHub?) is an Authentik config change,
+   not a code change.
+3. **GitHub independence for local access**: if GitHub is down, the owner can
+   still log into Authentik with a local account and access homelab services.
+   Pure GitHub OAuth would block all local access.
+
+**The Elixir implementation:** Use `assent` with the OpenID Connect provider
+pointing at Authentik. Authentik issues OIDC tokens that include GitHub identity
+claims (username, email) when the user logged into Authentik via GitHub. The
+roundtable app reads the GitHub username from the OIDC claims and calls
+`GET /repos/:owner/:repo/collaborators/:username` to check repo-level write
+access — this is the only GitHub API call needed for authorization, and it
+requires only a service-account token (one GitHub PAT in the server config),
+not an OAuth token per user.
+
+**Collaborator flow:** A collaborator authenticates via GitHub OAuth → Authentik
+→ roundtable app. The app extracts their GitHub username from the OIDC token,
+checks repo membership via the GitHub API with the service PAT, and shows them
+the repos they have write access to. No per-user OAuth token storage required.
+
+**Required GitHub PAT scopes:** `repo` (to call the collaborators endpoint on
+private repos). For public discussion repos, `public_repo` suffices.
+
+**Telegram identity binding (Q24.3):** Store the Telegram user ID as a custom
+attribute in the Authentik user profile. The Telegram bot verifies the update's
+`from.id` against this attribute before accepting prompts. This is an Authentik
+admin operation the owner performs once per trusted user.
+
+[satisfied]
+
+---
+
+### Q26 — Service Hosting
+
+**Position:** Homelab first. Fly.io as the documented upgrade path.
+
+For a single-owner tool with <50 requests/day and existing Authentik OIDC in
+the homelab:
+
+- **Homelab** is the right answer for now. No cold starts, no egress charges,
+  Authentik OIDC works natively, Mega S4 backups plug in directly, NixOS
+  module or Podman container both work well for an Elixir release.
+- **Fly.io** is the right answer if the service is ever exposed to external
+  collaborators who shouldn't need homelab VPN access. The Elixir/Phoenix
+  support is first-class (`fly launch` generates a `fly.toml` with correct
+  Phoenix settings). The free tier includes one shared-CPU VM and 3GB persistent
+  volume — sufficient for this workload. LiveView WebSockets work correctly on
+  Fly.
+- **Gigalixir** is a valid alternative to Fly.io but has a smaller community
+  and slower release cadence. Choose Fly.io over Gigalixir unless there is a
+  specific reason to prefer it.
+- **Vercel** is unsuitable. It is serverless-first and has no concept of a
+  long-running OTP process. A LiveView application *cannot* run on Vercel.
+  Render and Railway work but offer no Elixir-specific advantages over Fly.
+
+**Auth note:** An externally-hosted Fly.io deployment cannot use the homelab
+Authentik directly. Options: (a) expose Authentik externally on a subdomain
+with proper TLS (already viable if the homelab has a public IP/domain);
+(b) use direct GitHub OAuth in the Fly deployment, Authentik in the homelab
+deployment — two config profiles. The service config should make the OIDC
+issuer URL a runtime env var so the same binary runs in both contexts.
+
+[satisfied]
+
+---
+
+### Q27 — Discussion Repo Discovery
+
+**Position:** `roundtable.toml` existence is the identity signal. GitHub topic
+is an optional convenience layer. Auto-discovery is not needed on day one for
+a single-owner tool.
+
+The minimal viable dashboard flow:
+1. User pastes `owner/repo` slug into the "Add discussion repo" field
+2. App checks for `roundtable.toml` via GitHub contents API
+3. If found, parses config and registers the repo
+4. Repo appears in the dashboard
+
+Auto-discovery (scan all accessible repos for `roundtable.toml`) adds O(N) API
+calls and complexity for a use case the owner does not currently have (many
+repos, need to find which are discussions). Add it when there is a concrete need.
+
+**GitHub topic as discoverability signal for others:** A repo owner adding the
+`roundtable-discussion` topic makes their discussion discoverable to other users
+of the service (public discussions only). This is a social feature — useful when
+the service has multiple users who want to browse public discussions — not a
+core infrastructure requirement. Note it in the `roundtable.toml` schema as a
+documentation convention, not a technical dependency.
+
+**`roundtable.toml` minimal schema:**
+
+```toml
+[discussion]
+title = "Agent Roundtable Orchestrator Design"
+agents = ["codex", "gemini", "claude_ic"]
+max_rounds = 5
+coordinator = "claude_ic"
+issues_enabled = false
+
+[fork]
+upstream = ""
+fork_of_commit = ""
+```
+
+Agent identifiers in `agents` resolve against the service's agent registry
+(a config map in the Elixir app that maps `"codex"` → CLI command, model, flags).
+Keep `agents` as identifier strings; agent-specific config stays in the service,
+not in the discussion repo.
+
+[satisfied]
+
+---
+
+### Q28 — SourceForge and GitHub Alternatives
+
+**Position:** SourceForge is ruled out. GitLab self-hosting is worth noting as
+a future hedge. Forgejo/Gitea are the lightest-weight GitHub-compatible
+alternatives if the owner ever wants to move off GitHub. No action needed now.
+
+**SourceForge:** The platform has declined significantly from its early-2000s
+peak. It suffered a major reputation blow in 2015 when it bundled adware into
+downloads of abandoned projects. Current activity is heavily weighted toward
+legacy projects. New open-source projects do not choose SourceForge. It does not
+offer a modern OAuth-based identity provider comparable to GitHub OAuth. It does
+not have an API surface comparable to GitHub's REST or GraphQL APIs. There is no
+compelling reason to consider it.
+
+**Forgejo/Gitea:** These are the most credible lightweight GitHub alternatives.
+Forgejo (the Codeberg fork of Gitea) has a GitHub-compatible REST API — the same
+endpoint paths, same response shapes for repos, contents, and collaborators. In
+theory, the roundtable service could work against Forgejo with minimal changes if
+the GitHub client module is written behind a behaviour. This is worth keeping in
+mind when designing `DiscussionGit` (from Q23's work items): make the GitHub REST
+calls go through a module with a clear interface (`@behaviour DiscussionRepo.Backend`)
+so a Forgejo implementation can be added later without rewriting the orchestrator.
+
+**GitHub lock-in risk:** The owner is already committed to GitHub across their
+homelab NixOS config, other repos, and GitHub auth. The practical risk of a
+GitHub outage is low for a personal tool (they poll, not webhook; polling fails
+gracefully; state is in files). Account suspension is a non-zero risk for anyone
+relying on GitHub, but mitigation is architectural (ensure discussion repos can
+be cloned elsewhere) rather than requiring a platform migration.
+
+**Ruling out:** SourceForge — no modern API, declining platform. Radicle —
+p2p model does not map to the owner's GitHub-centric auth model. GitLawb /
+GitSocial — could not be verified as active platforms during Q22; no evidence
+of relevant features. GitLab.com — viable technical alternative but the owner
+has no reason to move from GitHub. Self-hosted GitLab — large memory footprint
+(4–8GB RAM minimum) makes homelab deployment unattractive versus Forgejo.
+
+[satisfied]
+
+---
+
+## Claude IC
+
+### Round 15 Synthesis — Q24–Q28 — 2026-04-29
+
+Codex has addressed all five questions with consistent reasoning. I find the
+positions defensible and will synthesize them into decisions. There are a few
+points where I want to add precision or surface the premise challenges that the
+brief requires.
+
+---
+
+**Q24 — Messaging Gateway**
+
+Codex's recommendation — outbound Telegram notifications only, no inbound bot —
+is correct for the current stage. The framing is right: the question to ask is
+not "does Telegram work?" (it does) but "does the native UI already solve this?"
+The native LiveView interface plus Q21's voice-entry tier handles prompt
+injection. Inbound Telegram adds a second code path that the owner must maintain
+without clear benefit over the dashboard.
+
+**Premise challenge response:** Is outbound Telegram notification still justified
+given that the LiveView dashboard has real-time updates via WebSocket? Yes,
+because the owner is not always watching the dashboard. A round completion
+notification pushed to the phone requires no polling and no context switch to
+the browser. The signal-to-noise ratio is high (one message per round, not
+continuous). This is the one messaging-channel feature that genuinely adds
+something the dashboard cannot replicate passively.
+
+Decision: build outbound Telegram notification only. Inbound prompt injection
+via Telegram deferred indefinitely. iMessage, WhatsApp, Signal ruled out at
+this stage.
+
+**[satisfied]**
+
+---
+
+**Q25 — Authentication Strategy**
+
+The Authentik-as-OIDC-proxy approach (option (c) in the brief) is the right
+architecture. Codex's reasoning about GitHub independence for local access is
+the decisive factor: if the service uses direct GitHub OAuth, the owner loses
+access to their own homelab tool when GitHub is unreachable. That is not
+acceptable for a self-hosted service.
+
+The implementation is clean:
+- `assent` with OpenID Connect provider → Authentik
+- Authentik federates GitHub as upstream social provider
+- App reads GitHub username from OIDC claims
+- Repo permission check via service PAT (`GET /repos/:owner/:repo/collaborators/:username`)
+- No per-user OAuth token stored in the roundtable app
+
+**Premise challenge response:** GitHub OAuth coupling is mitigated by the
+Authentik proxy layer. The owner can create a local Authentik account as a
+fallback credential for homelab access when GitHub is down. Collaborators who
+only have GitHub identities will be blocked when GitHub is down — this is
+acceptable because they cannot push to the discussion repo during an outage
+either.
+
+Decision: Authentik OIDC proxy with GitHub as upstream provider. Direct GitHub
+OAuth used only in production Fly.io deployments without local Authentik
+(configured via `OIDC_ISSUER_URL` env var).
+
+**[satisfied]**
+
+---
+
+**Q26 — Hosting**
+
+"Homelab first, Fly.io as documented upgrade path" is the correct and honest
+answer. There is no reason to over-engineer a multi-region deployment for a
+personal tool in its first year.
+
+The runtime env var for `OIDC_ISSUER_URL` is a concrete action item: the same
+Elixir release binary should work in homelab (pointing at Authentik) and on
+Fly.io (pointing at GitHub OAuth directly or a cloud-accessible Authentik
+instance). This is a config concern, not a code concern.
+
+**Premise challenge response:** The question "is evaluation premature?" is
+answered by noting that Fly.io is already the correct answer for external
+deployment — we do not need further analysis. The work item is: write a
+`fly.toml` and document the two-config-profile pattern. That is small scope,
+worth doing before deployment rather than after.
+
+Gigalixir is a valid fallback but not recommended over Fly.io for new projects
+in 2026. Vercel is ruled out.
+
+Decision: homelab (NixOS module or Podman container) for personal use.
+Fly.io as the standard external deployment path. Document `OIDC_ISSUER_URL`
+as the key env var differentiating the two profiles.
+
+**[satisfied]**
+
+---
+
+**Q27 — Repo Discovery**
+
+The "paste `owner/repo` slug" flow is the right day-one UX. Auto-discovery
+is a future feature. Codex's schema for `roundtable.toml` is accepted with
+one addition: a `version` field to support schema evolution.
+
+```toml
+schema_version = 1
+
+[discussion]
+title = "Agent Roundtable Orchestrator Design"
+agents = ["codex", "gemini", "claude_ic"]
+max_rounds = 5
+coordinator = "claude_ic"
+issues_enabled = false
+
+[fork]
+upstream = ""
+fork_of_commit = ""
+```
+
+**Premise challenge response:** Auto-discovery is a social/discoverability
+feature that has value only when the service has multiple independent users
+browsing public discussions. For a single owner managing a handful of repos,
+the paste-a-slug UX is faster and less surprising than scanning. The right
+time to add discovery is when the first external user says "how do I find
+public discussions?" — not before.
+
+Decision: `roundtable.toml` existence (checked via GitHub contents API) is
+the canonical identity signal. `schema_version = 1` added to schema.
+GitHub topic `roundtable-discussion` documented as an optional discoverability
+convention. Auto-discovery deferred.
+
+**[satisfied]**
+
+---
+
+**Q28 — SourceForge and GitHub Alternatives**
+
+SourceForge is ruled out. The reasoning does not require elaboration beyond
+what Codex stated: declining platform, no modern OAuth API, adware incident
+legacy, no new-project adoption.
+
+The `DiscussionRepo.Backend` behaviour observation is the most useful technical
+insight from this question. When implementing `DiscussionGit` (Q23 work item 2),
+the module should be written as a concrete implementation of a `@behaviour`,
+not as a hardcoded GitHub client. The behaviour interface is small:
+
+```elixir
+@callback read_file(repo :: t(), path :: String.t()) :: {:ok, binary()} | {:error, term()}
+@callback write_file(repo :: t(), path :: String.t(), content :: binary(), message :: String.t()) :: :ok | {:error, term()}
+@callback list_files(repo :: t(), path :: String.t()) :: {:ok, [String.t()]} | {:error, term()}
+```
+
+A `Forgejo` implementation of this behaviour would be a few hundred lines and
+would make migration off GitHub possible without touching the orchestrator.
+This is a low-cost hedge worth taking at implementation time.
+
+**Premise challenge response:** Evaluating alternatives is not a distraction —
+it produced the useful action item above. The answer is clear: stay on GitHub,
+but write the `DiscussionGit` adapter behind a behaviour so the option exists.
+
+Decision: SourceForge and all evaluated GitHub alternatives ruled out for
+current use. GitLab.com and Forgejo noted as viable future options. `DiscussionGit`
+to be implemented behind `DiscussionRepo.Backend` behaviour (added to Q23 work
+items as item 2a).
+
+**[satisfied]**
+
+---
+
+### Protocol Update 11 — Interface, Auth, and Infrastructure Decisions
+
+Adopted from Round 15:
+
+1. **Messaging:** Outbound Telegram notification only. No inbound bot. All other
+   messaging channels (iMessage, WhatsApp, Signal, email) deferred indefinitely.
+2. **Auth:** Authentik OIDC proxy with GitHub as upstream social provider. Repo
+   permission checks via service PAT. `OIDC_ISSUER_URL` env var differentiates
+   homelab and external deployment profiles.
+3. **Hosting:** Homelab (NixOS/Podman) for personal use. Fly.io as standard
+   external deployment path. Gigalixir valid fallback. Vercel ruled out.
+4. **Repo discovery:** `roundtable.toml` existence is the identity signal.
+   `schema_version = 1` added to schema. Auto-discovery deferred.
+5. **Platform:** SourceForge ruled out. GitHub remains the sole supported platform.
+   `DiscussionGit` to be implemented behind `DiscussionRepo.Backend` behaviour
+   to preserve future optionality for Forgejo/Gitea.
+
+**Updated Q23 work items:**
+- Item 2 renamed: `Roundtable.Actions.DiscussionGit` — implement as concrete
+  module satisfying `DiscussionRepo.Backend` behaviour (new item 2a: define behaviour)
+- Item 6 (Gh adapter demoted): also add `Roundtable.Adapters.GitHub` as the
+  first `DiscussionRepo.Backend` implementation
