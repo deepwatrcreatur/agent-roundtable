@@ -484,3 +484,207 @@ near closure. Guards against shared delusion from a false BRIEF premise.
   unverifiable count
 - Replacing the discussion format — all four changes are protocol changes,
   not architectural ones
+
+---
+
+## Q24 — Messaging Gateway (Round 15, 2026-04-29)
+
+**Decision:** Telegram is the recommended first messaging gateway. Email (IMAP/SMTP) as a
+secondary option. iMessage, WhatsApp, Signal ruled out for server-side receipt reasons or
+approval complexity.
+
+Telegram bot ingests prompts → roundtable service authenticates by Telegram user ID
+bound to GitHub identity in Authentik custom attributes. The Telegram channel
+complements the LiveView UI (it handles prompt injection and notifications); the
+LiveView UI remains the right home for discussion repo management, round history
+browsing, and satisfaction-state visualization.
+
+**Brief premise challenge resolved:** Messaging gateway is in-scope once the core
+orchestrator is functional. It is explicitly deferred until after items 1-22 ship.
+
+---
+
+## Q25 — Authentication Strategy (Round 15, 2026-04-29)
+
+**Decision:** Authentik as OIDC proxy for GitHub OAuth (option c). The roundtable
+Elixir app is an OIDC relying party to Authentik; Authentik federates GitHub as a
+social provider. This gives:
+- Centralized session management and SSO across homelab services
+- MFA available via Authentik without custom code in the app
+- GitHub identity available as a claim in the OIDC token
+
+GitHub OAuth scopes required: `read:user`, `user:email`, and `repo` (for checking
+collaborator access to private discussion repos). Permission checks against the GitHub
+API; no local authorization table required.
+
+**Collaborator flow:** GitHub OAuth → Authentik → OIDC token to app → app queries
+`GET /repos/:owner/:repo/collaborators/:username` to gate access per discussion repo.
+
+**Brief premise challenge resolved:** GitHub unavailability during homelab-only access
+is acceptable for a personal tool. VPN (Tailscale) as a fallback for LAN-only access
+mitigates the risk.
+
+---
+
+## Q26 — Service Hosting (Round 15, 2026-04-29)
+
+**Decision:** Homelab first. Fly.io documented as fallback only if external collaborator
+access is needed without VPN.
+
+Gigalixir noted as technically viable (Elixir-native, no sleep on free tier) but not
+the primary recommendation given homelab infrastructure already present.
+
+Vercel ruled out: serverless/edge model is incompatible with long-running OTP processes
+and LiveView WebSockets.
+
+**Rationale:** See Q31 for updated analysis with full homelab context.
+
+---
+
+## Q27 — Discussion Repo Discovery (Round 15, 2026-04-29)
+
+**Decision:** `roundtable.toml` existence is the canonical identity signal. GitHub
+topic `roundtable-discussion` is an optional convention for public-facing discoverability.
+"Paste owner/repo slug" is the primary day-one UX for repo registration.
+
+Auto-discovery (scanning user repos for `roundtable.toml`) deferred until a concrete
+multi-user need exists. Rate limit concern: O(N) existence checks are acceptable for
+a user with <100 repos; pagination + caching mitigates for larger accounts.
+
+---
+
+## Q28 — GitHub Alternatives (Round 15, 2026-04-29)
+
+**Decision:** SourceForge ruled out. GitHub remains the sole supported platform.
+`DiscussionRepo.Backend` behaviour provides the abstraction point for future
+Forgejo/Gitea support if needed.
+
+SourceForge: declining platform, no modern OAuth API, reputation damage from 2015 adware
+incident. Ruled out explicitly — will not resurface.
+
+Forgejo: GitHub-compatible REST API surface; a `Roundtable.Adapters.Forgejo`
+implementation would require minimal changes beyond `Roundtable.Adapters.GitHub`.
+Not a current priority.
+
+---
+
+## Q29 — Discussion Repo Co-evolution (Round 16, 2026-04-29)
+
+**Decision:** Standalone discussion repos are the default. Embedded (`docs/discussion/`)
+is a valid opt-in for solo/public projects. Architecture supports both via the existing
+`source` detection in `CLI.start_discussion/2`.
+
+**Retrofit convention adopted:**
+- Round 0 file: `round-00-retrofit-snapshot.md` with header
+  `# Retrofit: Current State at <commit>`
+- BRIEF.md opens with a retrofit notice block
+- Service root: `DISCUSSION_REPO.md` (standalone only)
+
+**`roundtable.toml` v1.1 additions:**
+```toml
+embedded = false
+service_repo = ""
+service_commit_at_start = ""
+retrofit = false
+```
+
+---
+
+## Q30 — Collaborator Permission Scoping (Round 16, 2026-04-29)
+
+**Decision:** Service-mediated contributions (LiveView injection, Telegram bot) are
+the primary model. The service acts as the GitHub write principal; discussion
+contributors authenticate to the service, not directly to the repo. This makes
+GitHub write access optional for discussion contributors.
+
+For standalone public discussion repos: any GitHub user can read; the service gates
+writes. For private standalone repos: `read` collaborator access is sufficient.
+
+GitHub Discussions ruled out as round medium: content is not in git history and
+cannot be forked (violates Q23 forkability requirement).
+
+GitHub Organizations not required for solo+occasional-collaborator use case.
+
+---
+
+## Q31 — Homelab Infrastructure Revisit (Round 16, 2026-04-29)
+
+**Decision:** Q26 recommendation confirmed and strengthened. Homelab is the correct
+first-deploy target given:
+- `deepwatercreature.com` publicly routable domain
+- `router` machine running Caddy handles TLS automatically (Let's Encrypt) and
+  WebSocket proxying for Phoenix LiveView without special config
+- Unified `unified-nix-configuration` NixOS flake: adding the service is ~20 lines
+  of NixOS module + one Caddy virtual host block
+- NixOS `nixos-rebuild switch` is already the owner's deployment workflow; `fly deploy`
+  adds a Docker build step with no net simplification for this user
+
+**Caddy WebSocket note:** `reverse_proxy localhost:4000` forwards WebSocket upgrade
+headers by default. Phoenix requires `PHX_HOST` set to the public hostname to prevent
+CSRF errors — this is a one-line NixOS module config.
+
+**Remaining open decisions (conditions for full Q31 closure):**
+1. Public (`roundtable.deepwatercreature.com`) vs. VPN-only for external collaborator access
+2. `PHX_HOST` value confirmed in NixOS module
+
+**Fly.io:** Retained as documented fallback only if public access without VPN is required.
+
+### Protocol Update 12 — Co-evolution and Deployment Conventions
+
+See ACTIVE_DISCUSSION.md Round 16 for full text. Summary:
+1. Standalone-first with embedded opt-in; `embedded` field in `roundtable.toml`
+2. Retrofit conventions: `round-00-retrofit-snapshot.md`, retrofit BRIEF notice, `DISCUSSION_REPO.md`
+3. Service-mediated contributions as primary path for discussion contributors
+4. Homelab (NixOS + Caddy) confirmed as first-deploy target
+5. `roundtable.toml` schema v1.1 additions: `embedded`, `service_repo`, `service_commit_at_start`, `retrofit`
+
+---
+
+## Q32 — Protocol Self-Assessment (Round 17, 2026-04-29)
+
+**Three structural flaws identified:**
+
+1. **Anchoring** — agents speak sequentially and see prior responses; later agents
+   anchor to earlier positions (Delphi literature)
+2. **IC circular authority** — IC deliberates, triages, and closes unilaterally;
+   no independent check on IC's framing or closure decision
+3. **`[satisfied]` marker conflates genuine agreement with exhausted opposition**;
+   creates misleading unanimity in the record
+
+**What is preserved:** premise challenge requirement (Protocol 11); typed claim
+provenance `[observed]`/`[testimony]`/`[inferred]` (Protocol 9).
+
+### Protocol Update 13 — Structural Corrections
+
+**Adopted immediately:**
+
+**New marker: `[no objection]`**
+Meaning: "No further evidence; not blocking closure; not asserting this is the
+best answer." Distinguishes from `[satisfied]` (active agreement) and
+`[needs more evidence]` (blocking). DECISION.md flags consensus formed primarily
+from `[no objection]` as "convergent but not robust."
+
+**Explicit warrant for contested `[inferred]` claims**
+When agent A contests agent B's `[inferred]` claim: A must state the assumed
+warrant and why it fails. IC must adjudicate the warrant dispute in the synthesis.
+
+**Adopted in principle, deferred to first production run:**
+
+**Challenger role at IC closure**
+One agent (the first speaker that round, rotating) must articulate the strongest
+alternative to the IC's proposed synthesis and rate it Low/Medium/High plausibility.
+Medium or High triggers an additional round before closure.
+
+**Deferred pending empirical evidence:**
+
+**Blind first sub-turn** (Delphi-inspired): each agent writes initial position
+without seeing others'; positions shared; second sub-turn follows. Adopted only
+if anchoring is empirically present in first real agent run.
+
+### Discourse Literature Incorporated
+
+- Delphi method → blind first sub-turn proposal (deferred)
+- Toulmin (1958) → explicit warrant for contested inferences (adopted)
+- ODNI SAT/ACH → Challenger role at closure (deferred)
+- Fishkin deliberative polling → "missing perspectives" IC prompt (future work item)
+- Habermas ideal speech → typed provenance already addresses sincerity claim

@@ -559,3 +559,534 @@ Be specific. "Agents should cite sources" is not a recommendation — the IC
 verification protocol already requires quoted content. What new structural
 change would catch the failure mode that the current protocol still misses?
 
+
+---
+
+### Q24 — Messaging Gateway for Prompt Injection (2026-04-29)
+
+**Context and motivation:**
+
+Tools like Hermes and Openclaw expose multiple inbound channels for sending
+prompts to an AI agent: Telegram, iMessage, WhatsApp, email, and others. These
+channels solve a real problem — authentication and reachability — without
+requiring a dedicated native UI. For a single owner operating a homelab service
+with low prompt volume (<50 requests/day), it is worth asking whether a
+messaging gateway is a better primary interface than the LiveView web app, or a
+valuable complement to it.
+
+The owner uses an iPhone as primary mobile device and has expressed interest in
+voice entry (Q21). A messaging channel could serve as the delivery mechanism
+for voice-transcribed prompts: speak → transcribe → send to Telegram bot →
+ingest to orchestrator.
+
+**Q24.1 — Which messaging gateway, if any?**
+
+Telegram, iMessage, WhatsApp, and email each have different characteristics:
+
+- **Telegram**: open API, easy bot creation, no Apple dependency, cross-platform,
+  widely used by self-hosting community. Requires Telegram account. Free.
+- **iMessage**: native iOS/macOS UX, no app install friction, but requires a Mac
+  or jailbreak/workaround for server-side receipt; Apple does not expose an
+  official server API.
+- **WhatsApp**: popular globally but the business API has cost and approval
+  complexity for personal use.
+- **Email**: universally available; IMAP/SMTP bridges are mature; high latency
+  acceptable for async discussion prompts; no app required.
+
+Which channel(s) are worth building for, and what is the recommended first
+implementation given the owner's constraints (iPhone, homelab, single user,
+Authentik OIDC already deployed)?
+
+**Q24.2 — Does a messaging gateway replace the LiveView UI or complement it?**
+
+**Q24.3 — Authentication via messaging channel**
+
+How does messaging identity interact with the GitHub-based auth model (Q25)?
+
+**Constraints for Q24:**
+- Single owner primary user; occasional collaborators
+- iPhone-first mobile workflow
+- Must not require Apple infrastructure
+- Brief premise challenge required: *Is adding a messaging gateway scope creep
+  that delays the core orchestrator work?*
+
+---
+
+### Q25 — Authentication Strategy: GitHub Auth, Collaborators, and Authentik (2026-04-29)
+
+**Context and motivation:**
+
+The owner has identified GitHub auth as the preferred primary identity provider.
+Authentik is already self-hosted in the homelab.
+
+**Q25.1 — GitHub OAuth as primary identity: minimal auth flow**
+
+**Q25.2 — Where does Authentik fit?**
+
+Options: (a) Authentik as OIDC proxy for GitHub OAuth, (b) direct GitHub OAuth
+in the Elixir app, (c) both — Authentik as broker with GitHub as upstream.
+
+**Q25.3 — Collaborator invite and authorization flow**
+
+**Q25.4 — Messaging gateway identity binding (cross-ref Q24.3)**
+
+**Constraints for Q25:**
+- Must work in homelab with Authentik already deployed
+- GitHub OAuth preferred; no paid identity service
+- Brief premise challenge required: *GitHub OAuth tightly couples auth to GitHub
+  availability — if GitHub is down, can the owner access their own homelab service?*
+
+---
+
+### Q26 — Service Hosting: Homelab vs. Managed Elixir Hosts (2026-04-29)
+
+**Context and motivation:**
+
+Evaluate fly.io, Gigalixir, general PaaS options, and homelab self-hosting for
+the Phoenix/LiveView/OTP workload.
+
+**Q26.1 — Fly.io** (free tier, BEAM compatibility, clustering, cold starts)
+
+**Q26.2 — Gigalixir** (Elixir-native, free tier no sleeping, limitations)
+
+**Q26.3 — General PaaS** (Render, Railway, Vercel — Vercel is poor fit; explain why)
+
+**Q26.4 — Homelab self-hosting** (NixOS module or Podman, Authentik integration,
+backup strategy to Mega S4)
+
+**Q26.5 — Recommendation:** homelab first with documented path to Fly.io?
+
+**Constraints for Q26:**
+- Free or <$10/month
+- Must support long-running OTP processes and LiveView WebSockets
+- Brief premise challenge required: *Is evaluating hosting premature given the
+  service does not yet exist in deployable form?*
+
+---
+
+### Q27 — Discussion Repo Discovery: GitHub Topics, Labels, and the User Dashboard (2026-04-29)
+
+**Context and motivation:**
+
+When a user authenticates, how does the app find discussion repos they can
+interact with?
+
+**Q27.1 — GitHub topics as discovery mechanism** (`roundtable-discussion` topic)
+
+**Q27.2 — `roundtable.toml` as both config and identity signal**
+
+**Q27.3 — `roundtable.toml` schema** (agents, max_rounds, coordinator,
+issues_enabled, fork metadata)
+
+**Q27.4 — Dashboard UX for repo management** (add by slug, register fork, start round)
+
+**Constraints for Q27:**
+- Must work within GitHub API rate limits
+- Discovery must be opt-in
+- No GitHub App or webhook required
+- Brief premise challenge required: *Does auto-discovery add complexity that
+  "paste your repo URL" already solves for a single-owner tool?*
+
+---
+
+### Q28 — SourceForge and GitHub Alternatives: Any Reason to Look? (2026-04-29)
+
+**Context and motivation:**
+
+Assess whether SourceForge or other GitHub alternatives (GitLab, Codeberg,
+Forgejo, Gitea) warrant consideration given the GitHub-centric architecture.
+
+**Q28.1 — SourceForge** (current standing, API, reputation)
+
+**Q28.2 — GitLab, Forgejo, Gitea** — Forgejo has GitHub-compatible REST API;
+could the service work against it with minimal changes?
+
+**Q28.3 — Is GitHub lock-in a risk worth mitigating now?** (`DiscussionRepoBackend`
+behaviour already provides the abstraction)
+
+**Q28.4 — Rule out SourceForge explicitly**
+
+**Constraints for Q28:**
+- GitHub auth is preferred primary identity provider (Q25)
+- Discussion repos must support forking
+- Brief premise challenge required: *Given GitHub is already deeply integrated,
+  is evaluating alternatives a distraction?*
+
+---
+
+### Q29 — Discussion Repo Co-evolution: Embedded vs. Standalone (2026-04-29)
+
+**Context and motivation:**
+
+The current architecture places discussion repos as standalone GitHub
+repositories — separate from any service repo being designed. The owner has
+raised the possibility that separating the design discussion from the service
+repo may be a mistake. When there is an active development project, the
+connection between design intent and implementation should be easy to trace.
+
+Additionally, the owner wants to revisit older projects retroactively — adding
+a discussion folder that re-examines past design decisions. This suggests the
+model needs to support both:
+
+- **Greenfield**: start a new service repo; attach a discussion folder before
+  or alongside development
+- **Retrofit**: take an existing service repo with no prior discussion and add
+  one, linking it to the current codebase state
+
+**Q29.1 — Embedded model: `docs/discussion/` inside the service repo**
+
+Instead of a standalone discussion repo, the roundtable material lives in a
+subfolder of the service repo:
+
+```
+my-service/
+  docs/
+    discussion/
+      BRIEF.md
+      DECISION.md
+      roundtable.toml
+      rounds/
+        round-00-opening.md
+        ...
+  lib/
+  ...
+```
+
+Advantages:
+- Design and implementation evolve together; git history links them
+- A single fork of the service repo gives contributors both the code and the
+  discussion history
+- No separate repo to register in the roundtable dashboard
+
+Disadvantages:
+- Discussion content mixed with code content in PRs and blame history
+- Permission scoping is harder: a discussion contributor needs at least `read`
+  access to the code
+- A service repo may have many contributors who should not have write access
+  to the discussion (or vice versa)
+
+Is the embedded model always, sometimes, or never preferable? What is the
+decision rule?
+
+**Q29.2 — Standalone discussion repo with explicit link**
+
+The current architecture. The discussion repo is `owner/my-service-design`
+and the `roundtable.toml` could carry a `service_repo` field pointing at the
+implementation repo:
+
+```toml
+[discussion]
+service_repo = "owner/my-service"
+service_commit_at_start = "abc123"
+```
+
+Advantages:
+- Clean separation of concerns; different permission models
+- The discussion repo can be public even if the service repo is private
+- Forkability is preserved (Q23): forks of the discussion don't inherit code
+
+Disadvantages:
+- Discoverability: finding a service repo's discussion requires knowing the
+  `owner/my-service-design` convention, or using GitHub topics
+- Two repos to keep track of; cross-references in issues/PRs need explicit links
+
+**Q29.3 — Retrofit model: adding discussion to an existing project**
+
+When the service already exists and has accumulated design decisions never
+formally recorded:
+
+- Should a retroactive discussion reconstruct past decisions (recording what
+  was decided and why), or open new questions about the current design?
+- How does `rounds/` work for a project where "round 0" is the current
+  production state, not a blank design slate?
+- What conventions help future readers understand that round 0 is a retrofit,
+  not a greenfield opening?
+
+**Q29.4 — Cross-linking convention**
+
+Whether embedded or standalone, define the convention for cross-referencing
+the discussion from the service repo and vice versa:
+
+- A `DISCUSSION.md` or `DISCUSSION_REPO.md` in the service root that links
+  to the discussion repo (standalone model)
+- A `README` badge or link in the standalone discussion repo pointing at the
+  service
+- GitHub repo description, topics, and `homepage` URL as discoverability aids
+
+**Constraints for Q29:**
+- Must support both greenfield and retrofit use cases
+- Must not force all discussion contributors to have code write access
+- Brief premise challenge required: *Is the embedded model actually simpler
+  in practice for a solo developer, or does it create friction (e.g., every
+  code PR now changes docs) that the standalone model avoids?*
+
+---
+
+### Q30 — GitHub Collaborator Permission Scoping for Discussions (2026-04-29)
+
+**Context and motivation:**
+
+The owner raised the question of whether GitHub collaborator permissions can
+be scoped so that a contributor can participate in a discussion (comment on
+issues, fork and read the discussion repo) without being able to modify service
+code. This is relevant for both models in Q29:
+
+- In the standalone model, the discussion repo can be set to `public` or have
+  its own collaborator list, entirely independent of the service repo
+- In the embedded model, discussion contributions require at least `read` access
+  to the service repo, which may be acceptable or may not be
+
+**Q30.1 — GitHub repo-level permission scoping**
+
+GitHub's permission levels for collaborators on a single repo are:
+`read`, `triage`, `write`, `maintain`, `admin`. There is no "comment only" or
+"fork only" role; `read` access allows forking (of public repos anyone can fork
+anyway) and commenting on issues/PRs.
+
+For the standalone discussion repo:
+- **Public repo**: anyone can read, fork, and open issues. Write access still
+  required to push commits (e.g., contribute a round file)
+- **Private repo with `read` collaborator**: can read, fork-to-their-own-account,
+  and comment on issues/PRs. Cannot push to the main repo.
+- **Private repo with `write` collaborator**: can also push branches and make PRs
+
+Is `read` access on a standalone private discussion repo sufficient for the
+"discussion contributor" role? Can they submit round contributions as PRs from
+their fork?
+
+**Q30.2 — GitHub Organizations as a scoping mechanism**
+
+GitHub Organizations allow teams with different permissions on different repos.
+An organization could have:
+- `discussion-contributors` team: `write` on discussion repos, no access to
+  service repos
+- `developers` team: `write` on service repos, `read` on discussion repos
+- `owners`: `admin` on all
+
+Is setting up a GitHub Organization worth the overhead for a solo project with
+occasional collaborators?
+
+**Q30.3 — What "discussion-only" contributors actually need**
+
+For the roundtable workflow, a discussion contributor needs to:
+
+1. Read the current `BRIEF.md` and round files
+2. Write their response (commit a round file, or inject via the LiveView app)
+3. See the accumulated `DECISION.md`
+
+If contributions are made via the roundtable service (LiveView prompt injection
+or Telegram bot), they do not need GitHub write access at all — the service acts
+as the authenticated write principal. If contributions are made via Git (clone,
+write, PR), they need `write` access (or fork + PR).
+
+Recommendation: is the "inject via service" model sufficient for
+discussion-only contributors, making GitHub permission complexity moot?
+
+**Q30.4 — GitHub Discussions vs. Issues vs. round files**
+
+GitHub has a native "Discussions" feature (separate from Issues) which allows
+threaded conversations without requiring write access to the repo. Would using
+GitHub Discussions as the round medium (instead of committed files or Issues)
+better serve the permission model?
+
+Trade-offs vs. committed round files:
+- GitHub Discussions: anyone can participate (no write access needed), native
+  threaded UX, searchable, but content is not in the git history and cannot be
+  forked
+- Committed round files: full git history, forkable, diff-able, but require
+  write access to contribute directly
+
+**Constraints for Q30:**
+- Must support single owner + occasional external collaborators
+- Collaborators should not be able to modify service code unless explicitly
+  granted write access
+- Must remain simple: no GitHub Apps, no custom permission infrastructure
+- Brief premise challenge required: *If all discussion contributions are made
+  via the roundtable service (not direct git commits), does the GitHub
+  permission question largely answer itself?*
+
+---
+
+### Q31 — Homelab Infrastructure and Hosting Revisit (2026-04-29)
+
+**Context and motivation:**
+
+The owner has provided additional homelab context that was not available during
+Q26. The homelab has:
+
+- **Domain**: `deepwatercreature.com` (active, publicly routable)
+- **Configuration**: all machines defined in a unified `unified-nix-configuration`
+  NixOS flake (one repo, all hosts)
+- **Firewall/reverse proxy**: a machine named `router` running Caddy, which
+  provides TLS termination and reverse proxying for all homelab services
+- **Existing services**: Authentik (OIDC), Podman for containers, Attic
+  (Nix binary cache), and others
+
+This changes the Q26 analysis: homelab hosting is not "bare metal with manual
+setup" but "NixOS module + Caddy virtual host + a line in the unified flake."
+
+**Q31.1 — NixOS module for the roundtable service**
+
+What would a minimal NixOS module for the roundtable service look like in the
+unified-nix-configuration flake?
+
+- Systemd unit wrapping `mix run` or a compiled release
+- Environment variables for GitHub token, secret key base
+- Firewall/Caddy config: a virtual host at
+  `roundtable.deepwatercreature.com` routing to the Phoenix listener port
+- Authentik OIDC integration: Caddy or Phoenix handles the OIDC redirect
+
+Estimate the number of lines of NixOS config to stand up a new service vs. the
+`fly deploy` equivalent.
+
+**Q31.2 — Caddy as the TLS/proxy layer**
+
+Caddy's automatic HTTPS (Let's Encrypt) means TLS is trivially handled for any
+new service added to the router. Evaluate:
+
+- How does Caddy's `reverse_proxy` directive route to a Phoenix LiveView app
+  with WebSocket connections (needed for LiveView)?
+- Is there anything Phoenix/OTP-specific that Caddy handles differently from
+  Nginx?
+- Does Caddy support the headers Phoenix needs for WebSocket upgrades and
+  remote IP detection?
+
+**Q31.3 — Deployment workflow in a NixOS flake**
+
+The unified-nix-configuration flake means deployment is:
+
+```bash
+nixos-rebuild switch --flake .#workstation
+# or for the server hosting the service:
+nixos-rebuild switch --flake .#homeserver
+```
+
+Compare this to `fly deploy` (Docker build + push + VM restart):
+
+- NixOS rebuild: atomic, declarative, rollback via `nixos-rebuild --rollback`
+  or boot entry. No Docker build step. Nix binary cache (Attic) means fast
+  deploys after the first build.
+- Fly.io: push-based, Docker-based, further from the owner's existing workflow.
+
+Is the NixOS deployment workflow already familiar enough that Fly.io's "easier
+deploy story" is not actually easier for this owner?
+
+**Q31.4 — Updated Q26 recommendation given homelab context**
+
+Given the additional infrastructure information, is the Q26 recommendation
+("homelab first, Fly.io as documented fallback") still correct? Does the
+presence of Caddy, a public domain, and a unified NixOS flake make homelab
+hosting more clearly the right first-deploy target?
+
+What are the remaining risks of homelab hosting that Fly.io avoids? (Home
+internet reliability, hardware failure, no managed scaling.)
+
+**Constraints for Q31:**
+- Homelab machines run NixOS and are configured via the unified-nix-configuration flake
+- Caddy handles TLS and reverse proxying at `router`
+- `deepwatercreature.com` is publicly routable
+- Brief premise challenge required: *Given that the roundtable service is primarily
+  a personal tool for one owner, does it need to be publicly reachable at all?
+  Could it run as a local-only service (no public domain, LAN access only)?*
+
+---
+
+### Q32 — Protocol Self-Assessment: Structural Flaws and Discourse Literature (2026-04-29)
+
+**Context and motivation:**
+
+The roundtable protocol has now completed 16 rounds and adopted 12 protocol
+updates. It has incorporated ideas from epistemology (Q20), organizational
+decision theory (Q15), and procedural design (Q1-Q5). But accumulated
+protocol updates may have created local patches that obscure deeper structural
+issues. Before continuing to build implementation on top of the protocol, it
+is worth asking whether the protocol itself has fundamental flaws that will
+surface under real usage.
+
+Additionally, the literature on productive discourse, structured argumentation,
+and group epistemics is rich — Delphi method, Structured Analytic Techniques
+(ODNI/CIA), argumentation theory (Toulmin, Walton), deliberative democracy
+theory (Habermas, Fishkin), and formal debate formats. The protocol has not
+explicitly engaged with most of this literature.
+
+**Q32.1 — Retrospective: what are the biggest structural flaws in the current protocol?**
+
+Review the protocol as documented across Protocol Updates 1-12 and identify
+the top 2-3 structural weaknesses — not surface issues (those have been
+patched) but systemic problems that the current patch history does not address.
+
+Consider:
+- **Roles**: Are the three roles (Codex, Gemini, IC) well-defined? Is the IC
+  role over-loaded (it is simultaneously a deliberator, a synthesizer, and a
+  closer)? Does the role structure create systematic bias?
+- **Round structure**: Is the round model (all agents speak once → IC
+  synthesizes) appropriate for all question types, or does it fail for
+  questions requiring rapid back-and-forth iteration?
+- **Satisfaction markers**: The `[satisfied]`/`[satisfied-conditional]`/
+  `[needs more evidence]` taxonomy is binary in one important respect — it does
+  not distinguish between "I have no further evidence to add" and "I actively
+  disagree but am outvoted." Does this create false consensus?
+- **Question granularity**: The BRIEF.md questions vary from highly specific
+  (Q28: SourceForge assessment) to very open (Q20: epistemology of AI agents).
+  Does the same round structure serve both question types well?
+- **IC closure authority**: The IC has unilateral authority to close a question.
+  Is this appropriate, or does it create a structural asymmetry where the IC's
+  biases systematically shape outcomes?
+
+**Q32.2 — What the protocol does well (to preserve)**
+
+Before recommending changes, identify 2-3 things the protocol does that are
+genuinely good and should be preserved — not the obvious things (it iterates,
+it uses multiple agents) but subtler properties that are worth naming explicitly.
+
+**Q32.3 — Discourse literature: what has not been incorporated?**
+
+Survey the following and assess whether each offers something the current
+protocol lacks:
+
+- **Delphi method**: structured expert elicitation via anonymous iterated
+  questionnaire with feedback. Key insight: anonymity reduces anchoring and
+  social pressure. Does our protocol have an anchoring problem (agents see
+  each other's positions in the same round before responding)?
+- **Toulmin argumentation model**: every claim has a Claim, Data, Warrant,
+  Backing, Qualifier, and Rebuttal. Does the protocol capture warrant and
+  backing, or does it collapse to "I assert X [satisfied]"?
+- **Structured Analytic Techniques (SATs)**: ODNI techniques like Analysis of
+  Competing Hypotheses (ACH), Red Team/Devil's Advocate, and Key Assumptions
+  Check. The Protocol Update 9 disconfirmation pass is a weak form of ACH —
+  is it sufficient?
+- **Deliberative polling (Fishkin)**: participants deliberate with balanced
+  briefing materials before forming opinions. Analogy: the BRIEF.md is the
+  briefing material, but it is written by one party (the owner) — is this a
+  bias source?
+- **Habermasian ideal speech situation**: discourse is valid when participants
+  have equal standing, no coercion, and are oriented toward mutual understanding
+  rather than strategic goals. How well does the roundtable protocol approximate
+  ideal speech conditions? What violates those conditions most severely?
+
+**Q32.4 — Concrete protocol changes recommended**
+
+Given Q32.1-Q32.3, propose at most three concrete structural changes to the
+protocol. Distinguish:
+
+- Changes that are protocol-only (can be adopted immediately, no code changes)
+- Changes that require code support (e.g., a new round structure, new markers)
+- Changes that require external resources (e.g., curated BRIEF.md templates)
+
+For each proposed change, state:
+1. Which structural flaw it addresses
+2. What discourse literature it draws on
+3. What it costs (complexity, latency, round length)
+4. What would indicate it is working vs. not working
+
+**Constraints for Q32:**
+- Bias toward protocol simplicity: a good protocol should be teachable in one
+  page. Changes that add cognitive overhead for marginal epistemic gain should
+  be rejected.
+- The protocol must remain operable with LLM agents that have finite context
+  windows. Proposals requiring agents to read the full 16-round ACTIVE_DISCUSSION.md
+  as context are not feasible at scale.
+- Brief premise challenge required: *Is the protocol already good enough for
+  the actual use case (one owner, personal projects, LLM agents)? Is investing
+  in further protocol sophistication premature given that it has never been
+  run end-to-end with real LLM agents?*
