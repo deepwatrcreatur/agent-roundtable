@@ -33,6 +33,11 @@ defmodule Roundtable.Orchestrator do
         any needs-more-evidence      → :awaiting_turns (next round, reset speakers)
         max_rounds reached           → :needs_human_review
 
+      :coordinator_unavailable
+        standby available            → takeover, resume suspended_phase
+        no standby, max not reached  → :needs_human_input
+        max takeovers reached        → :needs_human_review
+
       :needs_human_input             (HITL interrupt — resume via LiveView)
       :closed                        (terminal)
       :needs_human_review            (terminal)
@@ -53,6 +58,9 @@ defmodule Roundtable.Orchestrator do
   @default_agents [:codex, :gemini, :claude_ic]
   @default_max_rounds 5
   @terminal_phases [:closed, :needs_human_review, :needs_human_input]
+  @default_standby_coordinators [:codex, :gemini]
+  @default_coordinator_lease_seconds 300
+  @default_max_takeovers 2
 
   @label_conflicts %{
     "satisfied" => ["needs-more-evidence", "satisfied-conditional"],
@@ -240,6 +248,66 @@ defmodule Roundtable.Orchestrator do
     end
   end
 
+  def step(%RoundRun{phase: :coordinator_unavailable} = run, _issue, opts) do
+    standbys = Keyword.get(opts, :standby_coordinators, @default_standby_coordinators)
+    max_takeovers = Keyword.get(opts, :max_takeovers, @default_max_takeovers)
+    available = standbys -- [run.coordinator]
+
+    cond do
+      run.takeover_count >= max_takeovers ->
+        Telemetry.issue_close(run.issue_number, run.retry_count, :max_rounds)
+        next_run = RoundRun.put_phase(run, :needs_human_review)
+        comment =
+          "**Roundtable:** Coordinator unavailable and max takeovers (#{max_takeovers}) reached. " <>
+            "Flagging for human review."
+
+        {next_run,
+         [
+           {:gh_comment, run.issue_number, comment},
+           {:gh_label, run.issue_number, ["needs-human-review"], ["coordinator-unavailable"]},
+           {:notify, {:coordinator_max_takeovers, run.issue_number}}
+         ]}
+
+      available != [] ->
+        [standby | _] = available
+        prev = run.coordinator
+
+        case RoundRun.takeover(run, standby) do
+          {:ok, resumed_run} ->
+            Telemetry.coordinator_takeover(run.issue_number, prev, standby)
+            note =
+              "**Roundtable:** Coordinator #{inspect(prev)} timed out. " <>
+                "#{inspect(standby)} taking over from phase `#{run.suspended_phase}`."
+
+            {resumed_run,
+             [
+               {:gh_comment, run.issue_number, note},
+               {:gh_label, run.issue_number, [], ["coordinator-unavailable"]},
+               {:notify, {:coordinator_takeover, run.issue_number, standby}}
+             ]}
+
+          {:error, :no_suspended_phase} ->
+            next_run = RoundRun.put_phase(run, :needs_human_input)
+
+            {next_run,
+             [
+               {:gh_label, run.issue_number, ["needs-human-input"], ["coordinator-unavailable"]},
+               {:notify, {:coordinator_unavailable, run.issue_number}}
+             ]}
+        end
+
+      true ->
+        # No standbys configured — escalate to human
+        next_run = RoundRun.put_phase(run, :needs_human_input)
+
+        {next_run,
+         [
+           {:gh_label, run.issue_number, ["needs-human-input"], ["coordinator-unavailable"]},
+           {:notify, {:coordinator_unavailable, run.issue_number}}
+         ]}
+    end
+  end
+
   def step(%RoundRun{phase: phase} = run, _issue, _opts)
       when phase in @terminal_phases do
     {run, []}
@@ -285,10 +353,25 @@ defmodule Roundtable.Orchestrator do
 
       {:ok, issue} ->
         synced = sync_from_issue(run, issue)
-        {next_run, effects} = step(synced, issue, context.opts)
+        checked = maybe_detect_coordinator_timeout(synced)
+        {next_run, effects} = step(checked, issue, context.opts)
         RoundRun.persist(next_run)
         apply_effects(effects, Map.put(context, :issue, issue))
         run_issue_loop(next_run, context)
+    end
+  end
+
+  # If the coordinator lease has expired, enter :coordinator_unavailable before stepping.
+  defp maybe_detect_coordinator_timeout(run) do
+    now = DateTime.utc_now()
+
+    if run.phase not in @terminal_phases and
+         run.phase != :coordinator_unavailable and
+         RoundRun.coordinator_timed_out?(run, now) do
+      Telemetry.coordinator_timeout(run.issue_number, run.coordinator)
+      RoundRun.enter_coordinator_unavailable(run)
+    else
+      run
     end
   end
 
@@ -303,6 +386,10 @@ defmodule Roundtable.Orchestrator do
     brief = context.brief
     repo_root = Map.get(gh_config, :repo_root, File.cwd!())
     round = Keyword.get(opts, :_current_round, 1)
+    lease_seconds = Keyword.get(opts, :coordinator_lease_seconds, @default_coordinator_lease_seconds)
+
+    # IC claims coordinator lease; any other agent triggers a heartbeat.
+    update_coordinator_lease(agent, issue_number, lease_seconds)
 
     prompt = Prompt.build(brief, issue, agent_role(agent))
     Telemetry.agent_turn(agent, issue_number, round)
@@ -442,6 +529,43 @@ defmodule Roundtable.Orchestrator do
     |> case do
       nil -> nil
       comment -> Map.get(comment, "body", "")
+    end
+  end
+
+  # ------------------------------------------------------------------
+  # Coordinator lease helpers
+  # ------------------------------------------------------------------
+
+  # IC claims a fresh coordinator lease; non-IC agents heartbeat the active lease.
+  # Loads the run from ETS, updates, and persists — all side-effectful.
+  defp update_coordinator_lease(agent, issue_number, lease_seconds) do
+    case RoundRun.load(issue_number) do
+      {:ok, run} ->
+        updated =
+          if agent == :claude_ic do
+            case RoundRun.claim_coordinator(run, :claude_ic, lease_seconds) do
+              {:ok, claimed} ->
+                Telemetry.coordinator_lease_claim(
+                  issue_number,
+                  :claude_ic,
+                  claimed.coordinator_lease_expires_at
+                )
+
+                claimed
+
+              {:error, :coordinator_active} ->
+                run
+            end
+          else
+            refreshed = RoundRun.heartbeat(run, lease_seconds)
+            Telemetry.coordinator_heartbeat(issue_number, refreshed.coordinator)
+            refreshed
+          end
+
+        RoundRun.persist(updated)
+
+      {:error, _} ->
+        :ok
     end
   end
 

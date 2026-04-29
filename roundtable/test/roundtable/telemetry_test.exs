@@ -20,8 +20,8 @@ defmodule Roundtable.TelemetryTest do
   end
 
   describe "all_events/0" do
-    test "returns 8 event names" do
-      assert length(Telemetry.all_events()) == 8
+    test "returns 12 event names" do
+      assert length(Telemetry.all_events()) == 12
     end
 
     test "each event name is a list of atoms" do
@@ -160,6 +160,52 @@ defmodule Roundtable.TelemetryTest do
 
       assert_receive {:telemetry, _,
                       %{issue_number: 77_001, from_phase: :awaiting_turns, to_phase: :triage_missing_markers}}
+    end
+  end
+
+  describe "coordinator_lease_claim/3" do
+    test "emits [:roundtable, :coordinator, :lease, :claim] with coordinator and expires_at" do
+      ref = make_ref()
+      attach([:roundtable, :coordinator, :lease, :claim], ref)
+      expires = DateTime.add(DateTime.utc_now(), 300, :second)
+
+      Telemetry.coordinator_lease_claim(20, :claude_ic, expires)
+
+      assert_receive {:telemetry, _, %{issue_number: 20, coordinator: :claude_ic, expires_at: _}}
+    end
+  end
+
+  describe "coordinator_heartbeat/2" do
+    test "emits [:roundtable, :coordinator, :heartbeat]" do
+      ref = make_ref()
+      attach([:roundtable, :coordinator, :heartbeat], ref)
+
+      Telemetry.coordinator_heartbeat(21, :claude_ic)
+
+      assert_receive {:telemetry, _, %{issue_number: 21, coordinator: :claude_ic}}
+    end
+  end
+
+  describe "coordinator_timeout/2" do
+    test "emits [:roundtable, :coordinator, :timeout]" do
+      ref = make_ref()
+      attach([:roundtable, :coordinator, :timeout], ref)
+
+      Telemetry.coordinator_timeout(22, :claude_ic)
+
+      assert_receive {:telemetry, _, %{issue_number: 22, coordinator: :claude_ic}}
+    end
+  end
+
+  describe "coordinator_takeover/3" do
+    test "emits [:roundtable, :coordinator, :takeover] with from and to" do
+      ref = make_ref()
+      attach([:roundtable, :coordinator, :takeover], ref)
+
+      Telemetry.coordinator_takeover(23, :claude_ic, :codex)
+
+      assert_receive {:telemetry, _,
+                      %{issue_number: 23, from_coordinator: :claude_ic, to_coordinator: :codex}}
     end
   end
 

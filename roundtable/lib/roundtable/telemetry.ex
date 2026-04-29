@@ -8,16 +8,20 @@ defmodule Roundtable.Telemetry do
 
   ## Span names (as `:telemetry` event names)
 
-  | Span                          | When emitted                          |
-  |-------------------------------|---------------------------------------|
-  | `roundtable.issue.poll`       | `Gh.view_issue/3` call                |
-  | `roundtable.agent.turn`       | `RunCliAgent.run/2` start             |
-  | `roundtable.gh.comment`       | `Gh.comment_issue/3` call             |
-  | `roundtable.satisfaction.parse` | after marker extraction             |
-  | `roundtable.ic.triage`        | `triage_with_ic/5` call               |
-  | `roundtable.consensus.check`  | `Satisfaction.consensus?/1` eval      |
-  | `roundtable.issue.close`      | `Gh.close_issue/3` call               |
-  | `roundtable.phase.transition` | every `RoundRun.put_phase/2` call     |
+  | Span                              | When emitted                              |
+  |-----------------------------------|-------------------------------------------|
+  | `roundtable.issue.poll`           | `Gh.view_issue/3` call                    |
+  | `roundtable.agent.turn`           | `RunCliAgent.run/2` start                 |
+  | `roundtable.gh.comment`           | `Gh.comment_issue/3` call                 |
+  | `roundtable.satisfaction.parse`   | after marker extraction                   |
+  | `roundtable.ic.triage`            | `triage_with_ic/5` call                   |
+  | `roundtable.consensus.check`      | `Satisfaction.consensus?/1` eval          |
+  | `roundtable.issue.close`          | `Gh.close_issue/3` call                   |
+  | `roundtable.phase.transition`     | every `RoundRun.put_phase/2` call         |
+  | `roundtable.coordinator.lease.claim` | coordinator claims lease               |
+  | `roundtable.coordinator.heartbeat`   | coordinator heartbeat                  |
+  | `roundtable.coordinator.timeout`     | coordinator lease expiry detected      |
+  | `roundtable.coordinator.takeover`    | standby claims coordinator role        |
 
   ## Attaching a handler
 
@@ -49,8 +53,12 @@ defmodule Roundtable.Telemetry do
   @consensus_check [:roundtable, :consensus, :check]
   @issue_close [:roundtable, :issue, :close]
   @phase_transition [:roundtable, :phase, :transition]
+  @coordinator_lease_claim [:roundtable, :coordinator, :lease, :claim]
+  @coordinator_heartbeat [:roundtable, :coordinator, :heartbeat]
+  @coordinator_timeout [:roundtable, :coordinator, :timeout]
+  @coordinator_takeover [:roundtable, :coordinator, :takeover]
 
-  @doc "All eight event names — useful for bulk attach."
+  @doc "All twelve event names — useful for bulk attach."
   def all_events do
     [
       @issue_poll,
@@ -60,7 +68,11 @@ defmodule Roundtable.Telemetry do
       @ic_triage,
       @consensus_check,
       @issue_close,
-      @phase_transition
+      @phase_transition,
+      @coordinator_lease_claim,
+      @coordinator_heartbeat,
+      @coordinator_timeout,
+      @coordinator_takeover
     ]
   end
 
@@ -140,6 +152,40 @@ defmodule Roundtable.Telemetry do
       issue_number: issue_number,
       from_phase: from_phase,
       to_phase: to_phase
+    })
+  end
+
+  @doc "Emitted when a coordinator claims its lease."
+  def coordinator_lease_claim(issue_number, coordinator, expires_at) do
+    :telemetry.execute(@coordinator_lease_claim, ts(), %{
+      issue_number: issue_number,
+      coordinator: coordinator,
+      expires_at: DateTime.to_iso8601(expires_at)
+    })
+  end
+
+  @doc "Emitted when the coordinator refreshes its lease."
+  def coordinator_heartbeat(issue_number, coordinator) do
+    :telemetry.execute(@coordinator_heartbeat, ts(), %{
+      issue_number: issue_number,
+      coordinator: coordinator
+    })
+  end
+
+  @doc "Emitted when a coordinator lease expiry is detected."
+  def coordinator_timeout(issue_number, coordinator) do
+    :telemetry.execute(@coordinator_timeout, ts(), %{
+      issue_number: issue_number,
+      coordinator: coordinator
+    })
+  end
+
+  @doc "Emitted when a standby agent claims the coordinator role."
+  def coordinator_takeover(issue_number, from_coordinator, to_coordinator) do
+    :telemetry.execute(@coordinator_takeover, ts(), %{
+      issue_number: issue_number,
+      from_coordinator: from_coordinator,
+      to_coordinator: to_coordinator
     })
   end
 
