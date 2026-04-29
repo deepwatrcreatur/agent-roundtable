@@ -9,6 +9,10 @@ defmodule Roundtable.Application do
   def start(_type, _args) do
     Roundtable.RoundRun.init()
 
+    if Application.get_env(:roundtable, :telemetry_handler) == :json_logger do
+      Roundtable.Telemetry.attach_logger()
+    end
+
     children =
       [
         {Phoenix.PubSub, name: Roundtable.PubSub},

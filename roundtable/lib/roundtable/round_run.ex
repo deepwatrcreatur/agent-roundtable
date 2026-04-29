@@ -93,9 +93,10 @@ defmodule Roundtable.RoundRun do
     }
   end
 
-  @doc "Transition to `phase`, stamping `updated_at`."
+  @doc "Transition to `phase`, stamping `updated_at` and emitting a telemetry span."
   @spec put_phase(t(), phase()) :: t()
   def put_phase(%__MODULE__{} = run, phase) do
+    Roundtable.Telemetry.phase_transition(run.issue_number, run.phase, phase)
     %{run | phase: phase, updated_at: DateTime.utc_now()}
   end
 
