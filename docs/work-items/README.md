@@ -33,4 +33,4 @@ Do not work on an item already marked `in-progress` by another agent.
 
 ### Coordinator Robustness (Protocol Update 8)
 
-13. [`14-coordinator-failover.md`](./14-coordinator-failover.md) — `blocked` (needs 11, 12, 13) — coordinator lease/heartbeat, degraded-mode takeover, continuity-note automation
+13. [`14-coordinator-failover.md`](./14-coordinator-failover.md) — `done` — **GitHub Copilot** — coordinator lease/heartbeat, degraded-mode takeover, continuity-note automation
