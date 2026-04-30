@@ -40,7 +40,7 @@ defmodule Roundtable.Eval do
       started_at: DateTime.utc_now()
     }
 
-    {turns, buffer} =
+    {turns, _buffer} =
       Enum.reduce(agents, {[], ""}, fn agent, {acc_turns, acc_buffer} ->
         prompt = build_vaglio_prompt(question, brief_context, acc_buffer, agent)
 
@@ -172,6 +172,39 @@ defmodule Roundtable.Eval do
       {:error, _} ->
         []
     end
+  end
+
+  @doc """
+  Generate blind comparison files for a pair of runs on the same question.
+
+  Writes `output_a.md`, `output_b.md`, and `manifest.json` to
+  `state/eval/blind/<run_id>/`. Assignment of A/B is randomised so the
+  reader cannot infer which is vaglio.
+
+  Returns `{:ok, dir_path}`.
+  """
+  @spec blind_compare(Run.t(), Run.t()) :: {:ok, String.t()}
+  def blind_compare(%Run{} = run_a, %Run{} = run_b) do
+    {first, second} =
+      if :rand.uniform() > 0.5,
+        do: {run_a, run_b},
+        else: {run_b, run_a}
+
+    dir = Path.join([eval_dir(), "blind", first.id])
+    File.mkdir_p!(dir)
+
+    File.write!(Path.join(dir, "output_a.md"), first.final_output || "")
+    File.write!(Path.join(dir, "output_b.md"), second.final_output || "")
+
+    manifest = %{
+      a: %{id: first.id, mode: Atom.to_string(first.mode)},
+      b: %{id: second.id, mode: Atom.to_string(second.mode)},
+      question: first.question
+    }
+
+    File.write!(Path.join(dir, "manifest.json"), Jason.encode!(manifest, pretty: true))
+
+    {:ok, dir}
   end
 
   # ------------------------------------------------------------------
