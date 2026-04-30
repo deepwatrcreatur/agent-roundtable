@@ -22,6 +22,30 @@ mix test
 The checked-in `flake.nix` is intended to provide that environment once it is
 fully corrected; an ad-hoc `nix-shell -p elixir erlang git` also works.
 
+From this directory, the flake now provides:
+
+```sh
+nix develop
+nix run . -- path/to/BRIEF.md
+```
+
+The dev shell includes:
+
+- Elixir / Erlang
+- `git`
+- `gh`
+- `claude-code`
+- `codex`
+- `gemini-cli`
+
+Required environment variables are **not** hardcoded in the flake. Set them in
+your shell before running the orchestrator:
+
+- `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
+- `GEMINI_API_KEY`
+- `GH_TOKEN`
+
 ## Telemetry
 
 Roundtable emits OpenTelemetry-shaped spans via `:telemetry.execute/3` rather

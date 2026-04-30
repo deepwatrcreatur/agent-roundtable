@@ -1,6 +1,6 @@
 # 08 — flake.nix
 
-**Status:** `in-progress`
+**Status:** `done`
 **Assigned:** GitHub Copilot
 **Branch:** `feat/flake-pins`
 
