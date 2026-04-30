@@ -62,7 +62,8 @@ defmodule Roundtable.Actions.RunCliAgent do
         {:error, :deepseek_api_key_missing}
 
       api_key ->
-        model = params[:deepseek_model] || @deepseek_default_model
+        model = params[:deepseek_model] ||
+                Application.get_env(:roundtable, :deepseek_model, @deepseek_default_model)
 
         case Req.post(@deepseek_api_url,
                json: %{
