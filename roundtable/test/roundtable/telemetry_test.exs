@@ -90,7 +90,8 @@ defmodule Roundtable.TelemetryTest do
 
       Telemetry.satisfaction_parse(:gemini, "needs-more-evidence", :triage)
 
-      assert_receive {:telemetry, _, %{agent: :gemini, result: "needs-more-evidence", method: :triage}}
+      assert_receive {:telemetry, _,
+                      %{agent: :gemini, result: "needs-more-evidence", method: :triage}}
     end
   end
 
@@ -113,7 +114,11 @@ defmodule Roundtable.TelemetryTest do
       Telemetry.consensus_check(3, ["satisfied", "satisfied-conditional"], true)
 
       assert_receive {:telemetry, _,
-                      %{issue_number: 3, labels: ["satisfied", "satisfied-conditional"], result: true}}
+                      %{
+                        issue_number: 3,
+                        labels: ["satisfied", "satisfied-conditional"],
+                        result: true
+                      }}
     end
   end
 
@@ -159,7 +164,11 @@ defmodule Roundtable.TelemetryTest do
       Roundtable.RoundRun.put_phase(run, :triage_missing_markers)
 
       assert_receive {:telemetry, _,
-                      %{issue_number: 77_001, from_phase: :awaiting_turns, to_phase: :triage_missing_markers}}
+                      %{
+                        issue_number: 77_001,
+                        from_phase: :awaiting_turns,
+                        to_phase: :triage_missing_markers
+                      }}
     end
   end
 
@@ -222,6 +231,15 @@ defmodule Roundtable.TelemetryTest do
 
       assert output =~ "roundtable.issue.poll"
       assert output =~ "\"issue_number\":99"
+
+      :telemetry.detach("roundtable-json-logger")
+    end
+
+    test "is idempotent when called twice" do
+      :telemetry.detach("roundtable-json-logger")
+
+      assert :ok = Telemetry.attach_logger()
+      assert :ok = Telemetry.attach_logger()
 
       :telemetry.detach("roundtable-json-logger")
     end

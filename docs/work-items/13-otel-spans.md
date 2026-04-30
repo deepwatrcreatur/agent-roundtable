@@ -1,6 +1,6 @@
 # 13 — OTEL Span Taxonomy for Roundtable Events
 
-**Status:** `in-progress`
+**Status:** `done`
 **Assigned:** GitHub Copilot
 **Branch:** `feat/otel-spans`
 
