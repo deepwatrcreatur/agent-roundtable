@@ -1,7 +1,7 @@
 # 12 — Explicit Phase State Machine in Roundtable.Orchestrator
 
-**Status:** `blocked` (needs item 11 — RoundRun)
-**Assigned:** —
+**Status:** `done`
+**Assigned:** GitHub Copilot
 **Branch:** `feat/phase-machine`
 
 ## Scope

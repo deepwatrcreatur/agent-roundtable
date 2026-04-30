@@ -28,7 +28,7 @@ Do not work on an item already marked `in-progress` by another agent.
 ### Durability + Observability (Protocol Update 7)
 
 10. [`11-round-run.md`](./11-round-run.md) — `done` — **GitHub Copilot** — `RoundRun` persisted state struct (ETS hot store + JSON flush to `state/`)
-11. [`12-phase-state-machine.md`](./12-phase-state-machine.md) — `blocked` (needs 11) — explicit phase state machine in `Roundtable.Orchestrator`
+11. [`12-phase-state-machine.md`](./12-phase-state-machine.md) — `done` — **GitHub Copilot** — explicit phase state machine in `Roundtable.Orchestrator`
 12. [`13-otel-spans.md`](./13-otel-spans.md) — `done` — **GitHub Copilot** — OTEL span taxonomy (8 spans via `:telemetry.execute/3`)
 
 ### Coordinator Robustness (Protocol Update 8)
