@@ -9,7 +9,13 @@
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfreePredicate = pkg:
+            builtins.elem (nixpkgs.lib.getName pkg) [
+              "claude-code"
+            ];
+        };
 
         beamPkgs = pkgs.beam.packages.erlang;
 
@@ -26,7 +32,8 @@
           ];
 
           text = ''
-            exec elixir -S mix run -e 'Roundtable.CLI.main(System.argv())' -- "$@"
+            mix compile
+            exec elixir -S mix run --no-compile -e 'Roundtable.CLI.main(System.argv())' -- "$@"
           '';
         };
       in
