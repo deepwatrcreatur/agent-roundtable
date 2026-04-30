@@ -36,6 +36,24 @@
             exec elixir -S mix run --no-compile -e 'Roundtable.CLI.main(System.argv())' -- "$@"
           '';
         };
+
+        roundtableWebScript = pkgs.writeShellApplication {
+          name = "roundtable-web";
+          runtimeInputs = [
+            beamPkgs.elixir
+            beamPkgs.erlang
+            pkgs.git
+            pkgs.gh
+            pkgs.claude-code
+            pkgs.codex
+            pkgs.gemini-cli
+          ];
+
+          text = ''
+            mix compile
+            exec elixir -S mix run --no-halt
+          '';
+        };
       in
       {
         devShells.default = pkgs.mkShell {
@@ -57,7 +75,9 @@
         };
 
         packages.default = roundtableScript;
+        packages.roundtable-web = roundtableWebScript;
         apps.default = flake-utils.lib.mkApp { drv = roundtableScript; };
+        apps.roundtable-web = flake-utils.lib.mkApp { drv = roundtableWebScript; };
       }
     );
 }
