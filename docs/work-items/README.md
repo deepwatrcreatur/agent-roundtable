@@ -20,8 +20,8 @@ Do not work on an item already marked `in-progress` by another agent.
 3. [`03-cli-agent-action.md`](./03-cli-agent-action.md) — `blocked` (needs 01; Q8 expands scope to a harness selector with vendor-CLI-first v1 semantics)
 4. [`04-satisfaction.md`](./04-satisfaction.md) — `blocked` (needs 01)
 5. [`05-prompt.md`](./05-prompt.md) — `blocked` (needs 01, 02, 03)
-6. [`06-orchestrator.md`](./06-orchestrator.md) — `blocked` (needs 01–05)
-7. [`07-cli-entrypoint.md`](./07-cli-entrypoint.md) — `blocked` (needs 06)
+6. [`06-orchestrator.md`](./06-orchestrator.md) — `ready-for-review` — **Claude IC**
+7. [`07-cli-entrypoint.md`](./07-cli-entrypoint.md) — `ready-for-review` — **Claude IC**
 8. [`08-flake.md`](./08-flake.md) — `done` — **GitHub Copilot** — (Nix flake devShell + app wrapper; pin deps, wrap `mix run`)
 9. [`09-git-actions.md`](./09-git-actions.md) — `done` — **GitHub Copilot** (durable artifact write abstraction; `LocalGit` v1, `CodeStorage` v2)
 
@@ -34,3 +34,7 @@ Do not work on an item already marked `in-progress` by another agent.
 ### Coordinator Robustness (Protocol Update 8)
 
 13. [`14-coordinator-failover.md`](./14-coordinator-failover.md) — `done` — **GitHub Copilot** — coordinator lease/heartbeat, degraded-mode takeover, continuity-note automation
+
+### Product Surface
+
+14. [`10-web-dashboard.md`](./10-web-dashboard.md) — `ready-for-review` — **Claude IC** — Phoenix LiveView owner dashboard
