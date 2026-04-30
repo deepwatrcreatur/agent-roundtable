@@ -1,6 +1,6 @@
 # 24 — Outbound Telegram Notifications
 
-**Status:** `in-progress`
+**Status:** `done`
 **Assigned:** Codex
 
 ## Scope

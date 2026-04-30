@@ -983,6 +983,8 @@ defmodule Roundtable.Orchestrator do
   defp maybe_put(map, key, value), do: Map.put(map, key, value)
 
   defp notify(opts, event) do
+    _ = Roundtable.Notifier.Telegram.notify_event(event)
+
     case Keyword.get(opts, :on_event) do
       nil -> :ok
       fun when is_function(fun, 1) -> fun.(event)
