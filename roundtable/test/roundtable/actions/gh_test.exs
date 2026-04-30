@@ -83,6 +83,51 @@ defmodule Roundtable.Actions.GhTest do
                      ], [stderr_to_stdout: true]}
   end
 
+  test "list_issues builds gh issue list command" do
+    Process.put(:runner_result, {"[]", 0})
+
+    assert {:ok, []} = Gh.list_issues([label: "bug"], %{repo: "owner/repo", runner: FakeRunner})
+
+    assert_received {:cmd, "gh",
+                     [
+                       "issue",
+                       "list",
+                       "--state",
+                       "open",
+                       "--json",
+                       "number,title,state,labels,url,comments",
+                       "-R",
+                       "owner/repo",
+                       "--label",
+                       "bug"
+                     ], [stderr_to_stdout: true]}
+  end
+
+  test "create_issue extracts issue number from URL output" do
+    output = "https://github.com/owner/repo/issues/42\n"
+    Process.put(:runner_result, {output, 0})
+
+    assert {:ok, 42} =
+             Gh.create_issue("Title", "Body", ["feature"], %{
+               repo: "owner/repo",
+               runner: FakeRunner
+             })
+
+    assert_received {:cmd, "gh",
+                     [
+                       "issue",
+                       "create",
+                       "--title",
+                       "Title",
+                       "--body",
+                       "Body",
+                       "--label",
+                       "feature",
+                       "-R",
+                       "owner/repo"
+                     ], [stderr_to_stdout: true]}
+  end
+
   test "returns a command_failed error on non-zero exit" do
     Process.put(:runner_result, {"bad token", 1})
 

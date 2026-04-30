@@ -133,7 +133,7 @@ defmodule Roundtable.Actions.Gh do
   end
 
   defp decode_json(stdout) do
-    case JSON.decode(stdout) do
+    case Jason.decode(stdout) do
       {:ok, decoded} -> {:ok, decoded}
       {:error, reason} -> {:error, {:invalid_json, reason}}
     end
