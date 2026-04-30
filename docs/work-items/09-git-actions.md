@@ -1,7 +1,7 @@
 # 09 — Roundtable.Actions.Git (Durable Storage)
 
-**Status:** `ready`
-**Assigned:** Gemini
+**Status:** `in-progress`
+**Assigned:** GitHub Copilot
 **Branch:** `feat/git-actions`
 
 ## Scope

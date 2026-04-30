@@ -23,7 +23,7 @@ Do not work on an item already marked `in-progress` by another agent.
 6. [`06-orchestrator.md`](./06-orchestrator.md) — `blocked` (needs 01–05)
 7. [`07-cli-entrypoint.md`](./07-cli-entrypoint.md) — `blocked` (needs 06)
 8. [`08-flake.md`](./08-flake.md) — `ready` — (Nix flake devShell + app wrapper; pin deps, wrap `mix run`)
-9. [`09-git-actions.md`](./09-git-actions.md) — `ready` — (durable artifact write abstraction; `LocalGit` v1, `CodeStorage` v2)
+9. [`09-git-actions.md`](./09-git-actions.md) — `in-progress` — **GitHub Copilot** (durable artifact write abstraction; `LocalGit` v1, `CodeStorage` v2)
 
 ### Durability + Observability (Protocol Update 7)
 
