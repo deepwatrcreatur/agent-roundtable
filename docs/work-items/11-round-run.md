@@ -1,6 +1,6 @@
 # 11 — Roundtable.RoundRun (Persisted Round State)
 
-**Status:** `in-progress`
+**Status:** `done`
 **Assigned:** GitHub Copilot
 **Branch:** `feat/round-run`
 
