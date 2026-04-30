@@ -1,6 +1,6 @@
 # 29 — LLM-as-Judge: `Vaglio.Eval.Judge` + `Vaglio.Eval.Metrics`
 
-**Status:** `in-progress`
+**Status:** `done`
 **Assigned:** Codex
 **Source:** Q37 (Round 22)
 

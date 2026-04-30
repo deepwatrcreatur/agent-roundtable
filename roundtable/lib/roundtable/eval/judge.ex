@@ -31,7 +31,7 @@ defmodule Roundtable.Eval.Judge do
     #{String.slice(text, 0, 6000)}
     """
 
-    case invoke_judge(prompt, repo_root) do
+    case invoke_judge(prompt, repo_root, opts) do
       {:ok, raw} -> parse_json_array(raw)
       error -> error
     end
@@ -61,7 +61,7 @@ defmodule Roundtable.Eval.Judge do
     #{String.slice(text, 0, 6000)}
     """
 
-    case invoke_judge(prompt, repo_root) do
+    case invoke_judge(prompt, repo_root, opts) do
       {:ok, raw} -> parse_json_object(raw)
       error -> error
     end
@@ -91,7 +91,7 @@ defmodule Roundtable.Eval.Judge do
     #{String.slice(text, 0, 6000)}
     """
 
-    case invoke_judge(prompt, repo_root) do
+    case invoke_judge(prompt, repo_root, opts) do
       {:ok, raw} -> parse_json_object(raw)
       error -> error
     end
@@ -101,15 +101,21 @@ defmodule Roundtable.Eval.Judge do
   # Internals
   # ------------------------------------------------------------------
 
-  defp invoke_judge(prompt, repo_root) do
-    case RunCliAgent.run(%{agent: :claude, prompt: prompt, repo_root: repo_root}, %{}) do
-      {:ok, %{stdout: raw}} -> {:ok, extract_text(raw)}
-      {:error, reason} -> {:error, reason}
+  defp invoke_judge(prompt, repo_root, opts) do
+    case Keyword.get(opts, :invoke) do
+      fun when is_function(fun, 1) ->
+        fun.(prompt)
+
+      _ ->
+        case RunCliAgent.run(%{agent: :claude, prompt: prompt, repo_root: repo_root}, %{}) do
+          {:ok, %{stdout: raw}} -> {:ok, extract_text(raw)}
+          {:error, reason} -> {:error, reason}
+        end
     end
   end
 
   defp extract_text(raw) do
-    case JSON.decode(raw) do
+    case Jason.decode(raw) do
       {:ok, %{"result" => text}} when is_binary(text) -> text
       {:ok, %{"content" => text}} when is_binary(text) -> text
       {:ok, %{"message" => text}} when is_binary(text) -> text
