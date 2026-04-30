@@ -1,6 +1,6 @@
 # 25 — Authentik OIDC Authentication
 
-**Status:** `in-progress`
+**Status:** `done`
 **Assigned:** Codex
 
 ## Scope
