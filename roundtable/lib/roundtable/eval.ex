@@ -183,14 +183,19 @@ defmodule Roundtable.Eval do
 
   Returns `{:ok, dir_path}`.
   """
-  @spec blind_compare(Run.t(), Run.t()) :: {:ok, String.t()}
+  @spec blind_compare(Run.t(), Run.t()) :: {:ok, String.t()} | {:error, term()}
+  def blind_compare(%Run{question: question_a}, %Run{question: question_b})
+      when question_a != question_b do
+    {:error, :question_mismatch}
+  end
+
   def blind_compare(%Run{} = run_a, %Run{} = run_b) do
     {first, second} =
       if :rand.uniform() > 0.5,
         do: {run_a, run_b},
         else: {run_b, run_a}
 
-    dir = Path.join([eval_dir(), "blind", first.id])
+    dir = Path.join([eval_dir(), "blind", run_a.id])
     File.mkdir_p!(dir)
 
     File.write!(Path.join(dir, "output_a.md"), first.final_output || "")

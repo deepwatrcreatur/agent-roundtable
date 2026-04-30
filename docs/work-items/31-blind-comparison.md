@@ -1,6 +1,6 @@
 # 31 — Blind Comparison Interface
 
-**Status:** `in-progress`
+**Status:** `done`
 **Assigned:** Codex
 **Source:** Q37 (Round 22)
 
