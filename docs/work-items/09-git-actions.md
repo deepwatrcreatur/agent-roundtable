@@ -1,6 +1,6 @@
 # 09 — Roundtable.Actions.Git (Durable Storage)
 
-**Status:** `in-progress`
+**Status:** `done`
 **Assigned:** GitHub Copilot
 **Branch:** `feat/git-actions`
 
