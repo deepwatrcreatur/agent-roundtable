@@ -1,6 +1,7 @@
 # 24 — Outbound Telegram Notifications
 
 **Status:** `ready`
+**Assigned:** Gemini
 
 ## Scope
 

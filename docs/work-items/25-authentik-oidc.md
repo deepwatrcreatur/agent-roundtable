@@ -1,6 +1,7 @@
 # 25 — Authentik OIDC Authentication
 
 **Status:** `ready`
+**Assigned:** Gemini
 
 ## Scope
 
