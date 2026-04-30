@@ -37,7 +37,7 @@ defmodule Roundtable.RoundRun do
           | :needs_human_review
 
   @type satisfaction_result ::
-          :satisfied | :satisfied_conditional | :needs_more_evidence
+          :satisfied | :satisfied_conditional | :no_objection | :needs_more_evidence
 
   @type t :: %__MODULE__{
           issue_number: pos_integer(),
@@ -407,7 +407,8 @@ defmodule Roundtable.RoundRun do
   @agent_headers [
     {"## Claude IC", :claude_ic},
     {"## Codex", :codex},
-    {"## Gemini", :gemini}
+    {"## Gemini", :gemini},
+    {"## DeepSeek", :deepseek}
   ]
 
   @doc false
@@ -439,6 +440,7 @@ defmodule Roundtable.RoundRun do
 
   defp label_to_atom("satisfied"), do: :satisfied
   defp label_to_atom("satisfied-conditional"), do: :satisfied_conditional
+  defp label_to_atom("no-objection"), do: :no_objection
   defp label_to_atom("needs-more-evidence"), do: :needs_more_evidence
   defp label_to_atom(_), do: nil
 

@@ -55,7 +55,7 @@ defmodule Roundtable.Orchestrator do
   alias Roundtable.Actions.{Gh, RunCliAgent, DiscussionGit}
   alias Roundtable.{DiscussionRepo, Satisfaction, Prompt, RoundRun, Telemetry}
 
-  @default_agents [:codex, :gemini, :claude_ic]
+  @default_agents [:codex, :gemini, :deepseek, :claude_ic]
   @default_max_rounds 5
   @terminal_phases [:closed, :needs_human_review, :needs_human_input]
   @default_standby_coordinators [:codex, :gemini]
@@ -63,9 +63,10 @@ defmodule Roundtable.Orchestrator do
   @default_max_takeovers 2
 
   @label_conflicts %{
-    "satisfied" => ["needs-more-evidence", "satisfied-conditional"],
-    "satisfied-conditional" => ["needs-more-evidence", "satisfied"],
-    "needs-more-evidence" => ["satisfied", "satisfied-conditional"]
+    "satisfied" => ["needs-more-evidence", "satisfied-conditional", "no-objection"],
+    "satisfied-conditional" => ["needs-more-evidence", "satisfied", "no-objection"],
+    "no-objection" => ["needs-more-evidence", "satisfied", "satisfied-conditional"],
+    "needs-more-evidence" => ["satisfied", "satisfied-conditional", "no-objection"]
   }
 
   @type effect ::
@@ -350,11 +351,7 @@ defmodule Roundtable.Orchestrator do
   defp satisfaction_map_to_labels(sat_map) do
     sat_map
     |> Map.values()
-    |> Enum.map(fn
-      :satisfied -> "satisfied"
-      :satisfied_conditional -> "satisfied-conditional"
-      :needs_more_evidence -> "needs-more-evidence"
-    end)
+    |> Enum.map(&satisfaction_to_label/1)
     |> Enum.uniq()
   end
 
@@ -425,6 +422,7 @@ defmodule Roundtable.Orchestrator do
 
   defp label_string_to_atom("satisfied"), do: :satisfied
   defp label_string_to_atom("satisfied-conditional"), do: :satisfied_conditional
+  defp label_string_to_atom("no-objection"), do: :no_objection
   defp label_string_to_atom("needs-more-evidence"), do: :needs_more_evidence
   defp label_string_to_atom(_), do: nil
 
@@ -897,6 +895,7 @@ defmodule Roundtable.Orchestrator do
 
   defp satisfaction_to_label(:satisfied), do: "satisfied"
   defp satisfaction_to_label(:satisfied_conditional), do: "satisfied-conditional"
+  defp satisfaction_to_label(:no_objection), do: "no-objection"
   defp satisfaction_to_label(:needs_more_evidence), do: "needs-more-evidence"
   defp satisfaction_to_label(other), do: to_string(other)
 
@@ -911,6 +910,11 @@ defmodule Roundtable.Orchestrator do
     gemini:
       "You are Gemini, a Google-based agent with expertise in research, context synthesis, " <>
         "and system-level reasoning. Bring your perspective as an independent reviewer.",
+    deepseek:
+      "You are DeepSeek, an AI agent developed by DeepSeek AI. Bring independent analytical " <>
+        "perspective grounded in your distinct training distribution. Focus on rigorous reasoning " <>
+        "and considerations that may be underweighted by agents trained on primarily " <>
+        "English-language corpora. Bring your perspective as an independent reviewer.",
     claude_ic:
       "You are the Incident Commander (IC), a Claude-based agent responsible for synthesising " <>
         "positions, identifying gaps, and deciding whether the question has reached consensus. " <>
@@ -920,11 +924,13 @@ defmodule Roundtable.Orchestrator do
   defp agent_role(agent), do: Map.get(@agent_roles, agent, "You are an independent AI reviewer.")
 
   defp cli_agent_atom(:claude_ic), do: :claude
+  defp cli_agent_atom(:deepseek), do: :deepseek
   defp cli_agent_atom(agent), do: agent
 
   defp agent_name(:claude_ic), do: "Claude IC"
   defp agent_name(:codex), do: "Codex"
   defp agent_name(:gemini), do: "Gemini"
+  defp agent_name(:deepseek), do: "DeepSeek"
   defp agent_name(other), do: other |> to_string() |> String.capitalize()
 
   defp format_comment(agent, text), do: "## #{agent_name(agent)}\n\n#{text}"

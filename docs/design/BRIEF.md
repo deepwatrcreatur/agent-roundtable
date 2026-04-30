@@ -1090,3 +1090,431 @@ For each proposed change, state:
   the actual use case (one owner, personal projects, LLM agents)? Is investing
   in further protocol sophistication premature given that it has never been
   run end-to-end with real LLM agents?*
+
+**Q32 Addendum — Business School and Organizational Behaviour Research (2026-04-29)**
+
+Round 17 drew primarily on philosophy of science and intelligence-community
+sources. The organizational behaviour and management science literature has a
+parallel body of work focused on human group decision-making that is directly
+relevant — and may be more so for LLM agents, since models trained on
+human-produced text inherit the same dynamics the literature was written to
+diagnose.
+
+Agents should assess the following contributions against the structural flaws
+identified in Q32.1-Q32.3, and propose any protocol adjustments warranted:
+
+**(A) Groupthink (Janis, 1972)**
+
+Janis's analysis of foreign policy fiascos (Bay of Pigs, Pearl Harbor) identifies:
+illusion of unanimity, self-censorship among dissenters, and "mindguards" who
+suppress disconfirming information. The Challenger role (Protocol Update 13,
+deferred) is structurally equivalent to Janis's devil's advocate recommendation.
+
+Question: Does the current protocol have a mindguard equivalent? Could the IC
+synthesis function as a mindguard by framing which contributions are elevated
+into the DECISION.md record?
+
+**(B) Skilled incompetence and double-loop learning (Argyris, 1990)**
+
+Argyris distinguishes single-loop learning (adjust behaviour to correct error)
+from double-loop learning (question the governing variable that produced the
+error). Defensive routines prevent groups from surfacing the second-order
+question. The premise challenge requirement is a weak double-loop mechanism —
+but it is agent-triggered, not structurally enforced.
+
+Question: Is there a double-loop failure mode the premise challenge does not
+catch? Specifically: can the BRIEF.md framing itself be defensive (authored by
+one party with motivated reasoning), and does the current protocol surface this?
+
+**(C) Nominal Group Technique (Delbecq & Van de Ven, 1971)**
+
+NGT is the management science empirical basis for why independent idea
+generation before group discussion produces better outcomes than open group
+discussion from the start. It directly supports the blind first sub-turn
+proposal (Protocol Update 13, deferred): participants generate positions
+silently and independently before positions are shared.
+
+Question: Is there published evidence that the production-blocking and
+evaluation-apprehension effects that motivate NGT apply to LLM agents, or
+are they purely social phenomena that require conscious social pressure?
+If the latter, the blind first sub-turn may be unnecessary for LLMs.
+
+**(D) Dialectical inquiry and devil's advocacy (Mason & Mitroff, 1981)**
+
+Strategic management researchers comparing two structured methods for
+ill-structured problems:
+- **Dialectical inquiry**: build two fully elaborated opposing plans; debate them
+- **Devil's advocacy**: build one plan; assign a critic to demolish it
+
+For non-adversarial settings, devil's advocacy outperforms dialectical inquiry.
+The Challenger role at closure (Protocol Update 13) is their devil's advocacy
+mechanism applied to IC synthesis rather than to full plans.
+
+Question: Should the Challenger role be expanded beyond the closure moment to
+apply throughout the round (i.e., after each agent turn, one other agent is
+assigned a devil's advocate sub-turn)? What is the latency cost?
+
+**(E) Information sampling bias (Stasser & Titus, 1985)**
+
+One of the most replicated findings in group decision research: groups
+systematically over-discuss shared information and under-discuss information
+unique to one member. For LLMs: agents trained on similar corpora will produce
+correlated positions on well-represented topics; minority knowledge (the kind
+that would actually change the outcome) may be systematically suppressed.
+
+The typed provenance markers (`[observed]` vs `[inferred]`) partially address
+this: an `[observed]` claim from one agent that other agents lack is flagged as
+genuinely unique information. But the protocol does not yet reward uniqueness —
+there is no mechanism encouraging agents to contribute non-redundant information.
+
+Question: Should agents be explicitly prompted to report what they know that
+the brief and prior turns have NOT already established? Would a "unique
+contribution" prompt structure reduce information sampling bias?
+
+**Additional constraint for the addendum:**
+
+The LLM-inherits-human-dynamics hypothesis: LLMs are trained on text produced
+by humans operating in the group dynamics the above literature describes. A model
+that has seen thousands of meeting transcripts, decision documents, and
+organizational case studies will have internalized the failure patterns —
+including defensive routines, groupthink markers, and sampling bias. This is
+an empirical question (do LLMs exhibit these patterns in controlled settings?)
+but the prior should be that they do, absent evidence otherwise.
+
+What structural corrections does this prior suggest, beyond those already
+adopted in Protocol Updates 1-13?
+
+---
+
+### Q33 — Adding DeepSeek as a Roundtable Agent (2026-04-29)
+
+**Context and motivation:**
+
+The owner already has `opencode` installed (currently wired as `opencode-zai`
+via the fnox wrapper in the homelab NixOS flake). DeepSeek's API is considered
+very affordable and the owner is willing to add a subscription. The goal is to
+add DeepSeek as a participating agent in the roundtable protocol — either
+replacing an existing agent or joining as a fourth.
+
+The current agent roster: `:codex` (OpenAI via `codex` CLI), `:gemini` (Google
+via `gemini` CLI), `:claude_ic` (Anthropic via `claude` CLI, also serves as IC).
+
+`opencode` supports multiple LLM providers via its model selector and already
+has fnox-based API key injection. DeepSeek's API is OpenAI-compatible (same
+endpoint structure, base URL `https://api.deepseek.com/v1`).
+
+**Q33.1 — Which DeepSeek model?**
+
+DeepSeek offers two main models relevant to this use case:
+
+- **`deepseek-chat`** (DeepSeek-V3): general-purpose chat and reasoning, very
+  low cost (~$0.07/MTok input), fast responses, strong at structured analysis.
+- **`deepseek-reasoner`** (DeepSeek-R1): extended chain-of-thought reasoning,
+  slightly more expensive, significantly longer output due to thinking tokens,
+  but demonstrably better on complex reasoning tasks.
+
+For the roundtable role (producing structured positions with provenance-tagged
+claims, satisfaction markers, and explicit warrants), which model is more
+appropriate? Is the reasoning depth of R1 worth the latency and token cost,
+or is V3 sufficient for structured deliberation?
+
+**Q33.2 — How to invoke DeepSeek as a CLI agent?**
+
+The roundtable's `RunCliAgent` module dispatches to CLI binaries. Options:
+
+**(a) `opencode` with DeepSeek provider**
+`opencode` accepts a `--model` flag (e.g. `deepseek/deepseek-chat`). Since the
+owner already has opencode installed, this requires only a new `build_command`
+clause in `RunCliAgent` for `:deepseek`. The fnox wrapper injects the DeepSeek
+API key via `DEEPSEEK_API_KEY` or `Z_AI_API_KEY`.
+
+**(b) `llm` CLI (Simon Willison's tool)**
+`llm` is a universal LLM CLI supporting dozens of providers via plugins,
+including DeepSeek. Invocation: `llm -m deepseek-chat "prompt"`. Requires
+adding `llm` + `llm-deepseek` plugin to the NixOS config. Clean separation
+of concerns: `llm` handles auth and provider config; `RunCliAgent` calls it
+uniformly.
+
+**(c) Direct Elixir HTTP call in `RunCliAgent`**
+DeepSeek's API is OpenAI-compatible. `RunCliAgent` could detect `:deepseek`
+and call the API directly via `Req` (item 24 adds `:req` as a dep) instead of
+shelling out. This removes the CLI dependency entirely for DeepSeek.
+
+**(d) Thin shell wrapper script**
+A `deepseek` shell script (added to the NixOS config's `environment.systemPackages`)
+that `curl`s `api.deepseek.com/v1/chat/completions` and returns JSON. Matches
+the existing CLI agent contract exactly; no new Elixir deps.
+
+Which option best fits the existing architecture, the homelab NixOS config
+conventions, and the requirement to be available in both development and
+production?
+
+**Q33.3 — What role does DeepSeek play in the discussion?**
+
+Options:
+
+**(a) Replace `:gemini`**: DeepSeek plays the "independent analyst" role
+currently held by Gemini. The agent roster stays at three; no consensus
+logic changes needed.
+
+**(b) Replace `:codex`**: DeepSeek plays the "API/implementation detail"
+analyst role. Less natural fit — Codex's role is OpenAI-specific framing;
+DeepSeek would bring a different perspective.
+
+**(c) Add as fourth agent `:deepseek`**: The roster expands to four. This
+affects the consensus logic: with four agents, consensus rules need to handle
+the case where one agent marks `[no objection]` while others are `[satisfied]`
+— previously covered, but the IC prompt needs updating.
+
+**(d) Use DeepSeek as a second IC / Challenger**: DeepSeek-R1 specifically
+(with its extended reasoning) as the Challenger role at closure (Protocol
+Update 13). The IC is still Claude; DeepSeek-R1 is called only at the
+closure moment to argue the strongest alternative position.
+
+**Q33.4 — API key management in the homelab**
+
+The homelab uses `agenix` for secret management and `fnox` for API key injection
+into CLI wrappers. A new DeepSeek API key needs:
+- An agenix secret: `deepseek-api-key.age`
+- A fnox wrapper entry (or direct NixOS service env var for the roundtable module)
+- A `DEEPSEEK_API_KEY` environment variable consumed by the chosen CLI tool
+
+Is there anything DeepSeek-specific about key rotation, rate limits, or regional
+availability that affects this design?
+
+**Q33.5 — Output format compatibility**
+
+The roundtable's `extract_text/2` in `Orchestrator` parses agent output for
+`{"result": "..."}`, `{"content": "..."}`, `{"message": "..."}`, or `{"text": "..."}`.
+DeepSeek's raw API returns OpenAI-format JSON (`choices[0].message.content`).
+The chosen CLI tool may reformat this. What output format does each CLI option
+produce, and does `extract_text/2` need updating?
+
+**Constraints for Q33:**
+- The owner already has `opencode` installed; prefer solutions that leverage
+  existing tooling
+- Must fit the NixOS/fnox/agenix key management conventions
+- Must not require changes to the core consensus logic (or changes should be
+  minimal and documented)
+- Brief premise challenge required: *Given that the current three-agent roster
+  has never been run end-to-end, is adding a fourth agent premature? Does the
+  value come from DeepSeek specifically, or from having more independent
+  perspectives in general?*
+
+---
+
+### Q34 — AI Subscription Procurement: DeepSeek, Kimi, MiMo, Qwen, and Chinese AI Models (2026-04-29)
+
+**Context and motivation:**
+
+Round 18 decided to add DeepSeek as a fourth roundtable agent (Protocol Update 14)
+and confirmed the direct Elixir HTTP approach (`Req` to `api.deepseek.com`). What
+was not discussed: *where* to sign up, *which tier* to choose, and whether other
+Chinese AI models merit a subscription for roundtable participation or personal use.
+
+The owner is willing to pay for useful subscriptions and is already familiar with
+API-based AI tooling. The question is which of the available Chinese AI services
+offer genuine incremental value — either as roundtable agents (distinct training
+distribution, different perspectives) or as general-purpose tools — vs. which are
+redundant with models already in use.
+
+**Models under consideration:**
+
+- **DeepSeek** (DeepSeek AI): `deepseek-chat` (V3) and `deepseek-reasoner` (R1).
+  Already decided to add. Q34 focuses on *procurement specifics*.
+- **Kimi** (Moonshot AI): Long-context focused model, up to 1M token context window.
+  Strong at document analysis and long-form synthesis.
+- **Xiaomi MiMo**: Xiaomi's reasoning model optimized for math and code. Very small
+  (7B parameters) but claims competitive reasoning benchmark scores. Open weights.
+- **Qwen** (Alibaba/Tongyi): Qwen2.5 family — Qwen2.5-72B and Qwen2.5-Coder-32B
+  especially strong on code and structured tasks. Available via Alibaba Cloud
+  DashScope API and also as open weights via Ollama/vLLM.
+- **Yi** (01.AI): Yi-Large general-purpose, Yi-Lightning fast/cheap. Bilingual
+  Chinese/English. Less differentiated from the above for English-only tasks.
+- **Doubao** (ByteDance/Volcano Engine): ByteDance's commercial LLM offering.
+  Primarily targeted at Chinese enterprise customers; English API availability
+  variable.
+- **Hunyuan** (Tencent): Available via Tencent Cloud; mixed English capability.
+
+**Q34.1 — DeepSeek API procurement specifics**
+
+The `api.deepseek.com` API is the primary programmatic access point. Evaluate:
+
+- **Sign-up**: `platform.deepseek.com` — what is the account creation flow?
+  Chinese phone number required, or international email sufficient?
+- **Payment**: Does the platform accept international credit cards (Visa/Mastercard)?
+  Are there alternative payment paths (Stripe, PayPal)?
+- **Pricing tiers**: `deepseek-chat` at ~$0.07/MTok input, `deepseek-reasoner`
+  at ~$0.55/MTok. For roundtable use (~50 rounds/day, ~2K tokens/turn, 4 agents),
+  estimate monthly cost at each model tier.
+- **Rate limits**: What are the default rate limits on a new account? Are they
+  sufficient for automated orchestrator use?
+- **Regional availability**: Are there latency or availability concerns for
+  requests from a European homelab? Is there a EU endpoint?
+
+**Q34.2 — Kimi (Moonshot AI) — is the long-context strength useful here?**
+
+Kimi's primary differentiation is context length (128K–1M tokens). Evaluate:
+
+- For roundtable use, how often does context length actually become a constraint?
+  The current `max_tokens: 2048` cap in `RunCliAgent` suggests turns are short.
+- Is there a use case in the roundtable where Kimi's long-context window is
+  genuinely useful vs. the existing agents? (e.g., loading full code repos,
+  reading long BRIEF.md + all prior rounds as context)
+- `platform.moonshot.cn` — same procurement questions: international access,
+  payment method, pricing.
+- Is Kimi meaningfully differentiated from Qwen or DeepSeek for English-language
+  structured analysis, or does it only shine on Chinese-language tasks?
+
+**Q34.3 — Xiaomi MiMo — open weights vs. API**
+
+MiMo is open-weight (Apache 2.0 licensed). The owner's homelab includes an
+inference VM:
+
+- Is running MiMo locally (via Ollama or vLLM on the inference VM) a better
+  option than subscribing to a cloud API for it?
+- The inference VM hardware: what are the VRAM requirements for MiMo-7B? Can the
+  homelab run it at reasonable inference speed for roundtable turn generation?
+- Is MiMo's strength (math/code reasoning) complementary to the existing agent
+  roster, or redundant with DeepSeek-R1?
+- If running locally: what is the setup path on NixOS? (`ollama` is available
+  as a NixOS service.)
+
+**Q34.4 — Qwen (Alibaba DashScope) — strongest open-weight alternative**
+
+Qwen2.5-72B is competitive with GPT-4o on many benchmarks and available as
+open weights. Evaluate:
+
+- **API route**: Alibaba Cloud DashScope (`dashscope.aliyuncs.com`). International
+  account creation and payment (Alipay/international card)?
+- **Open-weights route**: Qwen2.5-72B via Ollama on the inference VM. VRAM
+  requirement is ~40GB for 4-bit quantised — is this feasible on the homelab
+  inference VM?
+- For roundtable structured analysis (English, technical, opinionated), how
+  does Qwen2.5-72B compare to `deepseek-chat` (V3)? Is one clearly better?
+- `Qwen2.5-Coder-32B` is specialised for code tasks — is there a separate
+  roundtable role for it (e.g., the Codex slot)?
+
+**Q34.5 — Recommended subscription set**
+
+Given the analysis in Q34.1–Q34.4:
+
+1. **Which subscriptions should the owner actually sign up for?** Rank by
+   expected incremental value for the roundtable use case, and flag any where
+   the open-weights + homelab route is preferable to a cloud subscription.
+2. **Which models should be added to the roundtable agent roster beyond DeepSeek?**
+   A fourth agent (DeepSeek) has already been decided. A fifth or sixth agent
+   adds latency and cost — what is the marginal value?
+3. **Procurement sequence**: If multiple subscriptions are warranted, what is
+   the recommended order (e.g., DeepSeek first, then Qwen if homelab VRAM is
+   insufficient, Kimi only if long-context use cases emerge)?
+4. **Non-roundtable uses**: Are any of these models useful as personal daily
+   tools (coding assistant, document analysis, brainstorming) that would justify
+   a subscription independent of roundtable use?
+
+**Constraints for Q34:**
+- Owner is in Europe; Chinese-national-only sign-up flows are a blocker
+- Owner's homelab has an inference VM but VRAM ceiling is unknown to agents —
+  assume 16–24GB VRAM unless stated otherwise
+- Bias toward API access over local inference for agents that will run in
+  the roundtable orchestrator (latency and reliability requirements)
+- Brief premise challenge required: *DeepSeek (V3) is already decided and
+  very affordable. Is there a genuine case for adding a second Chinese AI model
+  subscription, or does this optimise for roster diversity at the cost of
+  complexity and spend? What is the actual incremental epistemic contribution
+  of a fifth agent?*
+
+---
+
+### Q35 — Naming the Roundtable: Identity, Intellectual Heritage, and Branding (2026-04-29)
+
+**Context and motivation:**
+
+The project is currently called `agent-roundtable` — a functional description, not
+a name. The owner wants a proper name that reflects the intellectual heritage of the
+project. Three strands of influence are explicitly cited:
+
+1. **John Stuart Mill and rational discourse.** Mill's *On Liberty* (1859) argues
+   that even false opinions have value because they force the holder of the true
+   opinion to understand *why* it is true. Suppression of any opinion is always
+   wrong because it deprives humanity of the opportunity to test its beliefs.
+   The roundtable protocol operationalises this: no agent's position is suppressed;
+   the IC must quote dissent (mindguard check); the `[no objection]` marker
+   distinguishes genuine agreement from exhaustion. Mill's "marketplace of ideas"
+   is the philosophical ancestor of the protocol.
+
+2. **High Modernism and legibility.** James C. Scott's *Seeing Like a State* (1998)
+   describes High Modernist projects as attempts to make complex systems legible
+   and controllable through rational planning, standardisation, and measurement.
+   The roundtable protocol is explicitly High Modernist: it imposes structured
+   formats (satisfaction markers, typed provenance, Toulmin warrants) on what would
+   otherwise be unstructured group conversation. The name should acknowledge this
+   ambition — and perhaps the hubris that Scott warns about.
+
+3. **Contemporary anti-trap discourse.** The protocol incorporates specific
+   structural corrections drawn from organisational behaviour (Janis groupthink,
+   Argyris double-loop, Stasser information sampling bias), intelligence community
+   structured analytic techniques, and philosophy of science. It is designed to
+   avoid the known failure modes of group deliberation. This is a contemporary
+   project, not a nostalgic one.
+
+The owner also frames this as a **test of divergent thinking** — the kind of
+structured creativity exercise that business schools try to engineer. A naming
+exercise is a good test case: it requires lateral thinking, cultural references,
+and aesthetic judgment, not just analytical reasoning. If the agents can only
+produce safe, anodyne suggestions, that reveals a protocol limitation.
+
+**Q35.1 — Name candidates (divergent phase)**
+
+Each agent should propose **3–5 candidate names** for the project. For each name,
+provide:
+- The name itself
+- A one-sentence rationale connecting it to the intellectual heritage above
+- Any risks (confusion with existing projects, unintended connotations, difficulty
+  pronouncing or spelling)
+
+Names should be:
+- **Distinctive** — not generic ("AI Discussion Tool", "AgentChat")
+- **Evocative** — should suggest the intellectual tradition without requiring
+  explanation to someone unfamiliar with it
+- **Usable** — suitable as a CLI command name, GitHub repo name, and conversation
+  reference ("let's run it through [name]")
+- **Not already taken** — agents should flag if they believe a name is already in
+  use by a well-known project
+
+Draw freely from: Mill's works and life, High Modernist projects and their critics,
+the discourse literature (Habermas, Toulmin, Janis, Delphi method), historical
+deliberative assemblies, philosophy of science, or any other source that fits the
+intellectual character of the project.
+
+**Q35.2 — Name evaluation (convergent phase)**
+
+After the divergent phase, evaluate the full set of candidates against these
+criteria:
+
+| Criterion | Weight | Notes |
+|---|---|---|
+| Intellectual fit | High | Does it reflect the Mill / High Modernism / anti-trap heritage? |
+| Distinctiveness | High | Is it unique in the AI tooling space? |
+| CLI usability | Medium | Short enough to type as a command? Works as a repo name? |
+| Pronunciation | Medium | Can it be spoken aloud unambiguously in English? |
+| Aesthetic quality | Medium | Does it sound good? Would the owner enjoy saying it? |
+| Risk of confusion | Low | Similar to existing well-known projects? |
+
+Each agent should rank their top 2–3 from the combined candidate pool and explain
+why.
+
+**Q35.3 — Recommended name**
+
+Propose a single recommended name with a brief (2–3 sentence) justification. If
+no consensus is possible, present the top 2 with the trade-off between them.
+
+**Constraints for Q35:**
+- The name must work as a Nix flake package name (lowercase, hyphens allowed,
+  no spaces)
+- The name must work as a GitHub repo name
+- The name must be suitable as a CLI command (≤12 characters preferred)
+- Brief premise challenge required: *Does this project need a name beyond
+  `roundtable`? The functional name is clear, searchable, and already in use
+  throughout the codebase. What does a "proper" name add that `roundtable` does
+  not already provide?*

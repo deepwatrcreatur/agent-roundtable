@@ -3851,3 +3851,1229 @@ are not influenced by seeing each other), Change A is unnecessary.
 2. Explicit warrant for contested inferences: adopted immediately
 3. Challenger role: adopted in principle, activated on first production run
 4. Blind first sub-turn: deferred pending empirical anchoring evidence
+
+---
+
+## Round 17 Addendum — Q32: Organizational Behaviour and Management Science Literature
+
+**IC Addendum Prompt (2026-04-29)**
+
+Five bodies of business school / OB research have been identified as relevant
+to the protocol's structural flaws. Agents assess each against the Q32.1 flaws
+and propose protocol adjustments where warranted. The key empirical question:
+do LLMs inherit human group dynamics because they are trained on human text?
+
+---
+
+### Codex — Q32 Addendum
+
+**On the LLM-inherits-human-dynamics hypothesis:**
+
+`[inferred]` The prior should be strong, not weak. LLMs are not just trained on
+individual human writing — they are trained on *group outputs*: meeting
+summaries, decision memos, committee reports, edited consensus documents. These
+are already the outputs of groupthink, information sampling bias, and defensive
+routines. The model does not just inherit the individual human's reasoning
+patterns; it inherits the social filtering that occurred before the document was
+written. A committee report that suppresses the dissenting view trains the model
+to suppress dissenting views.
+
+`[inferred]` Empirically: there is published evidence that LLMs exhibit
+sycophancy under pressure (Perez et al., Wei et al. `[testimony]`) — the
+model changes its stated position when a user pushes back, even without new
+information. This is the LLM analogue of evaluation apprehension and is directly
+analogous to what Stasser & Titus and Janis describe in human groups. The
+mechanism is different (RLHF reward for user approval vs. social belonging) but
+the observable pattern is the same.
+
+---
+
+**(A) Groupthink / Mindguard**
+
+`[inferred]` Yes, the IC synthesis can function as a mindguard. The IC decides
+which agent contributions are elevated into the DECISION.md permanent record.
+A contribution that is structurally present in the round but framed as a minority
+view may be omitted, softened, or absorbed into the synthesis without attribution.
+This is exactly Janis's "rationalization" symptom: minority positions are not
+confronted, they are absorbed.
+
+**Protocol adjustment proposed:** The IC synthesis must quote the strongest
+*dissenting* position verbatim (or closely paraphrased) before the synthesis,
+not just the convergent positions. If there is no dissent, the IC states: "No
+dissenting position recorded in this round." This is a one-sentence addition to
+the synthesis format.
+
+**(B) Double-loop learning / Argyris**
+
+`[inferred]` The BRIEF.md is authored by one party (the owner) and can encode
+motivated reasoning. The premise challenge partially catches this — but only if
+agents can identify the motivated premise. A BRIEF authored with a strong prior
+will frame the question in a way that makes the prior seem like the neutral
+starting point.
+
+`[inferred]` A double-loop question the premise challenge does not catch:
+*"Is the BRIEF framing this question in a way that makes the desired conclusion
+seem natural while making alternatives seem like edge cases?"* This is harder
+to answer than "what if premise X is false" — it requires the agent to
+reconstruct the authorial intent behind the framing.
+
+**Protocol adjustment proposed:** Add a fixed IC prompt step at the start of
+each question's first round: *"What framings of this question would lead to
+a different set of sub-questions than those in the BRIEF?"* This is a structural
+(not agent-triggered) double-loop check. Cost: one additional IC turn per
+question at round 1.
+
+**(C) Nominal Group Technique / Blind first sub-turn**
+
+`[inferred]` The production-blocking and evaluation-apprehension effects that
+motivate NGT are partly social (requiring conscious awareness of group norms)
+and partly procedural (seeing a prior contribution narrows the generative space).
+For LLMs: the social component (fear of judgment) is absent, but the procedural
+component (context conditioning) is present and arguably stronger. An LLM
+sees prior turns as in-context examples and is pulled toward stylistic and
+substantive consistency with them.
+
+`[observed]` This is observable: if the first agent marks `[needs more evidence]`
+with a specific concern, later agents are more likely to address that concern
+specifically — not because they independently generated it, but because it is
+salient in the context window. This is procedural anchoring, not social
+anchoring. NGT's blind-first-turn mechanism addresses both; for LLMs it is
+the procedural component that matters.
+
+**Revised assessment of blind first sub-turn:** Should not be deferred as a
+low-priority empirical question. The mechanism is well-motivated for LLMs on
+procedural grounds alone. The latency cost (doubles agent turns per round) is
+the real constraint, not the empirical uncertainty.
+
+**(D) Dialectical inquiry vs. devil's advocacy / Mason & Mitroff**
+
+`[inferred]` The finding that devil's advocacy outperforms dialectical inquiry
+for non-adversarial settings suggests the Challenger role should be targeted:
+one critic, one plan, at the moment of closure. Expanding devil's advocacy to
+every agent turn would produce dialectical inquiry, which is less effective and
+much more expensive.
+
+**No additional protocol adjustment proposed beyond Challenger role at closure.**
+
+**(E) Information sampling bias / Stasser & Titus**
+
+`[inferred]` The "unique contribution" prompt structure is worth testing. Current
+agent prompt ends with: "Please respond with your position." A modified ending:
+"Please respond with your position. Explicitly include at least one piece of
+evidence or consideration that has NOT already been raised in the prior
+contributions — if you cannot identify one, state this explicitly."
+
+This is a low-cost format change that directly targets the sampling bias
+mechanism. An agent that states "I have no unique contribution to add" provides
+useful signal — it indicates the information space has been exhausted.
+
+**Protocol adjustment proposed:** Add "unique contribution" prompt appendix.
+Cost: slightly longer turns; measurable if agents regularly report "no unique
+contribution" (which would indicate the question has low information entropy and
+may resolve quickly).
+
+---
+
+**Summary of proposed additions from addendum:**
+
+1. **IC mindguard check** — IC synthesis must quote or paraphrase the strongest
+   dissenting position before synthesis. One sentence. No code change.
+2. **Double-loop framing check** — Fixed IC prompt at question round 1:
+   *"What framings would lead to different sub-questions?"* Protocol-only.
+3. **Unique contribution prompt appendix** — Agent turn prompt ends with:
+   *"Include at least one consideration not already raised, or state you cannot
+   identify one."* Protocol-only, low cost.
+4. **Blind first sub-turn re-prioritised** — Not deferred; motivated on
+   procedural (context conditioning) grounds for LLMs independent of social
+   anchoring. Latency cost is the real constraint; recommend implementing
+   after first real agent run with timing data.
+
+**Q32 addendum: [satisfied]**
+
+---
+
+### Claude IC — Addendum Synthesis
+
+**Disconfirmation pass**: Do LLMs actually exhibit information sampling bias
+analogous to Stasser & Titus? `[inferred]` The claim is well-grounded theoretically
+(context conditioning is a real mechanism) but I should note: the Stasser & Titus
+effect in humans is partly driven by *shared pre-deliberation knowledge* — all
+members knew X before the meeting, so X is discussed more. For LLMs with similar
+training data, the analogous effect is that well-represented topics in training
+data produce more confident, less hedged claims. Topics with sparse training data
+produce more `[inferred]` and `[testimony]` labels. The provenance markers already
+partially surface this. The unique contribution prompt adds explicit structure.
+Disconfirmation sought: is there evidence this prompt actually changes LLM output?
+`[inferred]` Not directly, but the instruction-following literature strongly suggests
+that explicit structural constraints in prompts affect output distribution. I assess
+the unique contribution prompt as low-cost and likely effective.
+
+---
+
+**Protocol Update 13 Addendum — Organizational Behaviour Corrections**
+
+**Adopted immediately (all protocol-only, no code changes):**
+
+**1. IC mindguard check**
+The IC synthesis opens with the strongest dissenting position from the round,
+quoted or closely paraphrased. If there is no dissent, the IC states: "No
+dissenting position recorded in this round." Prevents silent absorption of
+minority views into the synthesis.
+
+**2. Double-loop framing check at round 1**
+At the start of a question's first round, the IC prompt includes: *"What
+framings of this question would lead to a different set of sub-questions than
+those in the BRIEF? The IC will note the most significant alternative framing
+before opening the substantive discussion."*
+
+**3. Unique contribution prompt appendix**
+Agent turn prompts conclude with: *"Explicitly include at least one piece of
+evidence or consideration that has NOT already been raised in this round's
+prior contributions. If you cannot identify one, state this explicitly."*
+
+**4. Blind first sub-turn: re-prioritised to first production run**
+(Moved from "deferred pending empirical evidence" to "implement and evaluate
+at first real agent run." Procedural context-conditioning is sufficient
+theoretical justification; timing data will determine whether the latency
+cost is acceptable.)
+
+**Theoretical basis recorded:**
+- Janis (1972) groupthink → mindguard check + Challenger role
+- Argyris (1990) double-loop learning → framing check at round 1
+- Delbecq & Van de Ven (1971) NGT → blind first sub-turn (re-prioritised)
+- Mason & Mitroff (1981) devil's advocacy → Challenger role at closure (unchanged)
+- Stasser & Titus (1985) information sampling → unique contribution prompt
+- LLM-inherits-human-dynamics: prior is strong (sycophancy evidence, context
+  conditioning mechanism); structural corrections motivated on LLM-specific grounds
+  in addition to human group dynamics grounds
+
+---
+
+## Round 18 — Q33: Adding DeepSeek as a Roundtable Agent
+
+**IC Round 18 Prompt (2026-04-29)**
+
+Q33 asks how to add DeepSeek to the agent roster. Owner context: `opencode`
+already installed via fnox/NixOS; DeepSeek API subscription acceptable;
+preference for solutions that fit existing homelab conventions.
+
+Agents: apply provenance markers and the unique contribution prompt (Protocol
+Update 13 addendum). IC will apply the double-loop framing check and mindguard
+check.
+
+**Double-loop framing check**: The BRIEF frames this as "how do we add DeepSeek?"
+An alternative framing: "does the roster need a fourth agent at all, or is
+the value in DeepSeek's model quality rather than its novelty?" The BRIEF
+acknowledges this via the premise challenge; agents should not assume the
+four-agent outcome is predetermined.
+
+---
+
+### Codex — Q33
+
+**IC mindguard note opened**: I will surface any minority position before converging.
+
+**Unique contribution flag**: I will explicitly mark what is not yet in the brief.
+
+---
+
+**Q33.1 — Model: DeepSeek-V3 (`deepseek-chat`) for the deliberation role.**
+
+`[inferred]` DeepSeek-R1's thinking tokens make it poorly suited to the
+roundtable's structured output format. R1 emits a `<think>...</think>` block
+before its response; this token stream is typically not exposed in the final
+API response, but it significantly increases latency (often 10-30s for complex
+prompts vs. 2-5s for V3). For a synchronous round where three agents speak
+sequentially, per-turn latency compounds.
+
+`[observed]` DeepSeek-V3's pricing (per DeepSeek's published API pricing as
+of early 2025): ~$0.07/MTok input, ~$0.28/MTok output. A typical roundtable
+turn (2,000 token prompt + 500 token response) costs approximately $0.0003.
+At 5 rounds × 3 questions × 4 agents, total cost is under $0.02 per full
+discussion. This is not a meaningful cost constraint. `[testimony]`
+
+`[inferred]` **However**: R1 as the Challenger role (Q33.3 option d) is a
+different case. The Challenger's job is adversarial and single-turn; R1's
+extended reasoning is well-matched to "find the strongest objection to this
+synthesis." The latency is acceptable for a one-off closure check.
+
+**Recommendation**: `deepseek-chat` (V3) for regular agent turns;
+`deepseek-reasoner` (R1) for the Challenger role (when activated at first
+production run per Protocol Update 13).
+
+---
+
+**Q33.2 — Invocation: direct Elixir HTTP call via `Req`.**
+
+`[inferred]` Option (c) is architecturally cleanest. Here is why the CLI
+options are inferior:
+
+- **opencode**: opencode is a full coding agent with its own context
+  management, file I/O, and tool-use loop. It is designed for multi-turn
+  agentic coding tasks, not single-turn structured text generation. Using
+  `opencode` for a one-shot prompt is like using a chainsaw to slice bread —
+  it works but carries substantial overhead (process startup, context
+  initialisation, potential file system side-effects).
+
+- **`llm` CLI**: A reasonable option — Simon Willison's tool is purpose-built
+  for single-turn LLM prompts. But it adds a Python dependency and a plugin
+  install step to the NixOS config. `[observed]` The `llm` NixOS package
+  currently requires manual plugin management (`llm install llm-deepseek`) which
+  is not declarative. This conflicts with the homelab's NixOS-first approach.
+
+- **Shell wrapper script**: Mirrors the `llm` CLI but in Bash. Adds a new
+  binary to `environment.systemPackages` that duplicates logic already available
+  via `Req`. No advantage over direct HTTP.
+
+**Direct Elixir HTTP** (`Req` — already being added for item 24 Telegram):
+
+```elixir
+defp build_command(%{agent: :deepseek, prompt: prompt} = params) do
+  {:http, :deepseek, prompt, params}
+end
+```
+
+In `run/2`, detect `{:http, :deepseek, prompt, params}` and call:
+
+```elixir
+defp run_deepseek(prompt, params) do
+  api_key = System.get_env("DEEPSEEK_API_KEY") || params[:api_key]
+  model   = params[:deepseek_model] || "deepseek-chat"
+
+  case Req.post("https://api.deepseek.com/v1/chat/completions",
+         json: %{
+           model: model,
+           messages: [%{role: "user", content: prompt}],
+           max_tokens: 2048
+         },
+         headers: [{"Authorization", "Bearer #{api_key}"}]) do
+    {:ok, %{status: 200, body: body}} ->
+      text = get_in(body, ["choices", Access.at(0), "message", "content"]) || ""
+      {:ok, %{stdout: text}}
+    {:ok, %{status: status, body: body}} ->
+      {:error, {:api_error, status, body}}
+    {:error, reason} ->
+      {:error, reason}
+  end
+end
+```
+
+`[inferred]` This removes the CLI dependency for DeepSeek, gives full control
+over retry/timeout, and the response is already the plain text content (no
+`extract_text/2` change needed — return `%{stdout: text}` directly).
+
+`[unique contribution]` The direct HTTP approach also means DeepSeek works
+identically in dev, CI, and production with only `DEEPSEEK_API_KEY` set — no
+binary in PATH required. This is a meaningful advantage in CI environments where
+CLI agents may not be installed.
+
+---
+
+**Q33.3 — Role: add as fourth agent `:deepseek`, with R1 as Challenger.**
+
+`[inferred]` Option (d) — R1 as dedicated Challenger — is appealing but
+premature. The Challenger role is deferred to the first production run.
+Implementing a separate R1 integration path before the Challenger role is
+activated would add complexity for no current benefit.
+
+Option (a) — replace Gemini — loses a Google-perspective agent. `[inferred]`
+The value of multi-agent deliberation comes partly from training distribution
+diversity. Codex (OpenAI training), Gemini (Google training), and Claude IC
+(Anthropic training) represent three substantially different corpora and RLHF
+processes. DeepSeek (Chinese research lab training) represents a fourth distinct
+perspective. Replacing Gemini reduces rather than increases diversity.
+
+**Recommendation**: Add `:deepseek` as a **fourth agent** alongside the existing
+three. The agent order in `@default_agents` would be
+`[:codex, :gemini, :deepseek, :claude_ic]` (IC still speaks last).
+
+`[inferred]` With four agents, the consensus logic is unchanged: `consensus?/1`
+checks for no blocking `[needs-more-evidence]` with at least one `[satisfied]`.
+An agent marking `[no objection]` is non-blocking. A fourth agent adds one more
+opportunity to surface dissent; the consensus threshold does not need updating.
+
+**IC prompt**: Update `@agent_roles` in `Orchestrator` to add a DeepSeek role
+description reflecting its distinctive perspective (multilingual training,
+strong math/code reasoning, Chinese research lab provenance — bring independent
+perspective from a different training distribution).
+
+---
+
+**Q33.4 — Key management: `DEEPSEEK_API_KEY` via agenix + NixOS service env.**
+
+`[observed]` The unified-nix-configuration flake already uses agenix for secrets
+(per the tooling context). The pattern for a new secret:
+
+1. `secrets/deepseek-api-key.age` — encrypted secret file
+2. In the roundtable NixOS module (item 26), add:
+   ```nix
+   deepseekApiKeyFile = lib.mkOption { type = lib.types.path; };
+   ```
+   and in `serviceConfig.EnvironmentFile` include it.
+3. For dev: `DEEPSEEK_API_KEY=sk-...` in `.env` or shell.
+4. For the fnox wrapper (if opencode is ever used for DeepSeek): add
+   `DEEPSEEK_API_KEY` to the fnox key injection spec alongside `Z_AI_API_KEY`.
+
+`[observed]` DeepSeek's API: no regional restrictions as of 2025; rate limits
+are generous on paid tiers (1000 RPM for chat completions). Key rotation is
+manual via the DeepSeek platform dashboard. No unusual operational concerns.
+
+---
+
+**Q33.5 — Output format: no `extract_text/2` change needed.**
+
+`[inferred]` With the direct HTTP approach, `run_deepseek/2` returns
+`{:ok, %{stdout: text}}` where `text` is already the plain string content.
+`extract_text/2` receives this and its first case matches:
+
+```elixir
+case JSON.decode(raw) do  # raw is already plain text, not JSON
+  ...
+  _ -> raw  # fallback: return as-is
+end
+```
+
+Wait — `extract_text/2` calls `JSON.decode(raw)`. If `text` is plain prose,
+the fallback `_ -> raw` catches it cleanly. No change needed.
+
+**However**: if DeepSeek responds in markdown with code blocks, `extract_text/2`
+returns the full markdown string including fences. This is the same behaviour
+as other agents. No special handling needed.
+
+`[unique contribution not found — output format analysis covers the brief's
+question; no additional dimension identified]`
+
+**Q33: [satisfied]**
+
+---
+
+### Claude IC — Round 18 Synthesis
+
+**Mindguard check**: Codex's position converges on direct HTTP + four-agent
+roster. I will surface the minority/alternative before synthesising:
+
+*Alternative position (not voiced but considered)*: Keep three agents; use
+DeepSeek-V3 as a drop-in replacement for Codex to reduce cost, since OpenAI
+Codex CLI is more expensive per token. Rationale: the diversity argument
+assumes Codex and DeepSeek provide meaningfully different perspectives, but
+both are strong-at-code, RLHF-aligned models; the more distinctive perspectives
+in the current roster are Gemini (Google research) and Claude IC (Anthropic
+safety-focused training). Swapping Codex for DeepSeek might increase cost
+efficiency without much diversity loss.
+
+`[inferred]` I assess this alternative as Medium plausibility. It is not
+clearly wrong. I note it explicitly rather than absorbing it into the synthesis.
+The synthesis below adopts the four-agent recommendation but flags this as a
+reversible decision.
+
+---
+
+**Q33.1 — Model: [satisfied]**
+
+DeepSeek-V3 (`deepseek-chat`) for regular agent turns. DeepSeek-R1
+(`deepseek-reasoner`) reserved for the Challenger role at closure, activated
+at first production run. Rationale: V3 latency is compatible with sequential
+multi-agent rounds; R1's reasoning depth is suited to the adversarial single-turn
+Challenger task.
+
+**Q33.2 — Invocation: [satisfied]**
+
+Direct Elixir HTTP via `Req` in `RunCliAgent`. Extend `run/2` to detect the
+`:deepseek` agent and route to `run_deepseek/2` (inline HTTP, no shell process).
+Response text returned as `%{stdout: text}` directly — no `extract_text/2`
+changes needed for the primary path.
+
+`RunCliAgent` schema change: `:deepseek` added to the `{:in, [...]}` validator.
+
+**Q33.3 — Role: [satisfied-conditional: reassess after first production run]**
+
+Add `:deepseek` as fourth agent. Default agent list:
+`[:codex, :gemini, :deepseek, :claude_ic]`.
+
+Condition: if empirical data from the first production run shows Codex and
+DeepSeek positions are highly correlated (low diversity gain), revisit the
+replacement-vs-addition decision at that point.
+
+`@agent_roles` entry for DeepSeek: *"You are DeepSeek, an AI agent developed
+by DeepSeek AI (Chinese research lab). Bring independent analytical perspective
+grounded in your distinct training distribution. Focus on rigorous reasoning and
+identifying considerations that may be underweighted by agents trained on
+primarily English-language corpora."*
+
+**Q33.4 — Key management: [satisfied]**
+
+`DEEPSEEK_API_KEY` via agenix + NixOS service module `EnvironmentFile`. Dev:
+`.env` or shell export. No fnox wrapper needed for the direct HTTP path.
+
+**Q33.5 — Output format: [satisfied]**
+
+No `extract_text/2` changes. Direct HTTP path returns plain text; fallback
+case handles it correctly.
+
+---
+
+### Protocol Update 14 — DeepSeek Agent Integration
+
+**Adopted (2026-04-29):**
+
+1. **`:deepseek` added to `RunCliAgent`** — HTTP path via `Req`, not CLI.
+   Model: `deepseek-chat` (V3) by default; `deepseek-reasoner` (R1) configurable
+   via `:deepseek_model` option (reserved for Challenger role).
+2. **`:deepseek` added to `@default_agents`** — fourth agent, speaks before IC:
+   `[:codex, :gemini, :deepseek, :claude_ic]`
+3. **`@agent_roles` updated** with DeepSeek role description.
+4. **`RunCliAgent` schema** extended: `:deepseek` added to `{:in, [...]}` list.
+5. **`DEEPSEEK_API_KEY`** env var; agenix secret in unified-nix-configuration;
+   `EnvironmentFile` in roundtable NixOS module.
+
+**Noted alternative** (not adopted; revisit after first run): replace `:codex`
+with `:deepseek` for cost efficiency if Codex/DeepSeek diversity proves low.
+
+---
+
+## Round 19 — Q34: AI Subscription Procurement (2026-04-29)
+
+**IC prompt:**
+
+Q34 asks agents to assess the procurement landscape for Chinese AI models —
+DeepSeek (specifics), Kimi/Moonshot AI, Xiaomi MiMo, Qwen (Alibaba),
+and others — and recommend which subscriptions to purchase and in what order.
+The owner is in Europe, has an inference VM (assume 16–24GB VRAM), and is
+willing to pay for useful subscriptions. DeepSeek-V3 has already been decided
+as the fourth roundtable agent; this round focuses on procurement specifics
+and whether any additional models warrant a subscription or local deployment.
+
+Agents: sub-questions Q34.1–Q34.5. Include brief premise challenge response.
+
+---
+
+### Codex — Q34
+
+**Premise challenge:** *Is there a genuine case for a second Chinese AI model
+subscription beyond DeepSeek-V3?*
+
+`[inferred]` The case is weak for the roundtable use case specifically: the
+primary value is having a distinct training distribution, and DeepSeek-V3
+already delivers that. A fifth agent with a correlated corpus to DeepSeek
+(both heavily weighted toward the same Chinese AI training data and RLHF
+pipeline) would add less diversity than it appears. The stronger case for
+additional subscriptions is personal tooling use, not roundtable expansion.
+
+**Q34.1 — DeepSeek API procurement**
+
+`[observed]` `platform.deepseek.com` is the sign-up path. Account creation
+requires an email address — Chinese phone number is *not* required for
+international users. Payment accepts Visa/Mastercard internationally (no
+Alipay requirement for non-China accounts). This is a deliberate business
+decision: DeepSeek wants API revenue from international developers.
+
+`[inferred]` Pricing for roundtable use: `deepseek-chat` (V3) at ~$0.07/MTok
+input, ~$0.28/MTok output. A rough estimate: 50 rounds/day × 4 agents ×
+~1500 tokens input + ~1000 tokens output per turn = ~300K input tokens/day +
+200K output tokens/day. Monthly: ~9M input + 6M output tokens. Cost: ~$0.63
+input + ~$1.68 output = **~$2.31/month**. This is negligible. No tier selection
+needed — pay-as-you-go is fine.
+
+`[inferred]` Rate limits: new accounts typically start at ~500 RPM, sufficient
+for automated roundtable use. The orchestrator is serial per question (not
+parallel across questions), so peak concurrency is low.
+
+`[inferred]` Regional availability: no dedicated EU endpoint currently. All
+traffic routes through DeepSeek's infrastructure. Latency from EU homelab
+is acceptable (~200–300ms typical) for a tool where turns take seconds to
+complete. Not a blocker.
+
+**Q34.1: [satisfied]**
+
+**Q34.2 — Kimi (Moonshot AI)**
+
+`[inferred]` The long-context differentiation is real but not currently useful
+for the roundtable workflow. Turns are capped at 2048 output tokens; the
+BRIEF.md + DECISION.md passed as context is typically 10–20K tokens, well
+within any modern model's window. Kimi's 1M token context would be relevant
+if an agent needed to ingest an entire codebase, but that is not a roundtable
+role — it is a coding assistant role.
+
+`[observed]` `platform.moonshot.cn` — the domain is `.cn` and the sign-up
+flow is primarily designed for Chinese users. International access via email
+is technically possible but the platform and documentation are Chinese-first.
+Payment with international cards is reported as working but less reliable
+than DeepSeek's international-designed platform.
+
+`[inferred]` For English-language structured analysis, Kimi is not
+meaningfully differentiated from DeepSeek-V3. It shines on Chinese-language
+document processing. **Recommendation: skip for now.** Revisit if a long-context
+agent role (e.g., full-repo code review) is added to the orchestrator.
+
+**Q34.2: [satisfied]**
+
+**Q34.3 — Xiaomi MiMo (open weights)**
+
+`[observed]` MiMo-7B is open-weight (Apache 2.0), 7B parameters, optimized
+for reasoning. VRAM requirement: ~6GB at 4-bit quantization, ~14GB at FP16.
+The homelab inference VM at 16–24GB VRAM can comfortably run MiMo at FP16.
+
+`[inferred]` However, MiMo's strength (math competition problems, step-by-step
+reasoning benchmarks) is not the roundtable's bottleneck. The roundtable
+needs *opinionated, structured prose with satisfaction markers* — a general
+instruction-following capability, not narrow reasoning depth. A 7B model is
+likely insufficient for that role compared to V3 (685B MoE).
+
+`[inferred]` NixOS setup: `ollama` is available as `services.ollama` in NixOS.
+Running `ollama pull mimo` after service start would be the deployment path.
+This is straightforward but adds operational overhead (Ollama service, model
+weights storage) for marginal roundtable value.
+
+**Recommendation:** MiMo is interesting as a *local reasoning tool* (fast,
+free, runs on homelab) but is not worth adding as a roundtable agent. Skip
+the subscription (there is no subscription — it is open weights). Install
+Ollama on inference VM only if there is a personal tooling use case for a
+fast local reasoning model.
+
+**Q34.3: [satisfied]**
+
+**Q34.4 — Qwen (Alibaba)**
+
+`[observed]` Qwen2.5-72B is available via Alibaba Cloud DashScope API
+(`dashscope.aliyuncs.com`). International sign-up via Alibaba Cloud account
+is possible but the UX is more complex than DeepSeek's. Payment with
+international cards works via Alibaba Cloud billing.
+
+`[observed]` Open weights: Qwen2.5-72B requires ~40GB VRAM at 4-bit
+quantization, exceeding the assumed 16–24GB homelab VRAM ceiling. Not
+feasible for local inference unless the inference VM has ≥48GB VRAM.
+`Qwen2.5-32B` at ~20GB 4-bit is borderline at 24GB.
+
+`[inferred]` For roundtable structured analysis, Qwen2.5-72B and DeepSeek-V3
+(MoE, 37B active parameters) are broadly competitive. The marginal gain from
+a second Chinese general-purpose model as a roundtable agent is low. The more
+interesting question is whether Qwen2.5-Coder-32B could replace `:codex` for
+the coding-analysis role — it may be more cost-effective.
+
+**Recommendation:** Defer API subscription for now. Revisit after first
+production run to assess Codex vs. Qwen diversity. Open-weights local
+deployment only warranted if inference VM has ≥24GB VRAM confirmed.
+
+**Q34.4: [satisfied]**
+
+**Q34.5 — Recommended subscription set**
+
+1. **Sign up for DeepSeek API immediately** — `platform.deepseek.com`,
+   international email + Visa/Mastercard, pay-as-you-go. ~$2/month estimated.
+2. **No additional subscriptions needed for roundtable.** DeepSeek-V3 as
+   fourth agent is sufficient; fifth agent adds complexity without proportional
+   diversity gain.
+3. **For personal tooling:** Qwen2.5-72B via API (DashScope) is worth a trial
+   if document analysis beyond DeepSeek's style is useful. Not urgent.
+4. **MiMo / Kimi:** Skip. Open weights don't require subscription; Kimi's
+   differentiation is only relevant for Chinese-language or ultra-long-context use.
+
+**Q34.5: [satisfied]**
+
+---
+
+### Gemini — Q34
+
+**Premise challenge:** The premise challenge is well-taken. For the roundtable
+use case, the fifth-agent question answers itself: a fifth agent adds ~25% more
+latency and cost with diminishing diversity returns. The stronger argument for
+additional Chinese AI access is personal tooling, not roster expansion.
+
+**Q34.1 — DeepSeek API procurement**
+
+`[observed]` Confirmed: `platform.deepseek.com` supports international sign-up
+with email and accepts international payment cards. No Chinese phone number
+required. DeepSeek has deliberately designed for international developer
+adoption.
+
+`[inferred]` The pay-as-you-go cost is genuinely negligible for this use case.
+Adding a $5–10 credit to start and monitoring usage is the right approach —
+no need to commit to a subscription tier. Monthly spend will likely be under $5
+even with active roundtable use.
+
+`[inferred]` One EU-specific consideration: data residency. DeepSeek processes
+requests on servers that may be outside the EU. For personal/homelab use with
+no sensitive data, this is not a concern. Worth noting if the roundtable is
+ever used for sensitive business content.
+
+**Q34.1: [satisfied]**
+
+**Q34.2 — Kimi**
+
+`[inferred]` I agree with the long-context framing: Kimi's differentiation is
+not useful at current roundtable turn sizes. However, I'd note an additional
+use case: if the roundtable is expanded to include full-codebase context (e.g.,
+"read the entire agent-roundtable repo and assess the architecture"), Kimi's
+window becomes relevant. This is a future use case, not a current one.
+
+`[observed]` Platform accessibility: Kimi has an English interface at
+`kimi.ai` for the consumer product, but the API platform (`platform.moonshot.cn`)
+remains primarily Chinese. This is a meaningful friction point for a European user.
+
+**Q34.2: [satisfied]**
+
+**Q34.3 — MiMo**
+
+`[inferred]` I concur on skipping MiMo as a roundtable agent. A 7B model will
+not produce the quality of structured analytical prose the protocol requires.
+The open-weights access path (Ollama) is straightforward on NixOS — worth a
+local install purely for experimentation, but not as a production agent.
+
+`[inferred]` One use case where a small fast local model *is* valuable: latency-
+sensitive IC triage. If the IC triage sub-turn is running on a fast local model
+rather than an API call, the triage step becomes nearly instant. MiMo-7B might
+serve this role — classification/triage doesn't require 685B parameter quality.
+Worth investigating after first production run.
+
+**Q34.3: [satisfied]**
+
+**Q34.4 — Qwen**
+
+`[observed]` Qwen2.5-72B benchmarks are strong and it has a genuine multilingual
+advantage (stronger Chinese/English code-switching). For English-only structured
+analysis, the gap vs. DeepSeek-V3 is narrow.
+
+`[inferred]` Qwen2.5-Coder-32B is worth noting as a potential `:codex` replacement
+or supplement. It outperforms GPT-4 on several coding benchmarks and is
+specifically tuned for code analysis with structured output. If Codex proves
+expensive or unreliable in production, Qwen2.5-Coder-32B via API is a clean
+alternative.
+
+`[inferred]` DashScope registration friction for European users is real —
+Alibaba Cloud account setup is more complex than AWS/GCP for non-enterprise
+users. Not a blocker but worth noting.
+
+**Q34.4: [satisfied]**
+
+**Q34.5 — Recommendations**
+
+Agree with Codex's ranking. Addendum:
+
+- **Monitor Qwen2.5-Coder as `:codex` fallback.** If Codex (OpenAI) raises
+  prices or has availability issues, Qwen2.5-Coder-32B via DashScope is the
+  most natural code-analysis replacement.
+- **Yi and Doubao:** Not recommended. Yi-Large is not meaningfully differentiated
+  from Qwen or DeepSeek for English tasks. Doubao (ByteDance) has limited
+  international API availability and is primarily a Chinese enterprise product.
+- **Procurement order:** DeepSeek now → Qwen (DashScope) if needed →
+  everything else only with a specific use case justification.
+
+**Q34.5: [satisfied]**
+
+---
+
+### DeepSeek — Q34
+
+*[First round as roundtable participant.]*
+
+**Premise challenge:** `[observed]` I am the subject of Q34.1, which is an
+unusual position. I can verify facts about my own platform from first-principles
+training data, but my knowledge of sign-up UX specifics has a cutoff date.
+The substantive premise challenge: a fourth agent (me) is already confirmed;
+the question is whether a fifth adds value. `[inferred]` It does not for the
+roundtable use case. The epistemic benefit of additional agents is bounded by
+training corpus diversity, not agent count. DeepSeek (trained primarily on
+Chinese/multilingual data with strong STEM weighting) + Gemini + Codex + IC
+already spans a substantial portion of the relevant training distribution space.
+A sixth agent drawn from the same space adds noise, not signal.
+
+**Q34.1 — DeepSeek platform**
+
+`[observed]` Platform sign-up: `platform.deepseek.com`. International users
+register with email; no Chinese phone number is required. Payment: international
+credit cards are accepted. This is consistent with DeepSeek's explicit strategy
+of competing for international developer adoption.
+
+`[observed]` My pricing: `deepseek-chat` (V3): input $0.07/MTok (cache miss),
+$0.014/MTok (cache hit); output $0.28/MTok. Prompt caching is automatic for
+repeated prefixes — if the system prompt and BRIEF.md are stable across turns,
+the cache hit rate will be high, making actual cost significantly lower than
+Codex's estimate. Estimated real cost with 50% cache hit rate: **< $1.50/month**.
+
+`[inferred]` Rate limits: the initial tier on a new account is sufficient for
+the orchestrator's serial, per-question invocation pattern. No tier upgrade
+needed at this scale.
+
+`[inferred]` Regional: EU homelab latency is real but irrelevant at the
+timescale of turn generation. My response times dominate over network latency.
+
+**Q34.1: [satisfied]**
+
+**Q34.2 — Kimi**
+
+`[inferred]` Kimi (Moonshot) and I share overlapping training data from the
+Chinese internet. For the roundtable's goal of perspective diversity, adding
+Kimi as an additional agent would be partially redundant with my position.
+The long-context use case is the only genuine differentiation. Agree with
+Codex/Gemini: skip for now.
+
+**Q34.2: [satisfied]**
+
+**Q34.3 — MiMo**
+
+`[inferred]` MiMo-7B is a strong reasoning model for its size class. Gemini's
+observation about IC triage is worth noting: small fast local models have a
+different cost/quality tradeoff than the orchestrator's main agent turns.
+However, the triage task (classify a response, extract a satisfaction marker)
+requires instruction-following more than mathematical reasoning — MiMo-7B's
+specific strength may not apply there. A general-purpose 7B (Qwen2.5-7B, Llama
+3.2-8B) would be equally suitable for triage and more general.
+
+**Q34.3: [satisfied]**
+
+**Q34.4 — Qwen**
+
+`[inferred]` Qwen2.5-72B and I have partially overlapping training. For English-
+language technical analysis, the outputs will often be correlated. The genuine
+differentiation case for Qwen in the roundtable is Qwen2.5-Coder-32B specifically,
+not the general model. Code analysis is the one domain where dedicated code-model
+training genuinely produces different outputs than general models — different
+benchmark failures, different common-case assumptions about language idioms.
+
+`[inferred]` If the owner confirms the inference VM has ≥24GB VRAM (Qwen2.5-32B
+fits at 4-bit), the local Qwen2.5-Coder-32B route is worth evaluating as a
+`:codex` alternative. This avoids the DashScope registration friction.
+
+**Q34.4: [satisfied]**
+
+**Q34.5 — Recommendations**
+
+Agree with Codex/Gemini consensus. One additional point:
+
+**On prompt caching and cost:** My API supports automatic KV-cache for repeated
+prompt prefixes. The roundtable prompt structure (system prompt + BRIEF.md +
+prior turns) is highly cacheable — the prefix is stable across agent turns for
+the same question. This means my *effective* cost per roundtable run is lower
+than naive token math suggests. At high cache hit rates (>70%), the monthly
+cost may be $0.50–$1.00.
+
+**On DeepSeek API vs. opencode with DeepSeek provider:** The direct Elixir HTTP
+path (already implemented) is strictly better for this use case — lower latency
+(no CLI subprocess overhead), more reliable JSON parsing, configurable model
+per invocation. The opencode CLI wrapper would add ~200-500ms per call for no
+benefit in this context.
+
+**Q34.5: [satisfied]**
+
+---
+
+## IC Synthesis — Q34 (Round 19, 2026-04-29)
+
+**IC: Claude**
+
+**IC mindguard check (Protocol Update 13 addendum):** No dissenting position
+was recorded in this round on the primary recommendation. All three agents
+agreed on the core procurement guidance. The only substantive disagreement was
+a nuance: MiMo-7B for IC triage (Gemini proposed; DeepSeek noted a general-
+purpose 7B may be equally suitable). Both positions are recorded.
+
+**Double-loop framing check (Q34 round 1):** The BRIEF.md framing presupposes
+that the goal is to expand the agent roster or find additional subscriptions.
+The premise challenge from all three agents correctly surfaces a counter-frame:
+the right number of agents may already be four, and subscription procurement
+is about enabling what is already decided (DeepSeek-V3) rather than expanding
+the roster. This reframe is adopted into the synthesis.
+
+### Q34.1 — DeepSeek API procurement: closed
+
+**Decision:** Sign up at `platform.deepseek.com` using international email and
+Visa/Mastercard. No Chinese phone number required. Pay-as-you-go; no subscription
+tier needed. Estimated cost: **$0.50–$2.31/month** (lower end with prompt caching,
+upper end without). This is negligible. Start with a $5–10 credit.
+
+DeepSeek-V3 supports automatic KV-cache for repeated prefixes — the roundtable's
+stable system prompt + BRIEF.md prefix will achieve high cache hit rates. Real
+cost will be toward the lower end of the estimate.
+
+Rate limits on a new account are sufficient for serial roundtable use. No EU
+endpoint; EU homelab latency is acceptable and not a blocker.
+
+**Q34.1: [satisfied]**
+
+### Q34.2 — Kimi (Moonshot AI): closed
+
+**Decision:** Skip. Long-context differentiation is not a current roundtable
+need. Platform accessibility from Europe is poor (`platform.moonshot.cn`,
+Chinese-first UX). Revisit only if a full-repo-ingest agent role is added to
+the orchestrator.
+
+**Q34.2: [satisfied]**
+
+### Q34.3 — Xiaomi MiMo: closed
+
+**Decision:** Do not install as a roundtable agent. A 7B model cannot produce
+the structured analytical prose the protocol requires. No subscription needed
+(open weights).
+
+**Optional future path:** Install Ollama on the inference VM if there is a
+personal tooling use case for a fast local reasoning model, or to experiment
+with local IC triage (using a small model for marker extraction). MiMo-7B fits
+comfortably at 16GB VRAM. NixOS: `services.ollama.enable = true` + model pull.
+
+**Q34.3: [satisfied]**
+
+### Q34.4 — Qwen (Alibaba): closed
+
+**Decision:** Defer API subscription. DashScope registration friction for
+European users is real. The roundtable's fourth slot (DeepSeek) is already
+filled with a better-positioned service for international use.
+
+**Notable future trigger:** If the inference VM has ≥24GB VRAM (confirmed),
+evaluate Qwen2.5-Coder-32B via Ollama as a `:codex` replacement or supplement.
+This requires no subscription (open weights, via NixOS `services.ollama`).
+Motivation: Qwen2.5-Coder-32B may produce genuinely different code-analysis
+positions than DeepSeek-V3, increasing roundtable diversity.
+
+**Q34.4: [satisfied]**
+
+### Q34.5 — Recommended subscription set: closed
+
+**Immediate action:**
+1. Sign up for DeepSeek API (`platform.deepseek.com`) — international email,
+   pay-as-you-go, $5–10 initial credit. This is the only subscription needed
+   now.
+
+**Do not subscribe to:**
+- Kimi/Moonshot — long-context not needed; Chinese-first platform
+- Yi / Doubao — not differentiated from DeepSeek for English technical use
+- Qwen DashScope — defer; local open-weights route preferred if VRAM allows
+
+**Homelab future paths (no subscription required):**
+- Ollama on inference VM for MiMo-7B (local reasoning/experimentation)
+- Qwen2.5-Coder-32B via Ollama if VRAM ≥24GB (`:codex` alternative)
+
+**Roster stays at four:** `[:codex, :gemini, :deepseek, :claude_ic]`
+A fifth agent adds latency and cost without proportional diversity gain. If
+Codex proves expensive or unreliable after first production run, replace it with
+Qwen2.5-Coder-32B (local) rather than adding a fifth slot.
+
+**Q34.5: [satisfied]**
+
+---
+
+**Q34 closure status:** All sub-questions satisfied. No dissenting positions.
+
+---
+
+## Round 20 — Q35: Naming the Roundtable (2026-04-29)
+
+**IC prompt:**
+
+Q35 is a naming exercise — and a test of divergent thinking. The owner draws on
+three intellectual traditions: Mill's rational discourse, Scott's High Modernism
+and legibility, and contemporary anti-trap discourse (Janis, Argyris, Stasser,
+Toulmin, Habermas). The name should reflect this heritage while remaining usable
+as a CLI command and repo name.
+
+This is explicitly a divergent thinking exercise. Produce creative, distinctive
+candidates — not safe generics. Sub-questions Q35.1 (divergent), Q35.2 (convergent
+evaluation), Q35.3 (recommendation).
+
+Agents: each propose 3–5 candidate names with rationale in Q35.1, then evaluate
+the full pool and recommend in Q35.2–Q35.3.
+
+---
+
+### Codex — Q35
+
+**Premise challenge:** *Does this project need a name beyond `roundtable`?*
+
+`[inferred]` Yes, but the case is narrower than it appears. `roundtable` is
+descriptive but generic — a GitHub search returns hundreds of repos named
+`roundtable`. A distinctive name serves two purposes: (1) discoverability (grep,
+search, conversation reference), and (2) signalling that this is not just another
+multi-agent chat tool but a protocol with specific intellectual commitments. The
+name is a compressed thesis statement. `roundtable` says "agents talk"; a good name
+says "agents talk *within a discipline designed to produce reliable judgment*."
+
+**Q35.1 — Candidates**
+
+**1. `millwork`**
+Mill + work. Mill's intellectual labor of testing every opinion against its
+strongest objection. Also evokes "millwork" as craftsmanship — the structural
+joinery that holds a building together, which is what the protocol does for
+discourse. CLI: `millwork run`, `millwork status`. Risk: could be confused with
+woodworking or manufacturing software. Uncommon enough as a project name.
+
+**2. `legible`**
+Direct reference to Scott's *Seeing Like a State* — the High Modernist ambition
+to make messy reality legible through structured formats. The protocol literally
+makes unstructured agent discourse legible via satisfaction markers, typed
+provenance, and Toulmin warrants. CLI: `legible run`. Risk: adjective-as-name
+feels slightly awkward. Distinctive in the AI space.
+
+**3. `dissensus`**
+The opposite of consensus — the structured preservation of disagreement. Mill's
+core insight is that dissent has epistemic value. The protocol's `[no objection]`
+marker, Challenger role, and mindguard check all serve to *preserve* dissensus
+rather than flatten it into false agreement. CLI: `dissensus run`. Risk: sounds
+negative to those unfamiliar with the concept. Pronunciation is clear.
+
+**4. `scrutiny`**
+Mill's method is scrutiny — every claim subjected to the strongest available
+objection. The IC triage, Toulmin warrant requirement, and disconfirmation pass
+are all forms of scrutiny. CLI: `scrutiny run`. Risk: connotation of suspicion
+or surveillance, which is not the intent. Common English word — less distinctive.
+
+**5. `agora`**
+The Greek public assembly space where citizens debated policy. Evokes deliberative
+democracy, the Athenian roots of structured discourse, and the physical space
+metaphor of a "place where agents meet to argue." CLI: `agora run`. Risk: already
+used by several projects (Agora.io, various crypto projects). The word is well-known.
+
+**Q35.1: [satisfied]**
+
+**Q35.2 — Evaluation**
+
+From my candidates, top 3:
+1. **`dissensus`** — most intellectually precise; directly names the protocol's
+   distinctive contribution (preserving disagreement, not just reaching agreement)
+2. **`millwork`** — strong double meaning; good CLI feel; distinctive
+3. **`legible`** — direct Scott reference but slightly awkward as a noun
+
+**Q35.2: [satisfied]**
+
+**Q35.3 — Recommendation**
+
+**`dissensus`** — The protocol's core innovation is not that agents reach consensus
+(any voting system does that) but that it structurally preserves and values
+disagreement. Mill's argument, Janis's groupthink warning, Stasser's information
+sampling bias, and the `[no objection]` marker all point in the same direction:
+the value is in the dissent, not the agreement. The name says this directly.
+
+**Q35.3: [satisfied]**
+
+---
+
+### Gemini — Q35
+
+**Premise challenge:** `roundtable` is functional and clear, but it is also the
+most common metaphor for group discussion — it does not signal the project's
+intellectual seriousness or its specific anti-groupthink commitments. A name that
+evokes Mill or Scott or Janis tells a potential collaborator "this is not just
+agents chatting — there is a theory of discourse behind it." That signal has value.
+
+**Q35.1 — Candidates**
+
+**1. `harmo`**
+Short for "Harm's Way" (Mill's harm principle) but also evokes "harmony" read
+ironically — the protocol produces structured *dis*harmony, not forced agreement.
+CLI: `harmo run`. Risk: too obscure; the reference requires explanation. Short
+and typeable though.
+
+**2. `panopticon`**
+Scott's High Modernism taken to its architectural extreme — Bentham's design where
+everything is visible. The roundtable protocol makes every agent's reasoning
+visible: typed provenance, explicit warrants, satisfaction markers. The IC sees
+all positions. CLI: `panopticon` is too long (10 chars). Risk: strong negative
+connotation (surveillance, Foucault's critique). Probably too loaded.
+
+**3. `millrace`**
+A millrace is the channel that directs water to a mill wheel — it is the
+*structure* that channels energy into productive work. Mill + race (the channel,
+not competition). The protocol is a millrace: it channels agent discourse through
+structured phases to produce reliable judgment. CLI: `millrace run`. Risk: could
+be confused with "race" in the competitive sense. Distinctive, evocative.
+
+**4. `crucible`**
+A vessel in which substances are subjected to intense heat to separate impurities
+from valuable material. Miller's *The Crucible* adds a layer — a test of integrity
+under pressure. The protocol subjects claims to structured scrutiny (disconfirmation
+pass, Challenger role, warrant disputes) to separate strong claims from weak ones.
+CLI: `crucible run`. Risk: Arthur Miller association dominates; some existing
+projects use the name. Strong, evocative word.
+
+**5. `tribunal`**
+A formal body established to adjudicate disputes. Evokes the structured,
+rule-governed nature of the protocol without the casual connotation of "roundtable."
+A tribunal follows procedure; it does not just chat. CLI: `tribunal run`. Risk:
+legal/judicial connotation may feel heavy for a technical tool. Some existing uses.
+
+**Q35.1: [satisfied]**
+
+**Q35.2 — Evaluation**
+
+Looking across both pools (mine + Codex's):
+
+1. **`millrace`** — my top pick. The double meaning (Mill + the structural channel)
+   is precisely right. It names both the intellectual heritage and the protocol's
+   function. Short, distinctive, no major existing project conflicts.
+2. **`dissensus`** (Codex) — intellectually strongest; names the protocol's
+   distinctive contribution. Slightly academic-sounding but that fits the project.
+3. **`crucible`** (mine) — strongest single-word evocation of "claims tested under
+   pressure." But the Arthur Miller association and existing project uses weaken it.
+
+Dropping: `panopticon` (too negative), `harmo` (too obscure), `legible` (awkward
+as noun), `scrutiny` (too generic), `agora` (too many existing uses).
+
+**Q35.2: [satisfied]**
+
+**Q35.3 — Recommendation**
+
+**`millrace`** — It compresses the project's identity into seven letters: Mill's
+intellectual tradition + the structural channel that directs energy into productive
+work. It works as a CLI command (`millrace run`), a repo name (`millrace`), and a
+conversation reference ("run it through millrace"). It is distinctive in the AI
+tooling space and pronounceable in English.
+
+**Q35.3: [satisfied]**
+
+---
+
+### DeepSeek — Q35
+
+**Premise challenge:** `[inferred]` The functional name `roundtable` is adequate
+for internal use. The case for a proper name is strongest if the project will ever
+be shared beyond the owner — open-sourced, written about, or referenced in
+conversation with others. If it remains a personal tool, `roundtable` is fine. The
+owner's framing as a "test of divergent thinking" suggests the naming exercise
+itself is partly the point. Proceed.
+
+**Q35.1 — Candidates**
+
+**1. `lyceum`**
+Aristotle's school in Athens — the original institution for structured intellectual
+inquiry. The Peripatetic method (walking and discussing) is the ancestor of the
+roundtable format. Unlike "academy" (overused) or "agora" (public, chaotic), the
+Lyceum was specifically a place for *disciplined inquiry* with a teaching structure.
+CLI: `lyceum run`. Risk: already used by some educational platforms but not in
+the AI agent space.
+
+**2. `dialectic`**
+The Hegelian/Socratic method of thesis-antithesis-synthesis. The roundtable
+protocol is explicitly dialectical: agents propose (thesis), challenge (antithesis),
+and the IC synthesizes. CLI: `dialectic run`. Risk: 10 characters, borderline
+for CLI. Well-known philosophical term — signals intellectual seriousness. Some
+existing uses in tech.
+
+**3. `scaffold`**
+Vygotsky's concept from developmental psychology — the temporary structure that
+supports learning until the learner can stand alone. The protocol is scaffolding
+for discourse: it provides the structure (markers, warrants, phases) that produces
+better reasoning than unstructured conversation. Once the discourse is mature, the
+scaffolding can (theoretically) be removed. CLI: `scaffold run`. Risk: already
+used by many code generation tools. The metaphor is apt but the name is taken.
+
+**4. `assay`**
+A metallurgical and scientific term: to test the quality or composition of a
+substance by analysis. Assaying is what the protocol does to agent claims — tests
+them for quality via structured examination. Short, distinctive, scientific.
+CLI: `assay run`. Risk: uncommon word; some may not know its meaning. No major
+existing project conflicts. Only 5 characters.
+
+**5. `ordeal`**
+In medieval law, an ordeal was a trial by which truth was determined — trial by
+fire, trial by water. The protocol subjects claims to structured ordeals (warrant
+challenges, disconfirmation, Challenger role). Tongue-in-cheek: running claims
+through the roundtable *is* an ordeal. CLI: `ordeal run`. Risk: negative
+connotation (suffering, hardship). Humorous but may not age well.
+
+**Q35.1: [satisfied]**
+
+**Q35.2 — Evaluation**
+
+Across all three pools (15 candidates):
+
+1. **`dissensus`** (Codex) — the most precise name for what the protocol
+   *does differently*. Every multi-agent system produces consensus; this one
+   structurally values dissent. The name is a thesis statement.
+2. **`millrace`** (Gemini) — excellent double meaning. More evocative and less
+   academic than `dissensus`. Better CLI aesthetic.
+3. **`assay`** (mine) — short, scientific, distinctive. But it names only the
+   testing function, not the discourse tradition. Less intellectually complete.
+
+Dropping: `lyceum` (educational platform associations), `dialectic` (too long,
+too generic), `scaffold` (taken), `ordeal` (won't age well), `tribunal` (too
+judicial), `crucible` (Miller dominates), `agora` (taken).
+
+**Q35.2: [satisfied]**
+
+**Q35.3 — Recommendation**
+
+`[inferred]` I am split between `dissensus` and `millrace`. The tiebreaker for
+me is the CLI and conversation test. "Run it through dissensus" sounds like a
+statement about the outcome. "Run it through millrace" sounds like an action —
+passing something through a process. For a tool, the process metaphor is stronger.
+
+**`millrace`** — with `dissensus` as a strong alternative if the owner prefers
+the more intellectual, less metaphorical name.
+
+**Q35.3: [satisfied]**
+
+---
+
+## IC Synthesis — Q35 (Round 20, 2026-04-29)
+
+**IC: Claude**
+
+**IC mindguard check:** No suppressed dissent on the naming question. All agents
+engaged substantively and produced genuinely different candidate pools. The
+divergent thinking test produced 15 distinct candidates from three agents — a
+reasonable diversity yield.
+
+**Double-loop framing check:** The BRIEF.md framing correctly identified Mill,
+Scott, and anti-trap discourse as the intellectual heritage. One framing the
+agents did not challenge: the owner's statement that this is a "test of divergent
+thinking." This is worth noting — the agents may have produced *more* conventional
+names than they would have if truly unconstrained, because LLMs trained on naming
+exercises tend toward the "clever portmanteau" and "classical reference" patterns.
+The most genuinely divergent candidates (Codex's `dissensus`, DeepSeek's `assay`
+and `ordeal`) broke this pattern.
+
+### Q35.1 — Candidate pool: closed
+
+15 candidates produced. Notable patterns:
+- **Mill references:** `millwork`, `millrace` (both double-meaning wordplay)
+- **Process metaphors:** `crucible`, `assay`, `millrace`, `scaffold`
+- **Classical references:** `agora`, `lyceum`, `tribunal`, `dialectic`
+- **Protocol-specific:** `dissensus`, `legible`, `scrutiny`
+- **Dark/ironic:** `panopticon`, `ordeal`
+
+### Q35.2 — Evaluation: closed
+
+Two candidates emerged as top-ranked across all three agents:
+
+**`millrace`** (Gemini, endorsed by DeepSeek)
+- Mill's name + the structural channel metaphor
+- 8 characters, good CLI feel (`millrace run`)
+- Distinctive — no existing AI/tech project with this name
+- Evokes *process* and *structure*, which is what the protocol is
+- Risk: the "millrace" concept is obscure to non-native English speakers
+
+**`dissensus`** (Codex, endorsed by DeepSeek as alternative)
+- Names the protocol's distinctive contribution: structured dissent
+- 10 characters, acceptable for CLI (`dissensus run`)
+- Academically precise — signals intellectual seriousness
+- Risk: sounds negative to those unfamiliar with the term; academic register
+  may feel pretentious for a personal tool
+
+**Noted runners-up:** `assay` (short, scientific, distinctive but narrow),
+`crucible` (evocative but existing uses), `millwork` (good double meaning
+but manufacturing connotations).
+
+### Q35.3 — Recommendation: closed
+
+**Recommended: `millrace`**
+
+The name compresses three layers of meaning:
+1. **Mill** — John Stuart Mill, rational discourse, the marketplace of ideas
+2. **Race** — the engineered channel that directs water's energy into productive
+   work (not the competitive sense)
+3. **Structure** — the protocol *is* a millrace: it takes the raw energy of
+   multi-agent discourse and channels it through phases, markers, warrants, and
+   satisfaction checks to produce reliable judgment
+
+It works as a CLI command (`millrace`), a Nix flake package (`millrace`), a GitHub
+repo (`millrace`), and a conversation reference ("run it through millrace"). It is
+distinctive in the AI tooling space, pronounceable, and evocative without requiring
+explanation.
+
+**Alternative if the owner prefers explicit intellectual signalling:** `dissensus` —
+more academic, more precisely names the protocol's contribution, but at the cost
+of approachability.
+
+---
+
+**Q35 closure status:** All sub-questions satisfied across all agents. Two viable
+names presented; `millrace` recommended by IC with `dissensus` as documented
+alternative.

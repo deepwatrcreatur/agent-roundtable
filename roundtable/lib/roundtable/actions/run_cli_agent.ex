@@ -1,15 +1,31 @@
 defmodule Roundtable.Actions.RunCliAgent do
   use Jido.Action,
     name: "run_cli_agent",
-    description: "Invokes a CLI agent (claude, codex, gemini) headlessly",
+    description: "Invokes a CLI agent (claude, codex, gemini, deepseek) headlessly",
     schema: [
-      agent: [type: {:in, [:claude, :codex, :gemini]}, required: true, doc: "The agent to invoke"],
+      agent: [
+        type: {:in, [:claude, :codex, :gemini, :deepseek]},
+        required: true,
+        doc: "The agent to invoke"
+      ],
       prompt: [type: :string, required: true, doc: "The prompt to send to the agent"],
       repo_root: [type: :string, required: true, doc: "The working directory for the command"],
-      cli_path: [type: :string, required: false, doc: "Optional path to the CLI binary"]
+      cli_path: [type: :string, required: false, doc: "Optional path to the CLI binary"],
+      deepseek_model: [
+        type: :string,
+        required: false,
+        doc: "DeepSeek model ID (default: deepseek-chat). Use deepseek-reasoner for R1."
+      ]
     ]
 
+  @deepseek_api_url "https://api.deepseek.com/v1/chat/completions"
+  @deepseek_default_model "deepseek-chat"
+
   @impl true
+  def run(%{agent: :deepseek, prompt: prompt} = params, _context) do
+    run_deepseek(prompt, params)
+  end
+
   def run(params, _context) do
     runner = Map.get(params, :runner) ||
              Application.get_env(:roundtable, :cmd_runner, Roundtable.SystemCmdRunner)
@@ -35,6 +51,44 @@ defmodule Roundtable.Actions.RunCliAgent do
         {:error, reason}
     end
   end
+
+  # ------------------------------------------------------------------
+  # DeepSeek — direct HTTP (no CLI dependency)
+  # ------------------------------------------------------------------
+
+  defp run_deepseek(prompt, params) do
+    case params[:api_key] || System.get_env("DEEPSEEK_API_KEY") do
+      nil ->
+        {:error, :deepseek_api_key_missing}
+
+      api_key ->
+        model = params[:deepseek_model] || @deepseek_default_model
+
+        case Req.post(@deepseek_api_url,
+               json: %{
+                 model: model,
+                 messages: [%{role: "user", content: prompt}],
+                 max_tokens: 2048
+               },
+               headers: [{"Authorization", "Bearer #{api_key}"}],
+               receive_timeout: 120_000
+             ) do
+          {:ok, %{status: 200, body: resp}} ->
+            text = get_in(resp, ["choices", Access.at(0), "message", "content"]) || ""
+            {:ok, %{stdout: text}}
+
+          {:ok, %{status: status, body: resp}} ->
+            {:error, {:deepseek_api_error, status, resp}}
+
+          {:error, reason} ->
+            {:error, {:deepseek_http_error, reason}}
+        end
+    end
+  end
+
+  # ------------------------------------------------------------------
+  # CLI agent command builders
+  # ------------------------------------------------------------------
 
   defp build_command(%{agent: :claude, prompt: prompt, repo_root: root} = params) do
     cmd = params[:cli_path] || "claude"

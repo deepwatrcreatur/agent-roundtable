@@ -688,3 +688,169 @@ if anchoring is empirically present in first real agent run.
 - ODNI SAT/ACH → Challenger role at closure (deferred)
 - Fishkin deliberative polling → "missing perspectives" IC prompt (future work item)
 - Habermas ideal speech → typed provenance already addresses sincerity claim
+
+### Q32 Addendum — Organizational Behaviour Literature (Round 17, 2026-04-29)
+
+**Key finding:** LLMs inherit human group dynamics through training on group
+outputs (committee reports, meeting summaries, consensus documents) — not just
+individual writing. The sycophancy literature provides direct empirical support.
+Structural corrections motivated on LLM-specific grounds.
+
+**Adopted (Protocol Update 13 Addendum, all protocol-only):**
+
+**IC mindguard check**
+IC synthesis opens by quoting or closely paraphrasing the strongest dissenting
+position. If no dissent: "No dissenting position recorded in this round."
+Prevents silent absorption of minority views. *Source: Janis (1972) groupthink.*
+
+**Double-loop framing check at question round 1**
+IC prompt at first round of each question: *"What framings would lead to
+different sub-questions than those in the BRIEF?"* Structural (not
+agent-triggered) double-loop check against motivated BRIEF framing.
+*Source: Argyris (1990) skilled incompetence + defensive routines.*
+
+**Unique contribution prompt appendix**
+Agent prompts end: *"Include at least one consideration not already raised
+this round, or explicitly state you cannot identify one."*
+Targets information sampling bias; "no unique contribution" is a useful
+low-information-entropy signal. *Source: Stasser & Titus (1985).*
+
+**Blind first sub-turn: re-prioritised**
+Moved from "deferred" to "implement and evaluate at first real agent run."
+Procedural context-conditioning (LLM-specific) is sufficient justification
+independent of social anchoring. *Source: Delbecq & Van de Ven (1971) NGT.*
+
+**Unchanged:** Challenger role at closure (Mason & Mitroff 1981 devil's advocacy
+confirmed as correct scope — per-turn devil's advocacy would produce dialectical
+inquiry, which is less effective for non-adversarial settings).
+
+---
+
+## Q33 — Adding DeepSeek as a Roundtable Agent (Round 18, 2026-04-29)
+
+**Decision:** Add `:deepseek` (DeepSeek-V3) as a **fourth agent** via direct
+Elixir HTTP (`Req`), not via `opencode` CLI. Default roster becomes
+`[:codex, :gemini, :deepseek, :claude_ic]`.
+
+### Model
+
+- Regular agent turns: `deepseek-chat` (V3) — ~$0.0003/turn, fast, structured
+- Challenger role at closure: `deepseek-reasoner` (R1) — activated at first
+  production run; configurable via `:deepseek_model` option
+
+### Invocation
+
+Direct Elixir HTTP in `RunCliAgent`. `run/2` detects `:deepseek` and calls
+`run_deepseek/2` via `Req`. Response text returned as `%{stdout: text}` —
+no `extract_text/2` changes needed. This removes the CLI dependency for
+DeepSeek; works in dev, CI, and production with only `DEEPSEEK_API_KEY` set.
+
+### Role in roster
+
+Fourth agent, speaks before IC. `@agent_roles` description: *"You are DeepSeek,
+an AI agent developed by DeepSeek AI. Bring independent analytical perspective
+from a distinct training distribution. Focus on rigorous reasoning and
+considerations potentially underweighted by agents trained on primarily
+English-language corpora."*
+
+**Noted alternative** (not adopted; revisit after first run): replace `:codex`
+with `:deepseek` for cost efficiency if Codex/DeepSeek position diversity proves low.
+
+### Key management
+
+`DEEPSEEK_API_KEY` env var. Homelab: agenix secret + NixOS module `EnvironmentFile`.
+Dev: `.env` / shell export.
+
+### Protocol Update 14
+
+See ACTIVE_DISCUSSION.md Round 18. Changes to implement (item 27):
+1. `RunCliAgent`: add `:deepseek` to schema + `run_deepseek/2` HTTP handler
+2. `Orchestrator`: add `:deepseek` to `@default_agents` + `@agent_roles`
+3. NixOS module (item 26): add `deepseekApiKeyFile` option
+
+---
+
+## Q34 — AI Subscription Procurement (Round 19, 2026-04-29)
+
+**Decision:** Sign up for DeepSeek API only. No additional subscriptions needed now.
+
+### DeepSeek API
+
+- **Platform:** `platform.deepseek.com`
+- **Sign-up:** International email sufficient; no Chinese phone number required
+- **Payment:** Visa/Mastercard accepted; pay-as-you-go; start with $5–10 credit
+- **Estimated cost:** $0.50–$2.31/month (prompt caching reduces real cost significantly)
+- **Rate limits:** Default new-account limits are sufficient for serial roundtable use
+- **EU latency:** Acceptable; not a blocker
+
+### Models not subscribed to
+
+| Model | Decision | Reason |
+|---|---|---|
+| **Kimi (Moonshot AI)** | Skip | Long-context not needed; `platform.moonshot.cn` is Chinese-first; poor EU accessibility |
+| **Xiaomi MiMo** | Skip (open weights) | 7B insufficient for roundtable prose quality; no subscription exists |
+| **Qwen DashScope** | Defer | Registration friction; local open-weights route preferred if homelab VRAM allows |
+| **Yi (01.AI)** | Skip | Not differentiated from DeepSeek for English technical analysis |
+| **Doubao (ByteDance)** | Skip | Limited international API availability; Chinese enterprise focus |
+
+### Homelab future paths (no subscription)
+
+- **Ollama on inference VM:** `services.ollama.enable = true` in NixOS. Run MiMo-7B
+  (~6GB 4-bit, or ~14GB FP16) for local reasoning experimentation.
+- **Qwen2.5-Coder-32B via Ollama:** Worth evaluating as `:codex` replacement if
+  inference VM has ≥24GB VRAM. Requires no subscription. Trigger: if Codex proves
+  expensive or unavailable after first production run.
+
+### Roster remains at four
+
+`[:codex, :gemini, :deepseek, :claude_ic]` — fifth agent deferred indefinitely.
+Diversity gain from a fifth agent with overlapping training distribution is
+insufficient to justify added latency and cost. If `:codex` is replaced,
+substitute rather than expand the roster.
+
+---
+
+## Q35 — Naming the Roundtable (Round 20, 2026-04-29)
+
+**Decision:** Recommended name is **`millrace`**. Alternative: `dissensus`.
+
+### `millrace`
+
+Three layers of meaning:
+1. **Mill** — John Stuart Mill, rational discourse, marketplace of ideas
+2. **Race** — the engineered channel directing water's energy into productive work
+3. **Structure** — the protocol channels multi-agent discourse through phases,
+   markers, warrants, and satisfaction checks to produce reliable judgment
+
+Properties:
+- 8 characters, works as CLI command, Nix flake package, GitHub repo name
+- Distinctive in the AI tooling space — no existing project conflicts found
+- Evokes process and structure, not just conversation
+- Pronounceable, memorable, suitable for conversation reference ("run it through millrace")
+
+### Alternative: `dissensus`
+
+More academically precise — names the protocol's distinctive contribution (structured
+preservation of disagreement). 10 characters. Stronger intellectual signalling but
+at the cost of approachability. Available if the owner prefers explicit over evocative.
+
+### Naming exercise as protocol test
+
+15 candidates were produced across 3 agents. The exercise demonstrated the protocol's
+capacity for divergent thinking: candidates ranged from classical references (`lyceum`,
+`agora`) to process metaphors (`crucible`, `assay`) to protocol-specific concepts
+(`dissensus`, `legible`) to ironic/dark options (`panopticon`, `ordeal`). The protocol
+produced genuine diversity, not just variations on a theme.
+
+### Intellectual heritage encoded in the name
+
+| Tradition | How `millrace` reflects it |
+|---|---|
+| Mill / rational discourse | Mill's name is in the word |
+| High Modernism / legibility | A millrace is an engineered channel — structure imposed on nature |
+| Anti-trap discourse | The channel prevents diffusion and waste — discourse without structure dissipates |
+
+### Pending
+
+Owner approval required. If accepted, rename: repo, flake package, CLI module,
+and all internal references from `roundtable` → `millrace`.

@@ -210,6 +210,7 @@ defmodule RoundtableWeb.DiscussionLive do
       case assigns.sat do
         :satisfied -> {"✓ satisfied", "#3fb950"}
         :satisfied_conditional -> {"~ conditional", "#d29922"}
+        :no_objection -> {"· no objection", "#58a6ff"}
         :needs_more_evidence -> {"○ needs evidence", "#f78166"}
         _ -> {"– unknown", "#8b949e"}
       end
@@ -253,6 +254,7 @@ defmodule RoundtableWeb.DiscussionLive do
 
   defp border_color(:satisfied), do: "#238636"
   defp border_color(:satisfied_conditional), do: "#9e6a03"
+  defp border_color(:no_objection), do: "#1f6feb"
   defp border_color(:needs_more_evidence), do: "#da3633"
   defp border_color(_), do: "#30363d"
 
