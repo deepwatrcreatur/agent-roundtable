@@ -2153,3 +2153,80 @@ get entrenched.
   standards effort
 - Premise challenge required: *Is "publish a spec" the right framing, or is
   this actually "write an arXiv paper" — and the spec is just an appendix?*
+
+---
+
+### Q41 — The Delve Scandal and AI-Assisted Compliance
+
+**Context:** Delve was a YC W24 compliance startup that raised $32M at a $300M
+valuation. In March 2026, an anonymous whistleblower ("DeepDelver") revealed that
+Delve was running "fake compliance as a service":
+
+- 493 out of 494 SOC 2 reports used identical boilerplate text (same grammatical
+  errors, same nonsensical descriptions, only company name/logo changed)
+- Auditor conclusions were pre-generated before clients submitted evidence
+- Reports were routed through Indian "certification mills" for rubber-stamping
+- Delve also allegedly stole open-source code from fellow YC company Sim.ai,
+  forking their SimStudio tool and rebranding it as "Pathways"
+- YC removed Delve from its portfolio in April 2026
+
+Sources: [TechCrunch](https://techcrunch.com/2026/04/04/embattled-startup-delve-has-parted-ways-with-y-combinator/),
+[Captain Compliance](https://captaincompliance.com/news/the-delve-scandal-fake-soc-2-audits-open-source-code-theft-and-exit-from-y-combinator/),
+[Quasa](https://quasa.io/media/the-delve-scandal-how-two-21-year-old-forbes-30-under-30-founders-built-a-300m-ai-compliance-unicorn-and-are-now-accused-of-selling-fake-reports)
+
+Round 39 identified "auditable AI deliberation for regulated industries" as
+vaglio's most defensible commercial positioning. Round 40 planned publication as
+an arXiv paper + protocol spec. The Delve scandal shows both the market demand
+for AI-assisted compliance and the catastrophic failure mode when it is done
+without epistemic integrity.
+
+**Q41.1 — Would vaglio's protocol have prevented Delve's failure?**
+
+Delve's corruption was fundamental: pre-generating conclusions before evidence,
+using identical templates, routing through certification mills. This is not a
+subtle epistemic failure — it is fraud. Would vaglio's typed provenance,
+satisfaction protocol, and multi-agent deliberation have prevented this, or was
+the problem too basic (intentional deception, not accidental groupthink)?
+Be honest about what protocol mechanisms can and cannot prevent.
+
+**Q41.2 — The compliance market after Delve**
+
+The Delve scandal has created a trust vacuum in AI-assisted compliance. Customers
+who relied on Delve now need alternatives. What does the post-Delve compliance
+market look like? Is there an opportunity for a tool that emphasizes auditable
+AI reasoning with provenance tracking — exactly what vaglio is building?
+
+**Q41.3 — Vaglio as a compliance product**
+
+Could vaglio be adapted for the compliance use case? Consider:
+- SOC 2 / ISO 27001 / HIPAA assessments as multi-agent deliberation tasks
+- Typed provenance as audit evidence (distinguishing observed controls from
+  inferred compliance)
+- Satisfaction protocol as structured auditor sign-off
+- Multi-round convergence for addressing findings
+- The audit trail as the product (not just the report)
+
+**Q41.4 — Funding and market positioning**
+
+Delve raised $32M at $300M valuation for AI-assisted compliance. Given the
+post-scandal trust environment, could vaglio's "auditable AI deliberation"
+positioning attract similar funding? What would a funding pitch look like that
+explicitly differentiates from Delve's approach? Is this a realistic path for
+a solo developer with AI agents?
+
+**Q41.5 — Ethical considerations**
+
+Delve's failure was ultimately ethical, not technical. If vaglio enters the
+compliance space, what safeguards are needed to prevent the same failure mode?
+How do you build a system where the incentive structure rewards genuine
+compliance assessment rather than rubber-stamping?
+
+**Constraints for Q41:**
+- Be honest about the gap between "protocol prevents groupthink" and "protocol
+  prevents fraud"
+- Consider the regulatory landscape (AICPA independence rules, SOC 2 trust
+  services criteria)
+- The owner is a solo developer on a homelab, not a compliance expert
+- Premise challenge required: *Is entering the compliance market after Delve's
+  failure opportunistic ambulance-chasing, or is it a genuine case where
+  vaglio's protocol addresses a real gap that Delve exposed?*
