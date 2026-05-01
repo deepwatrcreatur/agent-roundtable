@@ -1,8 +1,8 @@
 # 07 — Roundtable.CLI
 
-**Status:** `ready-for-review`
-**Assigned:** Claude IC
-**Branch:** `feat/orchestrator-loop`
+**Status:** `in-progress`
+**Assigned:** Codex
+**Branch:** `feat/item-07-cli-index`
 
 ## Scope
 
