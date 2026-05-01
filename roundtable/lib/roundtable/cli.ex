@@ -22,6 +22,9 @@ defmodule Roundtable.CLI do
   alias Roundtable.Actions.Gh
   alias Roundtable.{DiscussionRepo, Orchestrator}
 
+  @issue_index_start "<!-- ROUNDTABLE_ISSUE_INDEX_START -->"
+  @issue_index_end "<!-- ROUNDTABLE_ISSUE_INDEX_END -->"
+
   # ----------------------------------------------------------------
   # Mix task / shell entry point
   # ----------------------------------------------------------------
@@ -94,6 +97,8 @@ defmodule Roundtable.CLI do
   """
   @spec start_discussion(String.t(), keyword()) :: {:ok, list()} | {:error, term()}
   def start_discussion(source, opts \\ []) do
+    orchestrator_module = Keyword.get(opts, :orchestrator_module, Orchestrator)
+
     if repo_slug?(source) do
       repo =
         DiscussionRepo.new(source,
@@ -101,11 +106,12 @@ defmodule Roundtable.CLI do
           local_path: Keyword.get(opts, :local_path),
           issues_enabled: Keyword.get(opts, :issues_enabled, false)
         )
-      Orchestrator.run_with_repo(repo, opts)
+
+      orchestrator_module.run_with_repo(repo, opts)
     else
       # Legacy: brief_path → GitHub Issues
       with {:ok, questions} <- load_or_create_issues(source, opts) do
-        {:ok, Orchestrator.run(source, questions, opts)}
+        {:ok, orchestrator_module.run(source, questions, opts)}
       end
     end
   end
@@ -194,6 +200,7 @@ defmodule Roundtable.CLI do
   # or creates new issues for questions that have no issue yet.
   defp load_or_create_issues(brief_path, opts) do
     repo = Keyword.get(opts, :repo)
+    gh_module = Keyword.get(opts, :gh_module, Gh)
     gh_config = %{repo: repo}
 
     # Look for ACTIVE_DISCUSSION.md next to BRIEF.md
@@ -207,10 +214,14 @@ defmodule Roundtable.CLI do
           %{id: id, issue_number: issue_number, state: :open}
         end)
 
+      update_issue_index(discussion_path, repo, questions)
       {:ok, questions}
     else
       # No index found — create issues from BRIEF.md questions
-      create_issues_from_brief(brief_path, gh_config)
+      with {:ok, questions} <- create_issues_from_brief(brief_path, gh_module, gh_config) do
+        update_issue_index(discussion_path, repo, questions)
+        {:ok, questions}
+      end
     end
   end
 
@@ -229,26 +240,40 @@ defmodule Roundtable.CLI do
   end
 
   # Creates GitHub Issues for each ### Q\d+ section heading in BRIEF.md.
-  defp create_issues_from_brief(brief_path, gh_config) do
+  defp create_issues_from_brief(brief_path, gh_module, gh_config) do
     case File.read(brief_path) do
       {:ok, content} ->
+        existing_issues =
+          case gh_module.list_issues([state: "all", label: "roundtable"], gh_config) do
+            {:ok, issues} -> issues
+            {:error, _} -> []
+          end
+
         questions =
           Regex.scan(~r/###\s+(Q\d+[^\n]*)\n+(.*?)(?=\n###|\z)/ms, content)
           |> Enum.map(fn [_, title, body] ->
             trimmed_title = String.trim(title)
             trimmed_body = String.trim(body)
+            id = question_id(trimmed_title)
 
-            case Gh.create_issue(trimmed_title, trimmed_body, ["roundtable", "needs-more-evidence"], gh_config) do
+            case find_existing_issue(id, trimmed_title, existing_issues) do
               {:ok, issue_number} ->
-                IO.puts("Created issue ##{issue_number} for #{trimmed_title}")
-                id = case Regex.run(~r/Q\d+/, trimmed_title) do
-                  [match | _] -> match
-                  _ -> trimmed_title
-                end
                 {:ok, %{id: id, issue_number: issue_number, state: :open}}
 
-              {:error, reason} ->
-                {:error, reason}
+              :not_found ->
+                case gh_module.create_issue(
+                       trimmed_title,
+                       trimmed_body,
+                       ["roundtable", "needs-more-evidence"],
+                       gh_config
+                     ) do
+                  {:ok, issue_number} ->
+                    IO.puts("Created issue ##{issue_number} for #{trimmed_title}")
+                    {:ok, %{id: id, issue_number: issue_number, state: :open}}
+
+                  {:error, reason} ->
+                    {:error, reason}
+                end
             end
           end)
 
@@ -274,4 +299,74 @@ defmodule Roundtable.CLI do
       true -> :unknown
     end
   end
+
+  defp question_id(title) do
+    case Regex.run(~r/Q\d+/, title) do
+      [match | _] -> match
+      _ -> String.trim(title)
+    end
+  end
+
+  defp find_existing_issue(id, title, issues) do
+    Enum.find_value(issues, :not_found, fn issue ->
+      issue_title = issue["title"] || ""
+      issue_number = issue["number"]
+
+      cond do
+        String.starts_with?(issue_title, id) -> {:ok, issue_number}
+        issue_title == title -> {:ok, issue_number}
+        true -> false
+      end
+    end)
+  end
+
+  defp update_issue_index(path, repo, questions) do
+    block = issue_index_block(repo, questions)
+
+    content =
+      case File.read(path) do
+        {:ok, existing} -> upsert_issue_index(existing, block)
+        {:error, _} -> "# Active Discussion\n\n" <> block <> "\n"
+      end
+
+    File.write!(path, content)
+  end
+
+  defp upsert_issue_index(content, block) do
+    if String.contains?(content, @issue_index_start) and String.contains?(content, @issue_index_end) do
+      Regex.replace(
+        ~r/#{Regex.escape(@issue_index_start)}.*?#{Regex.escape(@issue_index_end)}/ms,
+        content,
+        block
+      )
+    else
+      content <> "\n\n" <> block
+    end
+  end
+
+  defp issue_index_block(repo, questions) do
+    rows =
+      questions
+      |> Enum.sort_by(& &1.id)
+      |> Enum.map(fn %{id: id, issue_number: issue_number} ->
+        url = issue_url(repo, issue_number)
+        "| #{id} | ##{issue_number} | #{url} |"
+      end)
+      |> Enum.join("\n")
+
+    [
+      @issue_index_start,
+      "## Issue Index",
+      "",
+      "| Question | Issue | URL |",
+      "|---|---|---|",
+      rows,
+      @issue_index_end
+    ]
+    |> Enum.join("\n")
+  end
+
+  defp issue_url(nil, issue_number), do: "##{issue_number}"
+  defp issue_url("", issue_number), do: "##{issue_number}"
+  defp issue_url(repo, issue_number), do: "https://github.com/#{repo}/issues/#{issue_number}"
 end

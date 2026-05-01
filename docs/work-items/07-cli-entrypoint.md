@@ -1,8 +1,11 @@
 # 07 — Roundtable.CLI
 
-**Status:** `in-progress`
+**Status:** `done`
 **Assigned:** Codex
 **Branch:** `feat/item-07-cli-index`
+
+**Outcome:** Restored missing `ACTIVE_DISCUSSION.md` index updates and issue
+reuse/idempotency in `Roundtable.CLI`, with focused unit coverage.
 
 ## Scope
 
