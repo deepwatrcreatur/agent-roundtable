@@ -30,7 +30,13 @@ defmodule Roundtable.Actions.GhTest do
                        "--json",
                        "title,body,labels,state,comments,url"
                      ],
-                     [stderr_to_stdout: true]}
+                      [stderr_to_stdout: true]}
+  end
+
+  test "validate_auth runs gh auth status" do
+    assert :ok = Gh.validate_auth(%{runner: FakeRunner})
+
+    assert_received {:cmd, "gh", ["auth", "status"], [stderr_to_stdout: true]}
   end
 
   test "comment_issue sends the comment over stdin" do
@@ -132,13 +138,27 @@ defmodule Roundtable.Actions.GhTest do
     Process.put(:runner_result, {"bad token", 1})
 
     assert {:error, {:command_failed, 1, "bad token"}} =
-             Gh.view_issue(1, [], %{runner: FakeRunner})
+              Gh.view_issue(1, [], %{runner: FakeRunner})
+  end
+
+  test "returns an auth_failed error when gh auth status fails" do
+    Process.put(:runner_result, {"authentication required", 1})
+
+    assert {:error, {:auth_failed, 1, "authentication required"}} =
+             Gh.validate_auth(%{runner: FakeRunner})
   end
 
   test "returns an invalid_json error when gh output cannot be decoded" do
     Process.put(:runner_result, {"not-json", 0})
 
     assert {:error, {:invalid_json, _reason}} =
+              Gh.view_issue(1, [], %{runner: FakeRunner})
+  end
+
+  test "returns a runner_error when the runner reports timeout/network failure" do
+    Process.put(:runner_result, fn -> {:error, :timeout} end)
+
+    assert {:error, {:runner_error, :timeout}} =
              Gh.view_issue(1, [], %{runner: FakeRunner})
   end
 end

@@ -22,6 +22,18 @@ defmodule Roundtable.Actions.Gh do
   @type error_reason ::
           {:command_failed, non_neg_integer(), String.t()}
           | {:invalid_json, term()}
+          | {:auth_failed, non_neg_integer(), String.t()}
+          | {:runner_error, term()}
+          | {:unexpected_output, String.t()}
+
+  @spec validate_auth(config()) :: :ok | {:error, error_reason()}
+  def validate_auth(config \\ %{}) do
+    case run(["auth", "status"], config) do
+      {:ok, _stdout} -> :ok
+      {:error, {:command_failed, status, output}} -> {:error, {:auth_failed, status, output}}
+      {:error, reason} -> {:error, reason}
+    end
+  end
 
   @spec view_issue(issue_number(), keyword(), config()) :: {:ok, map()} | {:error, error_reason()}
   def view_issue(issue_number, opts \\ [], config \\ %{}) do
@@ -128,6 +140,7 @@ defmodule Roundtable.Actions.Gh do
 
     case runner.cmd(gh_bin, args, exec_opts) do
       {stdout, 0} -> {:ok, stdout}
+      {:error, reason} -> {:error, {:runner_error, reason}}
       {stdout, status} -> {:error, {:command_failed, status, stdout}}
     end
   end
