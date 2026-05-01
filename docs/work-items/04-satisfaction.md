@@ -1,6 +1,6 @@
 # 04 — Roundtable.Satisfaction
 
-**Status:** `in-progress` (Gemini)
+**Status:** `done` (Gemini)
 **Branch:** `feat/satisfaction`
 
 ## Scope
