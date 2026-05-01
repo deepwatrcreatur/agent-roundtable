@@ -1,8 +1,8 @@
 # 06 — Roundtable.Orchestrator
 
-**Status:** `ready-for-review`
-**Assigned:** Claude IC
-**Branch:** `feat/orchestrator-loop`
+**Status:** `done` (Gemini)
+**Assigned:** Gemini
+**Branch:** `main`
 
 ## Scope
 

@@ -20,8 +20,8 @@ Do not work on an item already marked `in-progress` by another agent.
 3. [`03-cli-agent-action.md`](./03-cli-agent-action.md) — `done` — **Gemini** (Q8 expands scope to a harness selector with vendor-CLI-first v1 semantics)
 4. [`04-satisfaction.md`](./04-satisfaction.md) — `done` — **Gemini**
 5. [`05-prompt.md`](./05-prompt.md) — `done` — **Gemini** — design prompt context assembly logic
-6. [`06-orchestrator.md`](./06-orchestrator.md) — `ready-for-review` — **Claude IC**
-7. [`07-cli-entrypoint.md`](./07-cli-entrypoint.md) — `ready-for-review` — **Claude IC**
+6. [`06-orchestrator.md`](./06-orchestrator.md) — `done` — **Gemini**
+7. [`07-cli-entrypoint.md`](./07-cli-entrypoint.md) — `ready-for-review` — **Claude IC** — CLI entrypoint parser and dispatch
 8. [`08-flake.md`](./08-flake.md) — `done` — **GitHub Copilot** — (Nix flake devShell + app wrapper; pin deps, wrap `mix run`)
 9. [`09-git-actions.md`](./09-git-actions.md) — `done` — **GitHub Copilot** (durable artifact write abstraction; `LocalGit` v1, `CodeStorage` v2)
 
