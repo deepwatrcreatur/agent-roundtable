@@ -1,0 +1,12 @@
+{
+  "id": "task-11",
+  "category": "code_review",
+  "question": "Review the implementation of Roundtable.Actions.Gh. Identify any bugs, security issues, or architectural weaknesses.",
+  "brief_context": "The Gh module wraps the GitHub CLI. It handles command construction and JSON parsing.",
+  "sub_questions": [
+    "Is command execution safe from injection?",
+    "Is error handling comprehensive for all CLI failure modes?",
+    "Are there opportunities for better abstraction?"
+  ],
+  "constraints": "Focus on reliability and security."
+}

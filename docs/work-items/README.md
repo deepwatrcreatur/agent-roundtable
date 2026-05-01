@@ -38,3 +38,11 @@ Do not work on an item already marked `in-progress` by another agent.
 ### Product Surface
 
 14. [`10-web-dashboard.md`](./10-web-dashboard.md) — `ready-for-review` — **Claude IC** — Phoenix LiveView owner dashboard
+
+### Eval Harness (Q37 / Round 22)
+
+15. [`28-eval-harness.md`](./28-eval-harness.md) — `ready` — **Gemini** — core eval harness (`Vaglio.Eval`)
+16. [`29-eval-judge.md`](./29-eval-judge.md) — `done` — **Codex** — LLM-as-judge metrics (`Vaglio.Eval.Judge`)
+17. [`30-eval-task-set.md`](./30-eval-task-set.md) — `done` — **Gemini** — design 12 eval tasks (replayed, synthetic, code review)
+18. [`31-blind-comparison.md`](./31-blind-comparison.md) — `done` — **Codex** — blind side-by-side comparison interface
+19. [`32-run-first-eval.md`](./32-run-first-eval.md) — `blocked` (needs 28, 29, 30, 31) — **Claude IC** — execute 6-task eval batch + report

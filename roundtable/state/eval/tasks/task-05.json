@@ -1,0 +1,13 @@
+{
+  "id": "task-05",
+  "category": "replayed",
+  "source": "Q35",
+  "question": "Propose a name for the project that reflects its intellectual heritage (Mill, High Modernism, anti-trap discourse). Evaluate names for CLI usability and distinctiveness.",
+  "brief_context": "The project is functional but needs an evocative name. It draws from rational discourse, legibility projects, and contemporary organizational behavior.",
+  "sub_questions": [
+    "Generate name candidates from Modernist literature/art",
+    "Evaluate names for CLI ergonomic fit",
+    "Provide a final recommendation"
+  ],
+  "constraints": "Nix-safe, Github-safe, <= 12 chars preferred."
+}

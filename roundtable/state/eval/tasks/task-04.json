@@ -1,0 +1,13 @@
+{
+  "id": "task-04",
+  "category": "replayed",
+  "source": "Q33",
+  "question": "How should DeepSeek be added to the roundtable? Which model (V3 or R1) and which invocation method (CLI, OpenCode, or direct HTTP)?",
+  "brief_context": "DeepSeek is affordable and powerful. We want to add it as a fourth agent or replacement.",
+  "sub_questions": [
+    "Compare deepseek-chat vs deepseek-reasoner",
+    "Evaluate direct HTTP call vs CLI wrapper",
+    "Assess impact on consensus logic"
+  ],
+  "constraints": "Fit into existing NixOS/fnox/agenix conventions."
+}
