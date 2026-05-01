@@ -1,8 +1,11 @@
 # 26 — NixOS Service Module
 
-**Status:** `in-progress` (cross-repo: targets `unified-nix-configuration`)
+**Status:** `done` (cross-repo: targets `unified-nix-configuration`)
 **Assigned:** Codex
 **Branch:** `feat/item-26-service-module` + `feat/roundtable-service-module`
+
+**Outcome:** Implemented in `unified-nix-configuration` as commit `5b9d082d`
+(`feat: add roundtable service module`).
 
 ## Scope
 
