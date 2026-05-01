@@ -1,7 +1,8 @@
 # 26 — NixOS Service Module
 
-**Status:** `ready` (cross-repo: targets `unified-nix-configuration`)
-**Assigned:** Gemini
+**Status:** `in-progress` (cross-repo: targets `unified-nix-configuration`)
+**Assigned:** Codex
+**Branch:** `feat/item-26-service-module` + `feat/roundtable-service-module`
 
 ## Scope
 
