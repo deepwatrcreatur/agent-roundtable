@@ -12,6 +12,14 @@ defmodule Roundtable.Eval do
 
   @agents [:codex, :gemini, :deepseek, :claude_ic]
 
+  # Estimates per 1,000 tokens (Input / Output)
+  @unit_costs %{
+    gemini: {0.0001, 0.0003},
+    codex: {0.00015, 0.0006},
+    deepseek: {0.00014, 0.00028},
+    claude: {0.003, 0.015}
+  }
+
   # ------------------------------------------------------------------
   # Public API
   # ------------------------------------------------------------------
@@ -25,11 +33,13 @@ defmodule Roundtable.Eval do
   ## Options
   - `:agents` — override the agent roster (default: #{inspect(@agents)})
   - `:repo_root` — working directory for CLI agents
+  - `:runner` — optional CommandRunner implementation for tests
   """
   @spec run_vaglio(String.t(), String.t(), keyword()) :: {:ok, Run.t()} | {:error, term()}
   def run_vaglio(question, brief_context, opts \\ []) do
     agents = Keyword.get(opts, :agents, @agents)
     repo_root = Keyword.get(opts, :repo_root, File.cwd!())
+    runner = Keyword.get(opts, :runner)
     id = Run.generate_id(:vaglio)
 
     run = %Run{
@@ -40,19 +50,30 @@ defmodule Roundtable.Eval do
       started_at: DateTime.utc_now()
     }
 
-    {turns, _buffer} =
-      Enum.reduce(agents, {[], ""}, fn agent, {acc_turns, acc_buffer} ->
+    {turns, _buffer, total_tokens, total_cost} =
+      Enum.reduce(agents, {[], "", 0, 0.0}, fn agent, {acc_turns, acc_buffer, acc_tokens, acc_cost} ->
         prompt = build_vaglio_prompt(question, brief_context, acc_buffer, agent)
 
-        case invoke_agent(agent, prompt, repo_root) do
-          {:ok, text} ->
-            turn = %{agent: Atom.to_string(agent), output: text}
+        case invoke_agent(agent, prompt, repo_root, runner) do
+          {:ok, text, usage} ->
+            tokens = usage[:total_tokens] || 0
+            cost = usage[:cost_usd] || calculate_cost(agent, usage)
+
+            turn = %{
+              agent: Atom.to_string(agent),
+              output: text,
+              tokens: tokens,
+              cost: cost
+            }
+
             contribution = "\n## #{agent_label(agent)}\n\n#{text}\n"
-            {acc_turns ++ [turn], acc_buffer <> contribution}
+
+            {acc_turns ++ [turn], acc_buffer <> contribution, acc_tokens + tokens,
+             acc_cost + cost}
 
           {:error, reason} ->
             turn = %{agent: Atom.to_string(agent), error: inspect(reason)}
-            {acc_turns ++ [turn], acc_buffer}
+            {acc_turns ++ [turn], acc_buffer, acc_tokens, acc_cost}
         end
       end)
 
@@ -69,6 +90,8 @@ defmodule Roundtable.Eval do
       run
       | turns: turns,
         final_output: final,
+        tokens_used: total_tokens,
+        cost_usd: total_cost,
         completed_at: DateTime.utc_now()
     }
 
@@ -87,12 +110,14 @@ defmodule Roundtable.Eval do
   ## Options
   - `:model` — which CLI agent to use (default: `:claude`)
   - `:repo_root` — working directory for CLI agent
+  - `:runner` — optional CommandRunner implementation for tests
   """
   @spec run_single(String.t(), String.t(), :naive | :structured | :debate, keyword()) ::
           {:ok, Run.t()} | {:error, term()}
   def run_single(question, brief_context, mode, opts \\ []) do
     model = Keyword.get(opts, :model, :claude)
     repo_root = Keyword.get(opts, :repo_root, File.cwd!())
+    runner = Keyword.get(opts, :runner)
     run_mode = :"single_#{mode}"
     id = Run.generate_id(run_mode)
 
@@ -107,12 +132,24 @@ defmodule Roundtable.Eval do
 
     prompt = build_single_prompt(question, brief_context, mode)
 
-    case invoke_agent(model, prompt, repo_root) do
-      {:ok, text} ->
+    case invoke_agent(model, prompt, repo_root, runner) do
+      {:ok, text, usage} ->
+        tokens = usage[:total_tokens] || 0
+        cost = usage[:cost_usd] || calculate_cost(model, usage)
+
         completed = %Run{
           run
-          | turns: [%{agent: Atom.to_string(model), output: text}],
+          | turns: [
+              %{
+                agent: Atom.to_string(model),
+                output: text,
+                tokens: tokens,
+                cost: cost
+              }
+            ],
             final_output: text,
+            tokens_used: tokens,
+            cost_usd: cost,
             completed_at: DateTime.utc_now()
         }
 
@@ -307,23 +344,110 @@ defmodule Roundtable.Eval do
   # Agent invocation
   # ------------------------------------------------------------------
 
-  defp invoke_agent(agent, prompt, repo_root) do
+  defp invoke_agent(agent, prompt, repo_root, runner) do
     cli_agent = cli_agent_atom(agent)
+    params = %{agent: cli_agent, prompt: prompt, repo_root: repo_root}
+    params = if runner, do: Map.put(params, :runner, runner), else: params
 
-    case RunCliAgent.run(%{agent: cli_agent, prompt: prompt, repo_root: repo_root}, %{}) do
-      {:ok, %{stdout: raw}} -> {:ok, extract_text(raw)}
-      {:error, reason} -> {:error, reason}
+    case RunCliAgent.run(params, %{}) do
+      {:ok, %{stdout: raw} = result} ->
+        text = extract_text(raw)
+        usage = extract_usage(agent, result)
+        {:ok, text, usage}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
   defp extract_text(raw) do
     case JSON.decode(raw) do
+      {:ok, %{"response" => text}} when is_binary(text) -> text
       {:ok, %{"result" => text}} when is_binary(text) -> text
       {:ok, %{"content" => text}} when is_binary(text) -> text
       {:ok, %{"message" => text}} when is_binary(text) -> text
       {:ok, %{"text" => text}} when is_binary(text) -> text
       _ -> raw
     end
+  end
+
+  defp extract_usage(_agent, %{usage: usage}) when map_size(usage) > 0 do
+    # DeepSeek direct API path
+    %{
+      input_tokens: usage["prompt_tokens"] || 0,
+      output_tokens: usage["completion_tokens"] || 0,
+      total_tokens: usage["total_tokens"] || 0
+    }
+  end
+
+  defp extract_usage(agent, %{stdout: raw}) do
+    # Try to parse usage from CLI JSON output
+    cond do
+      agent in [:claude, :claude_ic] ->
+        case JSON.decode(raw) do
+          {:ok, %{"usage" => u, "total_cost_usd" => cost}} ->
+            %{
+              input_tokens: u["input_tokens"] || 0,
+              output_tokens: u["output_tokens"] || 0,
+              total_tokens: (u["input_tokens"] || 0) + (u["output_tokens"] || 0),
+              cost_usd: cost
+            }
+
+          _ ->
+            %{}
+        end
+
+      agent == :gemini ->
+        case JSON.decode(raw) do
+          {:ok, %{"stats" => %{"models" => models}}} ->
+            # Sum tokens across all models used in the turn
+            Enum.reduce(models, %{input_tokens: 0, output_tokens: 0, total_tokens: 0}, fn {_name,
+                                                                                          m},
+                                                                                         acc ->
+              tokens = m["tokens"] || %{}
+
+              %{
+                input_tokens: acc.input_tokens + (tokens["input"] || 0),
+                output_tokens: acc.output_tokens + (tokens["candidates"] || 0),
+                total_tokens: acc.total_tokens + (tokens["total"] || 0)
+              }
+            end)
+
+          _ ->
+            %{}
+        end
+
+      agent == :codex ->
+        # Codex output is JSONL. Look for "turn.completed"
+        raw
+        |> String.split("\n")
+        |> Enum.find_value(%{}, fn line ->
+          case JSON.decode(line) do
+            {:ok, %{"type" => "turn.completed", "usage" => u}} ->
+              %{
+                input_tokens: u["input_tokens"] || 0,
+                output_tokens: u["output_tokens"] || 0,
+                total_tokens: (u["input_tokens"] || 0) + (u["output_tokens"] || 0)
+              }
+
+            _ ->
+              nil
+          end
+        end)
+
+      true ->
+        %{}
+    end
+  end
+
+  defp calculate_cost(agent, usage) do
+    cli_agent = cli_agent_atom(agent)
+    {in_rate, out_rate} = Map.get(@unit_costs, cli_agent, {0.0, 0.0})
+
+    in_tokens = usage[:input_tokens] || 0
+    out_tokens = usage[:output_tokens] || 0
+
+    in_tokens / 1000 * in_rate + out_tokens / 1000 * out_rate
   end
 
   # ------------------------------------------------------------------

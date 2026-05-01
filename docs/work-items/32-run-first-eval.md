@@ -1,7 +1,7 @@
 # 32 — Run First Eval Batch + Report
 
-**Status:** `blocked` (depends on items 28, 29, 30, 31)
-**Assigned:** Claude (IC / coordinator)
+**Status:** `in-progress` (Gemini)
+**Assigned:** Gemini
 **Source:** Q37 (Round 22)
 
 ## Scope
