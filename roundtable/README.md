@@ -38,13 +38,17 @@ The dev shell includes:
 - `codex`
 - `gemini-cli`
 
-Required environment variables are **not** hardcoded in the flake. Set them in
-your shell before running the orchestrator:
+Required credentials are **not** hardcoded in the flake. The current harness
+uses a mixed auth model:
 
-- `ANTHROPIC_API_KEY`
-- `OPENAI_API_KEY`
-- `GEMINI_API_KEY`
-- `GH_TOKEN`
+- Claude CLI: local Claude session/config (typically `~/.claude/config.json`);
+  `ANTHROPIC_API_KEY` may still be useful in some environments
+- Codex CLI: local Codex login/session (typically under `~/.codex/`)
+- Gemini CLI: local OAuth credentials at `~/.gemini/oauth_creds.json`
+- DeepSeek: `DEEPSEEK_API_KEY`
+- GitHub integration: `GH_TOKEN` or `GITHUB_TOKEN`
+
+For full eval runs, verify that all of the above are available before starting.
 
 ## Telemetry
 

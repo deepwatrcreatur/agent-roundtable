@@ -69,7 +69,7 @@
 
           shellHook = ''
             echo "Roundtable dev shell"
-            echo "Expected env vars: ANTHROPIC_API_KEY OPENAI_API_KEY GEMINI_API_KEY GH_TOKEN"
+            echo "Expected auth: Claude session, Codex login, Gemini oauth_creds.json, DEEPSEEK_API_KEY, GH_TOKEN"
             echo "CLI package set from locked nixpkgs: claude-code, codex, gemini-cli"
           '';
         };
