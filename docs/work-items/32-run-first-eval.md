@@ -1,7 +1,7 @@
 # 32 — Run First Eval Batch + Report
 
-**Status:** `in-progress` (Gemini)
-**Assigned:** Gemini
+**Status:** `in-progress` (Codex)
+**Assigned:** Codex
 **Source:** Q37 (Round 22)
 
 ## Scope
