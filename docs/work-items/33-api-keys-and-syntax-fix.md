@@ -1,7 +1,7 @@
 # 33 — Fix Syntax Error and Missing API Keys
 
-**Status:** `in-progress` (Gemini)
-**Assigned:** Gemini
+**Status:** `in-progress` (Codex)
+**Assigned:** Codex
 
 ## Scope
 

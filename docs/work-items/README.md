@@ -46,4 +46,4 @@ Do not work on an item already marked `in-progress` by another agent.
 17. [`30-eval-task-set.md`](./30-eval-task-set.md) — `done` — **Gemini** — design 12 eval tasks (replayed, synthetic, code review)
 18. [`31-blind-comparison.md`](./31-blind-comparison.md) — `done` — **Codex** — blind side-by-side comparison interface
 19. [`32-run-first-eval.md`](./32-run-first-eval.md) — `in-progress` — **Gemini** — execute 6-task eval batch + report
-20. [`33-api-keys-and-syntax-fix.md`](./33-api-keys-and-syntax-fix.md) — `in-progress` — **Gemini** — fix syntax error and missing API keys
+20. [`33-api-keys-and-syntax-fix.md`](./33-api-keys-and-syntax-fix.md) — `in-progress` — **Codex** — fix syntax error and missing API keys
