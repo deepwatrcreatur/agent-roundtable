@@ -13,7 +13,6 @@ defmodule RoundtableWeb.DiscussionLive do
 
   use Phoenix.LiveView
 
-  alias Roundtable.CLI
   alias Roundtable.RoundRun
 
   @poll_interval_ms 30_000
@@ -59,7 +58,7 @@ defmodule RoundtableWeb.DiscussionLive do
   def handle_event("inject_question", %{"text" => text}, socket) when byte_size(text) > 0 do
     repo = socket.assigns.repo
 
-    case CLI.inject_question(repo, text) do
+    case cli_module().inject_question(repo, text) do
       {:ok, number} ->
         socket =
           socket
@@ -90,14 +89,18 @@ defmodule RoundtableWeb.DiscussionLive do
       Task.start(fn ->
         questions = open_questions(socket.assigns.questions)
 
-        CLI.start_discussion(brief_path,
-          repo: repo,
-          on_event: fn event ->
-            send(lv_pid, {:roundtable_event, event})
-          end
-        )
+        case cli_module().start_discussion(brief_path,
+               repo: repo,
+               on_event: fn event ->
+                 send(lv_pid, {:roundtable_event, event})
+               end
+             ) do
+          {:ok, _results} ->
+            send(lv_pid, {:roundtable_event, {:round_complete, length(questions)}})
 
-        send(lv_pid, {:roundtable_event, {:round_complete, length(questions)}})
+          {:error, reason} ->
+            send(lv_pid, {:roundtable_event, {:round_failed, reason}})
+        end
       end)
 
       {:noreply, assign(socket, running: true, flash_msg: "Round started…")}
@@ -274,7 +277,7 @@ defmodule RoundtableWeb.DiscussionLive do
   end
 
   defp load_state(socket, repo) do
-    case CLI.get_discussion_state(repo) do
+    case cli_module().get_discussion_state(repo) do
       {:ok, state} ->
         enriched = enrich_questions(state)
 
@@ -296,6 +299,11 @@ defmodule RoundtableWeb.DiscussionLive do
   end
 
   defp schedule_poll, do: Process.send_after(self(), :poll, @poll_interval_ms)
+
+  defp cli_module do
+    Application.get_env(:roundtable, __MODULE__, [])
+    |> Keyword.get(:cli_module, Roundtable.CLI)
+  end
 
   defp border_color(:satisfied), do: "#238636"
   defp border_color(:satisfied_conditional), do: "#9e6a03"
@@ -388,6 +396,7 @@ defmodule RoundtableWeb.DiscussionLive do
   defp format_event({:agent_done, agent, _issue}), do: "#{agent} posted"
   defp format_event({:question_satisfied, id, n}), do: "#{id} satisfied after #{n} round(s)"
   defp format_event({:question_max_rounds, id}), do: "#{id} needs human review"
+  defp format_event({:round_failed, reason}), do: "Round failed: #{inspect(reason)}"
   defp format_event({:round_complete, n}), do: "Round complete — #{n} question(s) processed"
   defp format_event(_), do: nil
 end
