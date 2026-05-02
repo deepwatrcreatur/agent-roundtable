@@ -1,6 +1,6 @@
 # 32 — Run First Eval Batch + Report
 
-**Status:** `in-progress` (Codex)
+**Status:** `blocked`
 **Assigned:** Codex
 **Source:** Q37 (Round 22)
 
@@ -84,3 +84,28 @@ conditions.
 - Blind comparison files generated
 - Owner preferences recorded
 - Report generated with hypothesis assessment
+
+## Blockers (2026-05-02)
+
+This item was taken over from Gemini after an apparent stall. The Elixir app
+compiles, but the eval batch cannot be completed yet from this workstation.
+
+Verified blockers:
+
+1. `DEEPSEEK_API_KEY` is not currently available in the active shell or via
+   `fnox get DEEPSEEK_API_KEY`, and the vaglio roster defaults to
+   `[:codex, :gemini, :deepseek, :claude_ic]`.
+2. Unsandboxed harness probes did not complete within 45 seconds:
+   - `claude -p --output-format json ...` timed out
+   - `gemini -p ... --output-format json` loaded cached credentials, then timed out
+   - `codex exec ... --json` started a real turn, then timed out
+3. Sandboxed probes are additionally misleading because they fail on DNS/network
+   before provider execution.
+
+This means the remaining work is operational, not implementation:
+
+- restore DeepSeek credentials for the workstation or temporarily define an
+  approved eval roster that excludes DeepSeek
+- confirm provider responsiveness for Claude/Codex/Gemini with a longer or
+  externally supervised run window
+- then rerun `scripts/run_eval_batch_1.exs`
