@@ -1,0 +1,12 @@
+{
+  "id": "task-06",
+  "category": "synthetic",
+  "question": "Design a rate limiting strategy for the orchestrator's GitHub API calls.",
+  "brief_context": "Automated agents may flood the GitHub API with requests for comments, labels, and issue views. We need to respect rate limits without stalling the discussion.",
+  "sub_questions": [
+    "How to handle per-agent vs global limits?",
+    "What is the retry strategy for 403 Forbidden?",
+    "How to track consumption in the LiveView dashboard?"
+  ],
+  "constraints": "Avoid stalling rounds for more than 5 minutes."
+}

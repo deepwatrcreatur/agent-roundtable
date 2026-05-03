@@ -14,6 +14,7 @@ defmodule RoundtableWeb.DiscussionLive do
   use Phoenix.LiveView
 
   alias Roundtable.CLI
+  alias Roundtable.RoundRun
 
   @poll_interval_ms 30_000
 
@@ -125,6 +126,7 @@ defmodule RoundtableWeb.DiscussionLive do
       </header>
 
       <.flash_banner :if={@flash_msg} msg={@flash_msg} />
+      <.degraded_banner :if={@degraded_questions != []} questions={@degraded_questions} />
 
       <section style="margin-bottom: 2rem;">
         <h2 style="font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
@@ -184,11 +186,12 @@ defmodule RoundtableWeb.DiscussionLive do
 
   defp question_card(assigns) do
     ~H"""
-    <div style={"border: 1px solid #{border_color(@q.satisfaction)}; border-radius: 6px;
-                 padding: 1rem; margin-bottom: 0.75rem; background: #161b22;"}>
-      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-        <a href={@q.url} target="_blank" style="font-weight: 600; font-size: 0.95rem; color: #f0f6fc;">
-          #{@number} {@q.title}
+      <div style={"border: 1px solid #{border_color(@q.satisfaction)}; border-radius: 6px;
+                  padding: 1rem; margin-bottom: 0.75rem; background: #161b22;"}>
+        <.question_degraded_banner :if={@q.degraded?} q={@q} />
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
+          <a href={@q.url} target="_blank" style="font-weight: 600; font-size: 0.95rem; color: #f0f6fc;">
+            #{@number} {@q.title}
         </a>
         <.satisfaction_badge sat={@q.satisfaction} />
       </div>
@@ -201,6 +204,37 @@ defmodule RoundtableWeb.DiscussionLive do
           {if @q.state == :open, do: "open", else: "closed"}
         </span>
       </div>
+      <div :if={@q.coordinator || @q.phase} style="font-size: 0.8rem; color: #8b949e; margin-top: 0.35rem;">
+        <span :if={@q.coordinator}>coordinator: {format_agent(@q.coordinator)}</span>
+        <span :if={@q.coordinator && @q.phase}> · </span>
+        <span :if={@q.phase}>phase: {format_phase(@q.phase)}</span>
+      </div>
+    </div>
+    """
+  end
+
+  defp degraded_banner(assigns) do
+    ~H"""
+    <div style="background: #2d1f00; border: 1px solid #9e6a03; border-radius: 6px;
+                padding: 0.75rem 1rem; margin-bottom: 1.5rem;">
+      <div style="color: #ffd33d; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">
+        Degraded coordinator state
+      </div>
+      <div style="color: #c9d1d9; font-size: 0.85rem;">
+        {Enum.map_join(@questions, " · ", fn {number, q} ->
+          "##{number} (#{format_agent(q.coordinator)} — #{format_phase(q.phase)})"
+        end)}
+      </div>
+    </div>
+    """
+  end
+
+  defp question_degraded_banner(assigns) do
+    ~H"""
+    <div style="background: #2d1f00; border: 1px solid #9e6a03; border-radius: 6px;
+                padding: 0.6rem 0.75rem; margin-bottom: 0.75rem; color: #ffd33d;
+                font-size: 0.85rem;">
+      Coordinator degraded: {degraded_message(@q)}
     </div>
     """
   end
@@ -234,13 +268,24 @@ defmodule RoundtableWeb.DiscussionLive do
   # ----- helpers -----
 
   defp load_state(socket, "") do
-    assign(socket, :questions, %{})
+    socket
+    |> assign(:questions, %{})
+    |> assign(:degraded_questions, [])
   end
 
   defp load_state(socket, repo) do
     case CLI.get_discussion_state(repo) do
-      {:ok, state} -> assign(socket, :questions, state)
-      {:error, _} -> assign(socket, :questions, %{})
+      {:ok, state} ->
+        enriched = enrich_questions(state)
+
+        socket
+        |> assign(:questions, enriched)
+        |> assign(:degraded_questions, degraded_questions(enriched))
+
+      {:error, _} ->
+        socket
+        |> assign(:questions, %{})
+        |> assign(:degraded_questions, [])
     end
   end
 
@@ -257,6 +302,77 @@ defmodule RoundtableWeb.DiscussionLive do
   defp border_color(:no_objection), do: "#1f6feb"
   defp border_color(:needs_more_evidence), do: "#da3633"
   defp border_color(_), do: "#30363d"
+
+  defp enrich_questions(questions) do
+    Map.new(questions, fn {number, q} ->
+      {number, Map.merge(q, question_runtime_state(number, q))}
+    end)
+  end
+
+  defp question_runtime_state(issue_number, q) do
+    case RoundRun.load(issue_number) do
+      {:ok, run} ->
+        %{
+          coordinator: run.coordinator,
+          phase: run.phase,
+          suspended_phase: run.suspended_phase,
+          degraded?: degraded_phase?(run.phase)
+        }
+
+      {:error, _} ->
+        inferred_phase =
+          if "coordinator-unavailable" in Map.get(q, :labels, []) do
+            :coordinator_unavailable
+          else
+            nil
+          end
+
+        %{
+          coordinator: nil,
+          phase: inferred_phase,
+          suspended_phase: nil,
+          degraded?: degraded_phase?(inferred_phase)
+        }
+    end
+  end
+
+  defp degraded_questions(questions) do
+    questions
+    |> Enum.filter(fn {_number, q} -> q.degraded? end)
+    |> Enum.sort_by(fn {number, _q} -> number end)
+  end
+
+  defp degraded_phase?(:coordinator_unavailable), do: true
+  defp degraded_phase?(_), do: false
+
+  defp degraded_message(q) do
+    current =
+      case q.coordinator do
+        nil -> "no active coordinator"
+        agent -> "current coordinator #{format_agent(agent)}"
+      end
+
+    suspended =
+      case q.suspended_phase do
+        nil -> nil
+        phase -> "resume target #{format_phase(phase)}"
+      end
+
+    [current, suspended]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" · ")
+  end
+
+  defp format_agent(nil), do: "none"
+  defp format_agent(agent), do: to_string(agent)
+
+  defp format_phase(nil), do: "unknown"
+
+  defp format_phase(phase) do
+    phase
+    |> to_string()
+    |> String.replace("_", " ")
+  end
 
   defp btn_style(:primary) do
     "background: #238636; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1rem;

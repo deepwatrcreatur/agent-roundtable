@@ -76,7 +76,8 @@ defmodule Roundtable.Actions.RunCliAgent do
              ) do
           {:ok, %{status: 200, body: resp}} ->
             text = get_in(resp, ["choices", Access.at(0), "message", "content"]) || ""
-            {:ok, %{stdout: text}}
+            usage = resp["usage"] || %{}
+            {:ok, %{stdout: text, usage: usage}}
 
           {:ok, %{status: status, body: resp}} ->
             {:error, {:deepseek_api_error, status, resp}}

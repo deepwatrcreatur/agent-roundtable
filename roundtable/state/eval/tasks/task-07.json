@@ -1,0 +1,12 @@
+{
+  "id": "task-07",
+  "category": "synthetic",
+  "question": "Evaluate three approaches to persisting conversation history: SQLite, flat JSON files, or ETS with periodic snapshots.",
+  "brief_context": "Currently we use JSON files and ETS. As discussion history grows, we may need a more queryable or robust storage layer.",
+  "sub_questions": [
+    "Performance trade-offs of SQLite vs JSON?",
+    "Reliability of ETS snapshots during crashes?",
+    "Impact on NixOS deployment and backups?"
+  ],
+  "constraints": "Must work in homelab environment."
+}

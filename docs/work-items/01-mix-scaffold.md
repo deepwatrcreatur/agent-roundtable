@@ -1,6 +1,6 @@
 # 01 — Mix Project Scaffold + Nix flake.nix
 
-**Status:** `in-progress`
+**Status:** `done`
 **Assigned:** Codex
 **Branch:** `feat/scaffold`
 

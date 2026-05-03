@@ -1,0 +1,12 @@
+{
+  "id": "task-10",
+  "category": "synthetic",
+  "question": "Evaluate asynchronous agent turns vs the current synchronous round-robin model.",
+  "brief_context": "In sync mode, agents wait for each other. In async mode, agents post whenever they are ready. This could speed up discussions but might lead to missed context.",
+  "sub_questions": [
+    "How to handle 'out of order' responses?",
+    "Impact on IC synthesis timing?",
+    "Is the satisfaction protocol compatible with async turns?"
+  ],
+  "constraints": "Ensure agents have seen all 'prior' round context before responding."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "task-08",
+  "category": "synthetic",
+  "question": "Should the LiveView dashboard support multiple simultaneous discussions, or be single-discussion-at-a-time?",
+  "brief_context": "Currently the orchestrator is simple. Supporting multiple discussions adds complexity to state management and process supervision.",
+  "sub_questions": [
+    "UX trade-offs for solo users?",
+    "Architectural impact on OTP supervisor trees?",
+    "Resource isolation concerns?"
+  ],
+  "constraints": "Maintain simplicity for the primary solo use case."
+}

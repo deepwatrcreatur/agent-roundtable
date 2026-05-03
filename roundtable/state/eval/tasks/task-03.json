@@ -1,0 +1,13 @@
+{
+  "id": "task-03",
+  "category": "replayed",
+  "source": "Q26",
+  "question": "Evaluate hosting options for the Elixir/Phoenix orchestrator: Fly.io, Gigalixir, or homelab self-hosting. Which fits our budget and technical needs best?",
+  "brief_context": "The service needs a home. We have a homelab with NixOS but also want to consider managed PaaS for ease of use.",
+  "sub_questions": [
+    "Compare Fly.io and Gigalixir free tiers",
+    "Assess homelab setup effort",
+    "Provide a deployment recommendation"
+  ],
+  "constraints": "Budget < $10/month, support for long-running OTP processes."
+}

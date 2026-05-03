@@ -1,7 +1,6 @@
 # 04 — Roundtable.Satisfaction
 
-**Status:** `blocked` (needs 01)
-**Assigned:** Gemini
+**Status:** `done` (Gemini)
 **Branch:** `feat/satisfaction`
 
 ## Scope

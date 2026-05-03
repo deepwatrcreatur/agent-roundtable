@@ -1,0 +1,12 @@
+{
+  "id": "task-12",
+  "category": "code_review",
+  "question": "Review the persistence logic in Roundtable.RoundRun. Ensure state is correctly flushed and reconciled.",
+  "brief_context": "RoundRun manages state persistence to ETS and JSON. It also reconciles state from GitHub issues.",
+  "sub_questions": [
+    "Are there race conditions between ETS and disk writes?",
+    "Is the reconciliation logic robust against missing comments?",
+    "Does the JSON schema support future evolution?"
+  ],
+  "constraints": "Ensure data durability and restart recovery."
+}

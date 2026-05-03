@@ -1,7 +1,6 @@
 # 28 — Eval Harness: `Vaglio.Eval` + `Vaglio.Eval.Run`
 
-**Status:** `ready`
-**Assigned:** Gemini
+**Status:** `done` (Gemini)
 **Source:** Q37 (Round 22)
 
 ## Scope

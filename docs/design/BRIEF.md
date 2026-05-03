@@ -1956,3 +1956,277 @@ the project's direction:
   useful discussion without evals. Is formal evaluation necessary, or is the
   owner's subjective assessment that "the discussions are better than
   single-model output" sufficient for a personal tool?*
+
+---
+
+### Q38 — Eval Landscape and Competitive Analysis
+
+**Context:** Vaglio is a multi-agent deliberation system — it runs multiple LLM
+agents through a structured protocol to produce higher-quality analysis than any
+single model alone. We are building internal evals (items 28-32) to measure
+vaglio's value. Meanwhile, several commercial products claim strong results on
+public benchmarks like SWE-bench Pro. We need to understand which public
+benchmarks are relevant to what vaglio does, and which products are genuine
+competition vs. solving a different problem.
+
+Bito's AI Architect claims 70% on SWE-bench Pro (boosting Opus 4.6 from 51.9%).
+SWE-bench Pro measures code patch generation from issue descriptions — a coding
+agent task, not a deliberation task.
+
+**Q38.1 — Benchmark landscape**
+
+What public benchmarks exist that are relevant to multi-agent deliberation
+quality? Consider: SWE-bench (Verified, Pro, Live), MMLU-Pro, GPQA,
+LiveBench, BigBench, HumanEval, MATH, ARC-AGI, and any others. For each,
+assess: does it measure something vaglio could plausibly improve on compared
+to a single model?
+
+**Q38.2 — Competitive products**
+
+Which existing products or research systems are genuine competitors to vaglio's
+multi-agent deliberation approach? Consider: Bito AI Architect, Cursor, Devin,
+SWE-Agent, OpenHands, Aider, GitHub Copilot Workspace, AutoCodeRover,
+Agentless, ChatDev, MetaGPT, CrewAI, AutoGen, and others. For each, assess:
+are they solving the same problem as vaglio, or a different one?
+
+**Q38.3 — Where vaglio has an edge**
+
+Given the benchmark and competitive landscape, what tasks or evaluation
+dimensions would best demonstrate vaglio's unique value? Where would
+multi-perspective deliberation genuinely outperform a single agent with a
+knowledge graph or tool use?
+
+**Q38.4 — Practical eval strategy**
+
+Should vaglio participate in any public benchmarks, or should we focus
+exclusively on custom evals that measure deliberation quality? If public
+benchmarks, which ones and how would we adapt vaglio's output format?
+
+**Constraints for Q38:**
+- Be honest about where vaglio is and isn't competitive
+- Distinguish between "coding agent" and "deliberation system" capabilities
+- Consider the homelab deployment context (cost, compute constraints)
+- Premise challenge required: *Is comparing vaglio to coding agents like
+  SWE-bench entrants a category error, or is there a meaningful common
+  ground?*
+
+---
+
+### Q39 — Karpathy's LLM Council and Vaglio's Market Position
+
+**Context:** Andrej Karpathy has published an "LLM Council" concept — multiple
+LLMs generate responses to the same query, peer-review each other's anonymized
+outputs, and a chairman/synthesizer produces a final combined result. This is
+architecturally very similar to vaglio. Key developments from X/Twitter:
+
+- Karpathy built a simple web app using OpenRouter (dispatching to GPT, Claude,
+  Gemini, Grok; then peer review + chairman). He noted it works even with one
+  LLM using varied prompts.
+- @omarsar0 built it as a plugin inside Claude Code, hooked up to OpenRouter,
+  and experimented with it for agentic coding, evaluation, and research. Plans
+  to open-source.
+- @HarperEFoley implemented a version in Claude with sub-agents using distinct
+  reasoning styles. The peer-review step caught issues single advisors missed.
+- @PostleTyler noted a founder (@eshanchordia) independently arrived at a similar
+  "council of agents" where multiple agents debate instead of a single
+  orchestrator — right around when Karpathy published his.
+- Cursor may be adding an "LLM council" feature.
+- People are using it for reasoning, coding agents, knowledge work, and reducing
+  hallucinations via debate/review.
+- The pattern is being discussed as practical LLM ensembling / Mixture-of-Agents.
+
+**Q39.1 — Vaglio vs. Karpathy's Council: architectural comparison**
+
+Compare vaglio's architecture (heterogeneous CLI agents, structured satisfaction
+protocol, typed provenance, IC synthesis, multi-round convergence) to the LLM
+Council pattern (multi-model dispatch, anonymous peer review, chairman synthesis).
+What does vaglio do that the Council pattern does not, and vice versa? Is vaglio's
+additional protocol complexity justified, or is the simpler Council pattern
+sufficient?
+
+**Q39.2 — Competitive moat assessment**
+
+If Karpathy's pattern is gaining traction and being built into tools like Claude
+Code and Cursor, what is vaglio's competitive moat? Is there defensible
+differentiation, or has the core idea been commoditized? Consider:
+- The protocol (satisfaction markers, provenance typing, premise challenges)
+- The heterogeneous agent roster (CLI agents from different providers)
+- The Elixir/BEAM implementation (fault tolerance, concurrency)
+- The homelab deployment model (self-hosted, privacy-preserving)
+
+**Q39.3 — Company viability**
+
+Is there a viable company in this space? Consider:
+- Would anyone pay for a more structured version of what Karpathy built for free?
+- What is the TAM for multi-agent deliberation tools?
+- What business model makes sense (open-core, SaaS, enterprise, consulting)?
+- Who are the potential customers (enterprises, researchers, developers)?
+- What would a funding pitch look like?
+
+**Q39.4 — Strategic response**
+
+Given that the LLM Council pattern is being independently discovered by multiple
+people simultaneously, what should the vaglio project do? Options include:
+- Accelerate and differentiate (add features the simple Council lacks)
+- Pivot to focus on a specific vertical (code review, architecture decisions)
+- Open-source aggressively and build community
+- Abandon the general-purpose deliberation framing
+- Something else
+
+**Constraints for Q39:**
+- Be brutally honest about whether vaglio has a real advantage or has been
+  scooped
+- Consider timing — Karpathy has mass distribution; vaglio has a working Elixir
+  implementation with 23 rounds of real usage
+- Premise challenge required: *Is the fact that multiple people independently
+  discovered this pattern evidence that it's a real need (validating vaglio),
+  or evidence that it's too obvious to be defensible (threatening vaglio)?*
+
+---
+
+### Q40 — Publishing the Vaglio Protocol as an Open Standard
+
+**Context:** Round 24 (Q39) established unanimous consensus that vaglio's
+defensible differentiation is the protocol layer, not multi-model dispatch. All
+three agents recommended publishing the protocol as a standalone specification.
+This question explores what that looks like concretely.
+
+The vaglio protocol has several separable layers:
+1. Agent turn structure (sequential/parallel, attributed/anonymous)
+2. Epistemic provenance typing ([observed], [inferred], [testimony])
+3. Satisfaction protocol (4 terminal markers, consensus rules)
+4. Multi-round convergence (phase state machine, max rounds, escalation)
+5. Anti-groupthink mechanisms (disconfirmation pass, challenger role, mindguard
+   check, blind first sub-turn, unique contribution prompt, premise challenge)
+6. Coordinator resilience (lease/heartbeat, standby takeover, degraded mode)
+
+**Q40.1 — Spec format and venue**
+
+What format should the protocol specification take? Options include: GitHub
+markdown spec with JSON schemas, IETF Internet-Draft/RFC, W3C Community Group
+Report, arXiv paper, or some combination. What is the right level of formality
+for the current stage of the project? Consider that there is one implementation
+(Elixir/BEAM) and no external adopters yet.
+
+**Q40.2 — Minimum viable spec**
+
+Which layers of the protocol are essential to specify first, and which can wait?
+Is the full 6-layer protocol too much for an initial spec? What is the smallest
+useful subset that would (a) be implementable by someone building on top of a
+Council-style system, and (b) demonstrate clear value over single-pass synthesis?
+
+**Q40.3 — Community and contributors**
+
+Who would make helpful contributions to the spec? Consider: multi-agent systems
+researchers (MAD/MoA), computational argumentation theorists (Toulmin,
+Dung semantics), distributed systems engineers, AI safety/alignment researchers,
+enterprise compliance practitioners, Council-pattern implementers (Karpathy,
+@omarsar0, @eshanchordia), Elixir/BEAM community. Who do we need most, and
+how do we attract them?
+
+**Q40.4 — The spec + paper + implementation triple**
+
+The proposed release strategy is:
+1. Protocol spec as a versioned GitHub repo
+2. arXiv paper with eval results (vaglio vs. Council vs. single model)
+3. Elixir reference implementation + Python example for portability
+
+Is this the right strategy? What is the sequencing — should the spec come
+before or after the eval results? Should the paper lead with the protocol
+design or with the empirical comparison?
+
+**Q40.5 — Risks of premature standardization**
+
+Is it too early to publish a spec? The protocol has 24 rounds of real usage
+but no external validation via evals. Publishing prematurely could:
+- Lock in design decisions that need to change
+- Invite criticism before there is evidence
+- Signal ambition without substance
+
+Conversely, waiting too long risks the window closing as simpler patterns
+get entrenched.
+
+**Constraints for Q40:**
+- The eval framework (items 28-32) exists in code but has not been run yet
+- The 60-day window from Q39 is ticking
+- There is one developer (the owner) and AI agents — no team to staff a
+  standards effort
+- Premise challenge required: *Is "publish a spec" the right framing, or is
+  this actually "write an arXiv paper" — and the spec is just an appendix?*
+
+---
+
+### Q41 — The Delve Scandal and AI-Assisted Compliance
+
+**Context:** Delve was a YC W24 compliance startup that raised $32M at a $300M
+valuation. In March 2026, an anonymous whistleblower ("DeepDelver") revealed that
+Delve was running "fake compliance as a service":
+
+- 493 out of 494 SOC 2 reports used identical boilerplate text (same grammatical
+  errors, same nonsensical descriptions, only company name/logo changed)
+- Auditor conclusions were pre-generated before clients submitted evidence
+- Reports were routed through Indian "certification mills" for rubber-stamping
+- Delve also allegedly stole open-source code from fellow YC company Sim.ai,
+  forking their SimStudio tool and rebranding it as "Pathways"
+- YC removed Delve from its portfolio in April 2026
+
+Sources: [TechCrunch](https://techcrunch.com/2026/04/04/embattled-startup-delve-has-parted-ways-with-y-combinator/),
+[Captain Compliance](https://captaincompliance.com/news/the-delve-scandal-fake-soc-2-audits-open-source-code-theft-and-exit-from-y-combinator/),
+[Quasa](https://quasa.io/media/the-delve-scandal-how-two-21-year-old-forbes-30-under-30-founders-built-a-300m-ai-compliance-unicorn-and-are-now-accused-of-selling-fake-reports)
+
+Round 39 identified "auditable AI deliberation for regulated industries" as
+vaglio's most defensible commercial positioning. Round 40 planned publication as
+an arXiv paper + protocol spec. The Delve scandal shows both the market demand
+for AI-assisted compliance and the catastrophic failure mode when it is done
+without epistemic integrity.
+
+**Q41.1 — Would vaglio's protocol have prevented Delve's failure?**
+
+Delve's corruption was fundamental: pre-generating conclusions before evidence,
+using identical templates, routing through certification mills. This is not a
+subtle epistemic failure — it is fraud. Would vaglio's typed provenance,
+satisfaction protocol, and multi-agent deliberation have prevented this, or was
+the problem too basic (intentional deception, not accidental groupthink)?
+Be honest about what protocol mechanisms can and cannot prevent.
+
+**Q41.2 — The compliance market after Delve**
+
+The Delve scandal has created a trust vacuum in AI-assisted compliance. Customers
+who relied on Delve now need alternatives. What does the post-Delve compliance
+market look like? Is there an opportunity for a tool that emphasizes auditable
+AI reasoning with provenance tracking — exactly what vaglio is building?
+
+**Q41.3 — Vaglio as a compliance product**
+
+Could vaglio be adapted for the compliance use case? Consider:
+- SOC 2 / ISO 27001 / HIPAA assessments as multi-agent deliberation tasks
+- Typed provenance as audit evidence (distinguishing observed controls from
+  inferred compliance)
+- Satisfaction protocol as structured auditor sign-off
+- Multi-round convergence for addressing findings
+- The audit trail as the product (not just the report)
+
+**Q41.4 — Funding and market positioning**
+
+Delve raised $32M at $300M valuation for AI-assisted compliance. Given the
+post-scandal trust environment, could vaglio's "auditable AI deliberation"
+positioning attract similar funding? What would a funding pitch look like that
+explicitly differentiates from Delve's approach? Is this a realistic path for
+a solo developer with AI agents?
+
+**Q41.5 — Ethical considerations**
+
+Delve's failure was ultimately ethical, not technical. If vaglio enters the
+compliance space, what safeguards are needed to prevent the same failure mode?
+How do you build a system where the incentive structure rewards genuine
+compliance assessment rather than rubber-stamping?
+
+**Constraints for Q41:**
+- Be honest about the gap between "protocol prevents groupthink" and "protocol
+  prevents fraud"
+- Consider the regulatory landscape (AICPA independence rules, SOC 2 trust
+  services criteria)
+- The owner is a solo developer on a homelab, not a compliance expert
+- Premise challenge required: *Is entering the compliance market after Delve's
+  failure opportunistic ambulance-chasing, or is it a genuine case where
+  vaglio's protocol addresses a real gap that Delve exposed?*
