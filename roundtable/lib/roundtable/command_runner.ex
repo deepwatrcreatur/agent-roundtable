@@ -6,7 +6,7 @@ defmodule Roundtable.CommandRunner do
   @type command :: String.t()
   @type args :: [String.t()]
   @type opts :: keyword()
-  @type result :: {String.t(), non_neg_integer()}
+  @type result :: {String.t(), non_neg_integer()} | {:error, term()}
 
   @callback cmd(command(), args(), opts()) :: result()
 end

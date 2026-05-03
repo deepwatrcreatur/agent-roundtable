@@ -1,0 +1,13 @@
+{
+  "id": "task-02",
+  "category": "replayed",
+  "source": "Q8",
+  "question": "Should we use a unified harness like OpenCode for all agents, or stick to vendor-specific CLI wrappers? How do we preserve agent identity?",
+  "brief_context": "OpenCode supports many providers. However, vendor CLIs have unique system prompts and toolsets. We need to decide on the harness architecture.",
+  "sub_questions": [
+    "Evaluate OpenCode as a unification layer",
+    "Analyze risks of losing agent identity",
+    "Propose a harness selector design"
+  ],
+  "constraints": "Maintain distinct agent personalities."
+}

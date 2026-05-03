@@ -1,7 +1,7 @@
 # 05 — Roundtable.Prompt
 
-**Status:** `blocked` (needs 01, 02, 03)
-**Assigned:** Codex
+**Status:** `done` (Gemini)
+**Assigned:** Gemini
 **Branch:** `feat/prompt`
 
 ## Scope

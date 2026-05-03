@@ -1,6 +1,6 @@
 # 03 — Roundtable.Actions.RunCliAgent
 
-**Status:** `blocked` (needs 01)
+**Status:** `done` (Gemini)
 **Assigned:** Codex
 **Branch:** `feat/cli-agent-action`
 

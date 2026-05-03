@@ -30,7 +30,13 @@ defmodule Roundtable.Actions.GhTest do
                        "--json",
                        "title,body,labels,state,comments,url"
                      ],
-                     [stderr_to_stdout: true]}
+                      [stderr_to_stdout: true]}
+  end
+
+  test "validate_auth runs gh auth status" do
+    assert :ok = Gh.validate_auth(%{runner: FakeRunner})
+
+    assert_received {:cmd, "gh", ["auth", "status"], [stderr_to_stdout: true]}
   end
 
   test "comment_issue sends the comment over stdin" do
@@ -83,17 +89,76 @@ defmodule Roundtable.Actions.GhTest do
                      ], [stderr_to_stdout: true]}
   end
 
+  test "list_issues builds gh issue list command" do
+    Process.put(:runner_result, {"[]", 0})
+
+    assert {:ok, []} = Gh.list_issues([label: "bug"], %{repo: "owner/repo", runner: FakeRunner})
+
+    assert_received {:cmd, "gh",
+                     [
+                       "issue",
+                       "list",
+                       "--state",
+                       "open",
+                       "--json",
+                       "number,title,state,labels,url,comments",
+                       "-R",
+                       "owner/repo",
+                       "--label",
+                       "bug"
+                     ], [stderr_to_stdout: true]}
+  end
+
+  test "create_issue extracts issue number from URL output" do
+    output = "https://github.com/owner/repo/issues/42\n"
+    Process.put(:runner_result, {output, 0})
+
+    assert {:ok, 42} =
+             Gh.create_issue("Title", "Body", ["feature"], %{
+               repo: "owner/repo",
+               runner: FakeRunner
+             })
+
+    assert_received {:cmd, "gh",
+                     [
+                       "issue",
+                       "create",
+                       "--title",
+                       "Title",
+                       "--body",
+                       "Body",
+                       "--label",
+                       "feature",
+                       "-R",
+                       "owner/repo"
+                     ], [stderr_to_stdout: true]}
+  end
+
   test "returns a command_failed error on non-zero exit" do
     Process.put(:runner_result, {"bad token", 1})
 
     assert {:error, {:command_failed, 1, "bad token"}} =
-             Gh.view_issue(1, [], %{runner: FakeRunner})
+              Gh.view_issue(1, [], %{runner: FakeRunner})
+  end
+
+  test "returns an auth_failed error when gh auth status fails" do
+    Process.put(:runner_result, {"authentication required", 1})
+
+    assert {:error, {:auth_failed, 1, "authentication required"}} =
+             Gh.validate_auth(%{runner: FakeRunner})
   end
 
   test "returns an invalid_json error when gh output cannot be decoded" do
     Process.put(:runner_result, {"not-json", 0})
 
     assert {:error, {:invalid_json, _reason}} =
+              Gh.view_issue(1, [], %{runner: FakeRunner})
+  end
+
+  test "returns a runner_error when the runner reports timeout/network failure" do
+    Process.put(:runner_result, fn -> {:error, :timeout} end)
+
+    assert {:error, {:runner_error, :timeout}} =
              Gh.view_issue(1, [], %{runner: FakeRunner})
   end
 end

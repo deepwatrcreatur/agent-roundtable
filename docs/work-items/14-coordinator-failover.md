@@ -1,7 +1,7 @@
 # 14 — Coordinator Failover
 
-**Status:** `blocked` (needs items 11, 12, 13)
-**Owner:** unassigned
+**Status:** `done`
+**Owner:** GitHub Copilot
 **Branch:** `feat/coordinator-failover`
 
 ## Goal

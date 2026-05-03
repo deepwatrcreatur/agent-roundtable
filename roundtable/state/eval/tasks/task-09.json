@@ -1,0 +1,12 @@
+{
+  "id": "task-09",
+  "category": "synthetic",
+  "question": "Design an error handling strategy for when an agent CLI call fails mid-round (timeout, crash, API error).",
+  "brief_context": "Subprocess calls are flaky. An agent might time out or the API might return an error. The orchestrator must recover gracefully.",
+  "sub_questions": [
+    "How many retries before escalating to human?",
+    "Should the round pause or skip the agent?",
+    "How to record failures in the transcript?"
+  ],
+  "constraints": "Do not leave orphan processes."
+}

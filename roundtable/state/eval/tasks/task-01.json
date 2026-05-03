@@ -1,0 +1,13 @@
+{
+  "id": "task-01",
+  "category": "replayed",
+  "source": "Q1",
+  "question": "What flag or mode makes each agent (claude, codex, gemini) read a prompt from stdin or a file and write its response to stdout without interactive prompting? What is the best way to inject context?",
+  "brief_context": "We want to automate multi-agent discussions. The first step is headless invocation of CLI agents. Agents must read prompts and write responses without human interaction.",
+  "sub_questions": [
+    "Find headless flags for Claude, Codex, and Gemini",
+    "Identify best context injection method",
+    "Document token/auth concerns"
+  ],
+  "constraints": "Must work with already installed CLI tools."
+}

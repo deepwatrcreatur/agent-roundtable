@@ -1,7 +1,6 @@
 # 30 — Eval Task Set: Question Selection and Design
 
-**Status:** `ready`
-**Assigned:** Gemini
+**Status:** `done` (Gemini)
 **Source:** Q37 (Round 22)
 
 ## Scope

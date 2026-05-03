@@ -1,7 +1,7 @@
 # 25 — Authentik OIDC Authentication
 
-**Status:** `ready`
-**Assigned:** Gemini
+**Status:** `done`
+**Assigned:** Codex
 
 ## Scope
 

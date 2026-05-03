@@ -2,11 +2,14 @@ defmodule Roundtable.RoundRunTest do
   use ExUnit.Case, async: false
 
   alias Roundtable.RoundRun
+  alias Roundtable.TestSupport.FakeRunner
 
   @test_issue 88_001
 
   setup do
     RoundRun.init()
+    Process.put(:test_pid, self())
+    Process.put(:runner_result, {"", 0})
 
     on_exit(fn ->
       :ets.delete(:roundtable_round_runs, @test_issue)
@@ -14,6 +17,52 @@ defmodule Roundtable.RoundRunTest do
     end)
 
     :ok
+  end
+
+  # ------------------------------------------------------------------
+  # reconcile_from_github/2
+  # ------------------------------------------------------------------
+
+  describe "reconcile_from_github/2" do
+    test "fetches issue data through Gh.view_issue and rebuilds state" do
+      Process.put(
+        :runner_result,
+        {~s({"state":"OPEN","labels":[{"name":"needs-human-review"}],"comments":[{"id":"c1","body":"## Codex\\n\\nText.\\n\\n[satisfied]"},{"id":"c2","body":"## Gemini\\n\\nText.\\n\\n[needs more evidence: more proof]"}]}),
+         0}
+      )
+
+      assert {:ok, run} =
+               RoundRun.reconcile_from_github(
+                 42,
+                 %{repo: "owner/repo", runner: FakeRunner, agents: [:codex, :gemini]}
+               )
+
+      assert run.issue_number == 42
+      assert run.phase == :needs_human_review
+      assert run.expected_speakers == [:codex, :gemini]
+      assert run.completed_speakers == [:codex, :gemini]
+      assert run.satisfaction_map[:codex] == :satisfied
+      assert run.satisfaction_map[:gemini] == :needs_more_evidence
+
+      assert_received {:cmd, "gh",
+                       [
+                         "issue",
+                         "view",
+                         "42",
+                         "-R",
+                         "owner/repo",
+                         "--comments",
+                         "--json",
+                         "labels,state,comments"
+                       ], [stderr_to_stdout: true]}
+    end
+
+    test "passes through gh errors" do
+      Process.put(:runner_result, {"bad token", 1})
+
+      assert {:error, {:command_failed, 1, "bad token"}} =
+               RoundRun.reconcile_from_github(42, %{runner: FakeRunner})
+    end
   end
 
   # ------------------------------------------------------------------
@@ -190,7 +239,10 @@ defmodule Roundtable.RoundRunTest do
         "labels" => [],
         "comments" => [
           %{"id" => "c1", "body" => "## Codex\n\nText.\n\n[satisfied]"},
-          %{"id" => "c2", "body" => "## Gemini\n\nText.\n\n[satisfied-conditional: needs deployment]"},
+          %{
+            "id" => "c2",
+            "body" => "## Gemini\n\nText.\n\n[satisfied-conditional: needs deployment]"
+          },
           %{"id" => "c3", "body" => "## Claude IC\n\nText.\n\n[needs more evidence: repro steps]"}
         ]
       }
