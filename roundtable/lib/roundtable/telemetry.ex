@@ -198,12 +198,15 @@ defmodule Roundtable.Telemetry do
   stdout. Intended for development; wire an OTEL exporter in production.
   """
   def attach_logger do
-    :telemetry.attach_many(
-      "roundtable-json-logger",
-      all_events(),
-      &__MODULE__.handle_event/4,
-      nil
-    )
+    case :telemetry.attach_many(
+           "roundtable-json-logger",
+           all_events(),
+           &__MODULE__.handle_event/4,
+           nil
+         ) do
+      :ok -> :ok
+      {:error, :already_exists} -> :ok
+    end
   end
 
   @doc false

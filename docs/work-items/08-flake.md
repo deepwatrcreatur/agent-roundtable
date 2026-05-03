@@ -1,7 +1,7 @@
 # 08 — flake.nix
 
-**Status:** `ready`
-**Assigned:** Codex
+**Status:** `in-progress`
+**Assigned:** GitHub Copilot
 **Branch:** `feat/flake-pins`
 
 ## Scope
