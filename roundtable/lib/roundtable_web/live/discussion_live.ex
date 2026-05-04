@@ -31,6 +31,7 @@ defmodule RoundtableWeb.DiscussionLive do
       |> assign(:inject_text, "")
       |> assign(:running, false)
       |> assign(:flash_msg, nil)
+      |> assign(:conflicts, [])
       |> load_state(repo)
 
     {:ok, socket}
@@ -138,6 +139,13 @@ defmodule RoundtableWeb.DiscussionLive do
         <.question_card :for={{number, q} <- Enum.sort(@questions)} number={number} q={q} />
       </section>
 
+      <section :if={length(@conflicts) > 0} style="margin-bottom: 2rem;">
+        <h2 style="font-size: 1rem; color: #f78166; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+          Logical Conflicts
+        </h2>
+        <.conflict_card :for={c <- @conflicts} c={c} />
+      </section>
+
       <section style="margin-bottom: 2rem;">
         <h2 style="font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
           Inject Question
@@ -231,16 +239,64 @@ defmodule RoundtableWeb.DiscussionLive do
     """
   end
 
+  defp conflict_card(assigns) do
+    ~H"""
+    <div style="border: 1px solid #da3633; border-radius: 6px; padding: 1rem;
+                margin-bottom: 0.75rem; background: #161b22; display: flex;
+                justify-content: space-between; align-items: center;">
+      <div>
+        <div style="color: #f0f6fc; font-weight: 600; font-size: 0.9rem;">
+          {@c.path}
+        </div>
+        <div style="color: #8b949e; font-size: 0.75rem; margin-top: 0.25rem;">
+          Unresolved evolution in {@c.vcs |> Atom.to_string() |> String.upcase()}
+        </div>
+      </div>
+      <.vcs_badge vcs={@c.vcs} />
+    </div>
+    """
+  end
+
+  defp vcs_badge(assigns) do
+    {text, color} =
+      case assigns.vcs do
+        :jj -> {"jj", "#58a6ff"}
+        :dolt -> {"dolt", "#3fb950"}
+        _ -> {"vcs", "#8b949e"}
+      end
+
+    assigns = assign(assigns, text: text, color: color)
+
+    ~H"""
+    <span style={"border: 1px solid #{@color}; color: #{@color}; font-size: 0.65rem;
+                  padding: 0.1rem 0.4rem; border-radius: 4px; text-transform: uppercase;
+                  font-weight: bold;"}>{@text}</span>
+    """
+  end
+
   # ----- helpers -----
 
   defp load_state(socket, "") do
-    assign(socket, :questions, %{})
+    socket
+    |> assign(:questions, %{})
+    |> assign(:conflicts, [])
   end
 
   defp load_state(socket, repo) do
-    case CLI.get_discussion_state(repo) do
-      {:ok, state} -> assign(socket, :questions, state)
-      {:error, _} -> assign(socket, :questions, %{})
+    # Fetch GitHub issues
+    socket =
+      case CLI.get_discussion_state(repo) do
+        {:ok, state} -> assign(socket, :questions, state)
+        {:error, _} -> assign(socket, :questions, %{})
+      end
+
+    # Fetch logical conflicts if a local path is configured
+    # (In v1 we use ROUNDTABLE_LOCAL_PATH env var)
+    local_path = System.get_env("ROUNDTABLE_LOCAL_PATH")
+
+    case CLI.get_conflicts(local_path) do
+      {:ok, conflicts} -> assign(socket, :conflicts, conflicts)
+      {:error, _} -> assign(socket, :conflicts, [])
     end
   end
 

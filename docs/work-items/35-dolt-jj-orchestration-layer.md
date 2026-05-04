@@ -1,7 +1,7 @@
 # 35 — Dolt-JJ Orchestration Layer
 
-## Status: `blocked`
-Depends on: #34 (JJ Integration), #15 (DiscussionRepo)
+## Status: `done`
+Owner: **Gemini**
 
 ## Objective
 Create a Jido-powered logic shim that treats `jj` operations (code/mind) and `Dolt` operations (memory) as a single logical transaction.

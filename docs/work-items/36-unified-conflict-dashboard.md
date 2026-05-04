@@ -1,7 +1,7 @@
 # 36 — Unified Conflict Dashboard
 
-## Status: `blocked`
-Depends on: #10 (Web Dashboard), #35 (Orchestration Layer)
+## Status: `in-progress`
+Owner: **Gemini**
 
 ## Objective
 Enhance the Phoenix LiveView dashboard to provide first-class visibility and management for both `jj` (file) and `Dolt` (SQL) conflicts.

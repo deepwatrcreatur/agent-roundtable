@@ -110,6 +110,31 @@ defmodule Roundtable.CLI do
     end
   end
 
+  @doc """
+  Returns a list of logical conflicts in the given local repository path.
+  Checks both jj (file) and Dolt (SQL) conflicts.
+  """
+  @spec get_conflicts(String.t(), keyword()) :: {:ok, [map()]} | {:error, term()}
+  def get_conflicts(local_path, _opts \\ []) do
+    if is_binary(local_path) and File.dir?(local_path) do
+      jj_conflicts =
+        case Roundtable.Vcs.Jujutsu.conflicts(repo_path: local_path) do
+          {:ok, list} -> Enum.map(list, &Map.put(&1, :vcs, :jj))
+          _ -> []
+        end
+
+      dolt_conflicts =
+        case Roundtable.Vcs.Dolt.conflicts(repo_path: local_path) do
+          {:ok, list} -> Enum.map(list, &Map.put(&1, :vcs, :dolt))
+          _ -> []
+        end
+
+      {:ok, jj_conflicts ++ dolt_conflicts}
+    else
+      {:ok, []}
+    end
+  end
+
   # Returns true if `s` looks like "owner/repo" rather than a file path.
   defp repo_slug?(s) do
     Regex.match?(~r/\A[A-Za-z0-9_.\-]+\/[A-Za-z0-9_.\-]+\z/, s) and
