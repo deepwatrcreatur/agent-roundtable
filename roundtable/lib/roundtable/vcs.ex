@@ -36,4 +36,7 @@ defmodule Roundtable.Vcs do
 
   @callback conflicts(keyword()) ::
               {:ok, [conflict()]} | {:error, term()}
+
+  @callback query(String.t(), keyword()) ::
+              {:ok, [map()]} | {:error, term()}
 end

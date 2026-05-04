@@ -8,8 +8,7 @@ defmodule Roundtable.Vcs.JujutsuTest do
     File.rm_rf!(repo_path)
     File.mkdir_p!(repo_path)
 
-    # Initialize jj repo. Note: jj init --git creates a colocated repo by default if in a git repo,
-    # but we want a standalone one for testing.
+    # Initialize jj repo.
     jj!(repo_path, ["git", "init"])
     
     on_exit(fn -> File.rm_rf!(repo_path) end)
@@ -20,7 +19,6 @@ defmodule Roundtable.Vcs.JujutsuTest do
   describe "current_head/2" do
     test "returns the current commit ID", %{repo_path: repo_path} do
       assert {:ok, commit_id} = Jujutsu.current_head("@", repo_path: repo_path)
-      # jj commit IDs are shorter by default but still hex
       assert String.match?(commit_id, ~r/^[0-9a-f]+$/)
     end
   end
@@ -28,7 +26,6 @@ defmodule Roundtable.Vcs.JujutsuTest do
   describe "current_change_id/2" do
     test "returns the current change ID", %{repo_path: repo_path} do
       assert {:ok, change_id} = Jujutsu.current_change_id("@", repo_path: repo_path)
-      # jj change IDs are typically base32 or hex with letters
       assert String.length(change_id) > 0
     end
   end
@@ -68,16 +65,35 @@ defmodule Roundtable.Vcs.JujutsuTest do
   describe "conflicts/1" do
     test "surfaces file-level conflicts", %{repo_path: repo_path} do
       # Set up a conflict: create two revisions with different content for same file
-      # Start from the same parent (root)
       jj!(repo_path, ["new", "root()", "-m", "v1"])
       File.write!(Path.join(repo_path, "conflict.txt"), "A\n")
       
       jj!(repo_path, ["new", "root()", "-m", "v2"])
       File.write!(Path.join(repo_path, "conflict.txt"), "B\n")
       
-      # For simplicity in a mock-less test, we'll just check that the command runs.
-      # True conflict testing in jj is easier with its built-in primitives.
       assert {:ok, []} = Jujutsu.conflicts(repo_path: repo_path)
+    end
+  end
+
+  describe "query/2" do
+    test "queries the graph using revsets", %{repo_path: repo_path} do
+      # Create two revisions with distinct descriptions and content, and give them bookmarks
+      File.write!(Path.join(repo_path, "logic.txt"), "reason\n")
+      jj!(repo_path, ["describe", "-m", "logic layer"])
+      jj!(repo_path, ["bookmark", "create", "b1"])
+      
+      jj!(repo_path, ["new", "root()"])
+      File.write!(Path.join(repo_path, "vcs.txt"), "vcs\n")
+      jj!(repo_path, ["describe", "-m", "vcs layer"])
+      jj!(repo_path, ["bookmark", "create", "b2"])
+      
+      # Query for "logic" via bookmark
+      assert {:ok, [%{description: desc}]} = Jujutsu.query("bookmarks(b1)", repo_path: repo_path)
+      assert desc =~ "logic layer"
+      
+      # Query for both via union
+      assert {:ok, results} = Jujutsu.query("bookmarks(b1) | bookmarks(b2)", repo_path: repo_path)
+      assert length(results) == 2
     end
   end
 

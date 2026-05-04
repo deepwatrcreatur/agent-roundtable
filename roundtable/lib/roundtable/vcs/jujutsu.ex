@@ -58,6 +58,40 @@ defmodule Roundtable.Vcs.Jujutsu do
   end
 
   @impl true
+  def query(revset, opts) when is_binary(revset) do
+    with {:ok, repo_path} <- fetch_repo_path(opts) do
+      # Use separate() for reliable template formatting.
+      # We append a newline to ensure each revision is on a new line.
+      template = "separate('|', commit_id, change_id, author.email(), description.first_line()) ++ '\n'"
+
+      cmd_args = ["log", "-r", revset, "--no-graph", "--color", "never", "-T", template]
+
+      case jj(cmd_args, repo_path, opts) do
+        {:ok, output} ->
+          results =
+            output
+            |> String.split("\n", trim: true)
+            |> Enum.map(fn line ->
+              parts = String.split(line, "|")
+              case parts do
+                [commit_id, change_id, author, description] ->
+                  %{commit_id: commit_id, change_id: change_id, author: author, description: description}
+                [commit_id, change_id, description] ->
+                  %{commit_id: commit_id, change_id: change_id, author: "unknown", description: description}
+                _ ->
+                  %{commit_id: "unknown", change_id: "unknown", author: "unknown", description: line}
+              end
+            end)
+
+          {:ok, results}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
+    end
+  end
+
+  @impl true
   def write_files(%{message: message, branch: _branch, changes: changes}, opts)
       when is_binary(message) and is_list(changes) do
     with {:ok, repo_path} <- fetch_repo_path(opts),
