@@ -1,7 +1,7 @@
 # 37 — Evolution-based Prompting (Token Efficiency)
 
-## Status: `blocked`
-Depends on: #34 (JJ Integration), #05 (Prompt logic)
+## Status: `in-progress` (Research)
+Owner: **Codex**
 
 ## Objective
 Update the prompt assembly logic to use `jj` logical deltas (evolutions of intent) instead of full transcript histories, drastically reducing token consumption.

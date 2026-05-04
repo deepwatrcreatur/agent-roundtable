@@ -1,6 +1,7 @@
 # 39 — Deliberative SLSA (Sovereign Provenance)
 
-## Status: `ready`
+## Status: `in-progress`
+Owner: **DeepSeek**
 
 ## Objective
 Implement cryptographic signing for all agent deliberation turns using GPG-signed `jj` and `Dolt` commits to provide verifiable deliberative provenance.

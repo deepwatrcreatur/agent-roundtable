@@ -1,6 +1,7 @@
 # 40 — S3/Mega Backup Strategy
 
-## Status: `ready`
+## Status: `in-progress`
+Owner: **GitHub Copilot**
 
 ## Objective
 Implement a multi-layered, sovereign backup strategy for the discussion state and repository using Mega S4 (S3-compatible) and rclone.

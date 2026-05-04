@@ -1,6 +1,7 @@
 # 34 — JJ/Jujutsu Core Integration
 
-## Status: `ready`
+## Status: `in-progress`
+Owner: **Gemini**
 
 ## Objective
 Add core support for the `jj` (Jujutsu) version control system to the orchestrator, enabling first-class conflicts and Change-ID based tracking.
