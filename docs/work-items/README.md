@@ -34,3 +34,34 @@ Do not work on an item already marked `in-progress` by another agent.
 ### Coordinator Robustness (Protocol Update 8)
 
 13. [`14-coordinator-failover.md`](./14-coordinator-failover.md) — `blocked` (needs 11, 12, 13) — coordinator lease/heartbeat, degraded-mode takeover, continuity-note automation
+
+### Product Surface
+
+14. [`10-web-dashboard.md`](./10-web-dashboard.md) — `ready` — Phoenix LiveView owner dashboard
+
+### File-Based Discussion Repo (Protocol Update 10)
+
+15. [`15-discussion-repo-layer.md`](./15-discussion-repo-layer.md) — `ready` — DiscussionRepo abstraction & GitHub Adapter
+16. [`19-orchestrator-repo-path.md`](./19-orchestrator-repo-path.md) — `ready` — Orchestrator file-based model integration
+17. [`23-no-objection-marker.md`](./23-no-objection-marker.md) — `ready` — `[no objection]` satisfaction marker support
+18. [`24-telegram-outbound.md`](./24-telegram-outbound.md) — `ready` — Outbound Telegram notifications
+19. [`25-authentik-oidc.md`](./25-authentik-oidc.md) — `ready` — Authentik OIDC authentication
+20. [`26-nixos-module.md`](./26-nixos-module.md) — `ready` — NixOS service module & deployment config
+
+### Eval Harness (Q37 / Round 22)
+
+21. [`28-eval-harness.md`](./28-eval-harness.md) — `ready` — core eval harness (`Vaglio.Eval`)
+22. [`29-eval-judge.md`](./29-eval-judge.md) — `ready` — LLM-as-judge metrics (`Vaglio.Eval.Judge`)
+23. [`30-eval-task-set.md`](./30-eval-task-set.md) — `ready` — design 12 eval tasks (replayed, synthetic, code review)
+24. [`31-blind-comparison.md`](./31-blind-comparison.md) — `ready` — blind side-by-side comparison interface
+25. [`32-run-first-eval.md`](./32-run-first-eval.md) — `ready` — execute 6-task eval batch + report
+
+### Platform Evolution (JJ + Dolt + Provenance)
+
+26. [`34-jj-core-integration.md`](./34-jj-core-integration.md) — `ready` — **JJ/Jujutsu** core CLI integration
+27. [`35-dolt-jj-orchestration-layer.md`](./35-dolt-jj-orchestration-layer.md) — `blocked` — Dolt-JJ orchestration shim (Jido-powered)
+28. [`36-unified-conflict-dashboard.md`](./36-unified-conflict-dashboard.md) — `blocked` — Unified jj/Dolt conflict management dashboard
+29. [`37-evolution-based-prompting.md`](./37-evolution-based-prompting.md) — `blocked` — Evolution-based prompting (token efficiency)
+30. [`38-revset-context-pruning.md`](./38-revset-context-pruning.md) — `blocked` — Revset-driven context pruning
+31. [`39-deliberative-slsa.md`](./39-deliberative-slsa.md) — `ready` — Deliberative SLSA (GPG-signed agent turns)
+32. [`40-s3-mega-backup.md`](./40-s3-mega-backup.md) — `ready` — S3/Mega backup strategy & automation
