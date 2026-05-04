@@ -39,4 +39,7 @@ defmodule Roundtable.Vcs do
 
   @callback query(String.t(), keyword()) ::
               {:ok, [map()]} | {:error, term()}
+
+  @callback diff(String.t(), keyword()) ::
+              {:ok, binary()} | {:error, term()}
 end

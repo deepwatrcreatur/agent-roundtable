@@ -92,6 +92,17 @@ defmodule Roundtable.Vcs.Jujutsu do
   end
 
   @impl true
+  def diff(revision, opts) when is_binary(revision) do
+    with {:ok, repo_path} <- fetch_repo_path(opts) do
+      # jj diff --git -r <rev> provides a standard unified diff.
+      case jj(["diff", "--git", "-r", revision, "--color", "never"], repo_path, opts) do
+        {:ok, content} -> {:ok, content}
+        {:error, reason} -> {:error, reason}
+      end
+    end
+  end
+
+  @impl true
   def write_files(%{message: message, branch: _branch, changes: changes}, opts)
       when is_binary(message) and is_list(changes) do
     with {:ok, repo_path} <- fetch_repo_path(opts),

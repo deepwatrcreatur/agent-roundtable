@@ -56,6 +56,9 @@ defmodule Roundtable.Vcs.Dolt do
   def query(_revset, _opts), do: {:ok, []}
 
   @impl true
+  def diff(_revision, _opts), do: {:ok, ""}
+
+  @impl true
   def write_files(%{message: message, branch: branch, changes: _changes}, opts)
       when is_binary(message) and is_binary(branch) do
     # For Dolt, write_files is a logical commit of the CURRENT database state.

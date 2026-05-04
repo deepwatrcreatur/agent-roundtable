@@ -60,8 +60,8 @@ Do not work on an item already marked `in-progress` by another agent.
 
 26. [`34-jj-core-integration.md`](./34-jj-core-integration.md) — `done` — **Gemini** — JJ/Jujutsu core CLI integration
 27. [`35-dolt-jj-orchestration-layer.md`](./35-dolt-jj-orchestration-layer.md) — `done` — **Gemini** — Dolt-JJ orchestration shim (Jido-powered)
-28. [`36-unified-conflict-dashboard.md`](./36-unified-conflict-dashboard.md) — `in-progress` — **Gemini** — Unified jj/Dolt conflict management dashboard
-29. [`37-evolution-based-prompting.md`](./37-evolution-based-prompting.md) — `ready` — Evolution-based prompting
+28. [`36-unified-conflict-dashboard.md`](./36-unified-conflict-dashboard.md) — `done` — **Gemini** — Unified jj/Dolt conflict management dashboard
+29. [`37-evolution-based-prompting.md`](./37-evolution-based-prompting.md) — `done` — **Codex** — Evolution-based prompting
 30. [`38-revset-context-pruning.md`](./38-revset-context-pruning.md) — `done` — **Gemini** — Revset-driven context pruning
 31. [`39-deliberative-slsa.md`](./39-deliberative-slsa.md) — `in-progress` — **DeepSeek** — Deliberative SLSA (GPG-signed agent turns)
 32. [`40-s3-mega-backup.md`](./40-s3-mega-backup.md) — `in-progress` — **GitHub Copilot** — S3/Mega backup strategy & automation

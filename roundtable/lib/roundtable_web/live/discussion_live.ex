@@ -109,6 +109,25 @@ defmodule RoundtableWeb.DiscussionLive do
     {:noreply, assign(socket, :flash_msg, nil)}
   end
 
+  @impl true
+  def handle_event("resolve_conflict", %{"path" => path, "vcs" => vcs}, socket) do
+    local_path = System.get_env("ROUNDTABLE_LOCAL_PATH")
+    vcs_atom = String.to_existing_atom(vcs)
+
+    case CLI.resolve_conflict(local_path, path, vcs_atom) do
+      :ok ->
+        socket =
+          socket
+          |> assign(:flash_msg, "Resolved #{path} in #{vcs}")
+          |> load_state(socket.assigns.repo)
+
+        {:noreply, socket}
+
+      {:error, reason} ->
+        {:noreply, assign(socket, :flash_msg, "Failed to resolve: #{inspect(reason)}")}
+    end
+  end
+
   # ----- render -----
 
   @impl true
@@ -252,7 +271,13 @@ defmodule RoundtableWeb.DiscussionLive do
           Unresolved evolution in {@c.vcs |> Atom.to_string() |> String.upcase()}
         </div>
       </div>
-      <.vcs_badge vcs={@c.vcs} />
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <button phx-click="resolve_conflict" phx-value-path={@c.path} phx-value-vcs={@c.vcs}
+                style={btn_style(:action)}>
+          Resolve
+        </button>
+        <.vcs_badge vcs={@c.vcs} />
+      </div>
     </div>
     """
   end

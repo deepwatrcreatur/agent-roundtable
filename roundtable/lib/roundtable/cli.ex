@@ -135,6 +135,25 @@ defmodule Roundtable.CLI do
     end
   end
 
+  @doc """
+  Resolves a logical conflict in the given local repository.
+  """
+  def resolve_conflict(local_path, path, :jj) do
+    # Simple resolution for jj: describe the conflict away
+    case System.cmd("jj", ["describe", "-m", "resolved conflict in #{path}"], cd: local_path, stderr_to_stdout: true) do
+      {_, 0} -> :ok
+      {out, _} -> {:error, out}
+    end
+  end
+
+  def resolve_conflict(local_path, path, :dolt) do
+    # Simple resolution for dolt: take 'mine' version for the table
+    case System.cmd("dolt", ["conflicts", "resolve", "--mine", path], cd: local_path, stderr_to_stdout: true) do
+      {_, 0} -> :ok
+      {out, _} -> {:error, out}
+    end
+  end
+
   # Returns true if `s` looks like "owner/repo" rather than a file path.
   defp repo_slug?(s) do
     Regex.match?(~r/\A[A-Za-z0-9_.\-]+\/[A-Za-z0-9_.\-]+\z/, s) and

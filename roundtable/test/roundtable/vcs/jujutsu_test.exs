@@ -97,6 +97,20 @@ defmodule Roundtable.Vcs.JujutsuTest do
     end
   end
 
+  describe "diff/2" do
+    test "returns unified diff for a revision", %{repo_path: repo_path} do
+      File.write!(Path.join(repo_path, "delta.txt"), "v1\n")
+      jj!(repo_path, ["describe", "-m", "v1"])
+      
+      jj!(repo_path, ["new", "-m", "v2"])
+      File.write!(Path.join(repo_path, "delta.txt"), "v2\n")
+      
+      assert {:ok, content} = Jujutsu.diff("@", repo_path: repo_path)
+      assert content =~ "-v1"
+      assert content =~ "+v2"
+    end
+  end
+
   defp temp_path(prefix) do
     Path.join(System.tmp_dir!(), "#{prefix}-#{System.unique_integer([:positive])}")
   end
