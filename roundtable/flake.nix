@@ -1,5 +1,5 @@
 {
-  description: "Roundtable - Autonomous multi-agent design orchestrator";
+  description = "Roundtable - Autonomous multi-agent design orchestrator";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -18,6 +18,8 @@
             elixir
             pkgs.beam.packages.erlang.erlang
             pkgs.gh
+            pkgs.jujutsu
+            pkgs.dolt
             # Mock or real agent CLIs if available
           ];
         };
