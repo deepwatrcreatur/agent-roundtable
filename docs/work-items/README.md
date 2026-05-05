@@ -80,6 +80,11 @@ Do not work on an item already marked `in-progress` by another agent.
 46. [`54-dmux-vaglio-tui.md`](./54-dmux-vaglio-tui.md) — `ready` — `[tools]` Vaglio TUI (dmux Integration)
 47. [`55-local-subscription-harness.md`](./55-local-subscription-harness.md) — `ready` — `[tools]` Local Subscription Harness Verification
 
+### Workflow & Task Delegation (Round 54)
+
+48. [`56-embedded-design-merge.md`](./56-embedded-design-merge.md) — `ready` — `[structural]` Design History Integration (Embedded Model)
+49. [`57-agent-task-queue.md`](./57-agent-task-queue.md) — `ready` — `[structural]` Autonomous Agent Task Delegation System
+
 ### Platform Evolution (JJ + Dolt + Provenance)
 
 
