@@ -85,6 +85,12 @@ Do not work on an item already marked `in-progress` by another agent.
 48. [`56-embedded-design-merge.md`](./56-embedded-design-merge.md) — `ready` — `[structural]` Design History Integration (Embedded Model)
 49. [`57-agent-task-queue.md`](./57-agent-task-queue.md) — `ready` — `[structural]` Autonomous Agent Task Delegation System
 
+### Distribution, Testing & PoC (Round 55-57)
+
+50. [`58-standalone-nix-modules.md`](./58-standalone-nix-modules.md) — `ready` — `[structural]` Portable LXC & NixOS Modules
+51. [`59-test-sandbox-repo.md`](./59-test-sandbox-repo.md) — `ready` — `[tools]` Isolated Testing Sandbox
+52. [`60-sna-poc-reports.md`](./60-sna-poc-reports.md) — `ready` — `[market]` Public Repo SNA Reports (PoC)
+
 ### Platform Evolution (JJ + Dolt + Provenance)
 
 
