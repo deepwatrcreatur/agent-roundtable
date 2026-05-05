@@ -74,6 +74,12 @@ Do not work on an item already marked `in-progress` by another agent.
 43. [`51-proxy-and-cache.md`](./51-proxy-and-cache.md) — `ready` — `[tools]` Agent-Proxy & Cache (OpenRouter + LiteLLM)
 44. [`52-selective-research.md`](./52-selective-research.md) — `ready` — `[tools]` Selective Web Research (Browserbase)
 
+### Local TUI & Subscription Optimization (Round 53)
+
+45. [`53-opencode-fork-rpc.md`](./53-opencode-fork-rpc.md) — `ready` — `[structural]` OpenCode Vaglio Proxy (Local RPC)
+46. [`54-dmux-vaglio-tui.md`](./54-dmux-vaglio-tui.md) — `ready` — `[tools]` Vaglio TUI (dmux Integration)
+47. [`55-local-subscription-harness.md`](./55-local-subscription-harness.md) — `ready` — `[tools]` Local Subscription Harness Verification
+
 ### Platform Evolution (JJ + Dolt + Provenance)
 
 
