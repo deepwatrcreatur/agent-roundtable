@@ -53,10 +53,19 @@ Do not work on an item already marked `in-progress` by another agent.
 21. [`28-eval-harness.md`](./28-eval-harness.md) — `done` — **Gemini** — core eval harness (`Vaglio.Eval`)
 22. [`29-eval-judge.md`](./29-eval-judge.md) — `done` — **Codex** — LLM-as-judge metrics (`Vaglio.Eval.Judge`)
 23. [`30-eval-task-set.md`](./30-eval-task-set.md) — `done` — **Gemini** — design 12 eval tasks
-24. [`31-blind-comparison.md`](./31-blind-comparison.md) — `done` — **Codex** — blind side-by-side comparison interface
-25. [`32-run-first-eval.md`](./32-run-first-eval.md) — `in-progress` — **Gemini** — execute 6-task eval batch + report
+31. [`31-blind-comparison.md`](./31-blind-comparison.md) — `done` — **Codex** — blind side-by-side comparison interface
+32. [`32-run-first-eval.md`](./32-run-first-eval.md) — `in-progress` — **Gemini** — execute 6-task eval batch + report
+
+### Epistemic Integrity & WebUI (Protocol 15)
+
+33. [`41-integrity-scorecard.md`](./41-integrity-scorecard.md) — `ready` — Sycophancy & Integrity Dashboard
+34. [`42-robustness-meter.md`](./42-robustness-meter.md) — `ready` — Consensus Robustness Meter
+35. [`43-red-team-highlights.md`](./43-red-team-highlights.md) — `ready` — Adversarial Turn UI
+36. [`44-provenance-visualization.md`](./44-provenance-visualization.md) — `ready` — Claim Basis & Provenance Badging
+37. [`45-vouch-anchoring.md`](./45-vouch-anchoring.md) — `ready` — Human Vouch Anchoring
 
 ### Platform Evolution (JJ + Dolt + Provenance)
+
 
 26. [`34-jj-core-integration.md`](./34-jj-core-integration.md) — `done` — **Gemini** — JJ/Jujutsu core CLI integration
 27. [`35-dolt-jj-orchestration-layer.md`](./35-dolt-jj-orchestration-layer.md) — `done` — **Gemini** — Dolt-JJ orchestration shim (Jido-powered)
