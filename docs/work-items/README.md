@@ -65,6 +65,14 @@ Do not work on an item already marked `in-progress` by another agent.
 37. [`45-vouch-anchoring.md`](./45-vouch-anchoring.md) — `ready` — Human Vouch Anchoring
 38. [`46-dolt-tag-schema.md`](./46-dolt-tag-schema.md) — `ready` — Multidimensional Tagging Schema (Dolt + jj)
 39. [`47-tag-based-context-pruning.md`](./47-tag-based-context-pruning.md) — `ready` — Tag-Based Context Pruning
+40. [`48-prediction-error-heatmap.md`](./48-prediction-error-heatmap.md) — `ready` — Prediction Error Heatmap (System Stress UI)
+
+### Infrastructure & Operations (Tagged Rounds 48-51)
+
+41. [`49-virtual-working-copies.md`](./49-virtual-working-copies.md) — `ready` — `[structural]` Virtual Working Copies (jj)
+42. [`50-hybrid-cloud.md`](./50-hybrid-cloud.md) — `ready` — `[hosting]` Hybrid Cloud Deployment (Railway)
+43. [`51-proxy-and-cache.md`](./51-proxy-and-cache.md) — `ready` — `[tools]` Agent-Proxy & Cache (OpenRouter + LiteLLM)
+44. [`52-selective-research.md`](./52-selective-research.md) — `ready` — `[tools]` Selective Web Research (Browserbase)
 
 ### Platform Evolution (JJ + Dolt + Provenance)
 
