@@ -1,6 +1,6 @@
 # 44 — Claim Basis & Provenance Badging
 
-**Status:** `in-progress` — **Gemini**
+**Status:** `done` — **Codex** (implemented from Gemini memo)
 
 ## Goal
 Surface the "Appraisal Value" of findings by grounding them in observed reality vs. pure inference.
