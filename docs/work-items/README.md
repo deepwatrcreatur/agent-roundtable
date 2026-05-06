@@ -74,27 +74,33 @@ Do not work on an item already marked `in-progress` by another agent.
 43. [`51-proxy-and-cache.md`](./51-proxy-and-cache.md) — `ready` — `[tools]` Agent-Proxy & Cache (OpenRouter + LiteLLM)
 44. [`52-selective-research.md`](./52-selective-research.md) — `ready` — `[tools]` Selective Web Research (Browserbase)
 
-### Local TUI & Subscription Optimization (Round 53)
+### Direct Local TUI & Real Harness Path
 
-45. [`53-opencode-fork-rpc.md`](./53-opencode-fork-rpc.md) — `ready` — `[structural]` OpenCode Vaglio Proxy (Local RPC)
-46. [`54-dmux-vaglio-tui.md`](./54-dmux-vaglio-tui.md) — `ready` — `[tools]` Vaglio TUI (dmux Integration)
-47. [`55-local-subscription-harness.md`](./55-local-subscription-harness.md) — `ready` — `[tools]` Local Subscription Harness Verification
+45. [`66-local-roundtable-control-socket.md`](./66-local-roundtable-control-socket.md) — `ready` — `[structural]` Local Roundtable Control Socket
+46. [`67-live-turn-event-stream.md`](./67-live-turn-event-stream.md) — `ready` — `[tools]` Live Turn Event Stream
+47. [`68-dmux-direct-round-supervisor.md`](./68-dmux-direct-round-supervisor.md) — `ready` — `[tools]` dmux Direct Round Supervisor
+48. [`55-local-subscription-harness.md`](./55-local-subscription-harness.md) — `ready` — `[tools]` Local Harness & DeepSeek Verification
+
+### Optional OpenCode Layer (Deferred)
+
+49. [`53-opencode-fork-rpc.md`](./53-opencode-fork-rpc.md) — `blocked` — `[structural]` Optional OpenCode UX Proxy (not the primary discussion path)
+50. [`54-dmux-vaglio-tui.md`](./54-dmux-vaglio-tui.md) — `blocked` — `[tools]` Legacy dmux/OpenCode TUI path (superseded by items 66-68)
 
 ### Workflow & Task Delegation (Round 54)
 
-48. [`56-embedded-design-merge.md`](./56-embedded-design-merge.md) — `ready` — `[structural]` Design History Integration (Embedded Model)
-49. [`57-agent-task-queue.md`](./57-agent-task-queue.md) — `ready` — `[structural]` Autonomous Agent Task Delegation System
+51. [`56-embedded-design-merge.md`](./56-embedded-design-merge.md) — `ready` — `[structural]` Design History Integration (Embedded Model)
+52. [`57-agent-task-queue.md`](./57-agent-task-queue.md) — `ready` — `[structural]` Autonomous Agent Task Delegation System
 
 ### Distribution, Testing & PoC (Round 55-57)
 
-50. [`58-standalone-nix-modules.md`](./58-standalone-nix-modules.md) — `ready` — `[structural]` Portable LXC & NixOS Modules
-51. [`59-test-sandbox-repo.md`](./59-test-sandbox-repo.md) — `ready` — `[tools]` Isolated Testing Sandbox
-52. [`60-sna-poc-reports.md`](./60-sna-poc-reports.md) — `ready` — `[market]` Public Repo SNA Reports (PoC)
+53. [`58-standalone-nix-modules.md`](./58-standalone-nix-modules.md) — `ready` — `[structural]` Portable LXC & NixOS Modules
+54. [`59-test-sandbox-repo.md`](./59-test-sandbox-repo.md) — `ready` — `[tools]` Isolated Testing Sandbox
+55. [`60-sna-poc-reports.md`](./60-sna-poc-reports.md) — `ready` — `[market]` Public Repo SNA Reports (PoC)
 
 ### Integrity & Scaling (Round 58-59)
 
-53. [`61-slsa-attestation-hooks.md`](./61-slsa-attestation-hooks.md) — `ready` — `[integrity]` SLSA-Signed Integrity Hooks
-54. [`62-jj-high-velocity-ingest.md`](./62-jj-high-velocity-ingest.md) — `ready` — `[structural]` Scalable jj Ingestion Layer
+56. [`61-slsa-attestation-hooks.md`](./61-slsa-attestation-hooks.md) — `ready` — `[integrity]` SLSA-Signed Integrity Hooks
+57. [`62-jj-high-velocity-ingest.md`](./62-jj-high-velocity-ingest.md) — `ready` — `[structural]` Scalable jj Ingestion Layer
 
 ### Platform Evolution (JJ + Dolt + Provenance)
 

@@ -1,16 +1,18 @@
-# 55 — Local Subscription Harness Verification
+# 55 — Local Harness & DeepSeek Verification
 
 **Status:** `ready`
 **Tag:** `[tools]`
 
 ## Goal
-Verify and harden the use of local CLI binaries (`claude`, `gemini`, `codex`) for use with Pro/Plus subscriptions.
+Verify and harden the real local discussion harnesses: `claude`, `gemini`, `codex`, and `deepseek` via `RunCliAgent`.
 
 ## Scope
 - Test the `claude`, `gemini`, and `codex` binaries to ensure they correctly use local session cookies/auth.
-- Document the login process for each harness to maintain "Headless" compatibility.
-- Implement error handling for "Subscription Expired" or "Rate Limited" scenarios, allowing the Orchestrator to fail-over to OpenRouter if needed.
+- Test `deepseek` through `Roundtable.Actions.RunCliAgent.run/2`, including missing-key and API-error handling.
+- Document the login/bootstrap path for each harness to maintain headless compatibility.
+- Normalize failure modes such as "Subscription Expired", "Rate Limited", quota exhaustion, or missing `DEEPSEEK_API_KEY` so the orchestrator and TUI can react cleanly.
 
 ## Acceptance Criteria
-- Agents can produce "High Signal" turns without consuming OpenRouter credit.
-- Verified support for "Unlimited" context (where applicable by subscription).
+- All four real harnesses can either produce a turn or emit a clear structured failure state.
+- Agents can produce high-signal turns without consuming OpenRouter credit when local subscriptions are valid.
+- The expected operator recovery path is documented for auth expiry, rate limits, and missing DeepSeek credentials.

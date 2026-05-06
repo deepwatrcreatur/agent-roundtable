@@ -1,17 +1,16 @@
-# 53 — OpenCode Vaglio Proxy (Local RPC)
+# 53 — Optional OpenCode UX Proxy
 
-**Status:** `ready`
+**Status:** `blocked`
 **Tag:** `[structural]`
 
 ## Goal
-Fork `opencode` to create a local background service that provides a uniform API for local agent harnesses.
+Optionally fork or wrap `opencode` later as a UX accelerator, without making it the core discussion transport.
 
 ## Scope
-- Adapt OpenCode's client-server architecture to handle Vaglio protocol turns.
-- Implement handlers for `claude`, `gemini`, and `codex` CLI binaries.
-- Ensure the server maintains the `jj` and `Dolt` state for the local workstation.
-- Expose a Unix socket for TUI interaction.
+- Evaluate OpenCode only as an optional client/server shell around the direct Roundtable path.
+- Do not let OpenCode replace `Roundtable.Actions.RunCliAgent` for real turns.
+- Revisit only after items 66-68 prove the direct local TUI path.
 
 ## Acceptance Criteria
-- TUI can trigger a "Gemini Turn" by calling the local RPC.
-- The RPC correctly captures and streams the output from the CLI binaries.
+- Any OpenCode integration is strictly optional and layered above Roundtable.
+- Removing OpenCode must not break the real discussion path.
