@@ -1,6 +1,6 @@
 # 43 — Adversarial Turn UI
 
-**Status:** `ready`
+**Status:** `in-progress` — **Gemini**
 
 ## Goal
 Promote and highlight "Skeptic" turns to prove the council is actively testing for failure modes.
