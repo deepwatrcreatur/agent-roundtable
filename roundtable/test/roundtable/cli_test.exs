@@ -16,8 +16,13 @@ defmodule Roundtable.CLITest do
            "comments" => [
              %{
                "id" => "c1",
-               "body" =>
+                "body" =>
                  "## Codex\n\nThe repo uses Nix [observed: cat flake.nix]. Therefore use a flake [inferred]."
+             },
+             %{
+               "id" => "c2",
+               "body" =>
+                 "## Gemini\n\n[needs more evidence: reproduce this locally]\nPremise collision: the BRIEF assumes a server, but the observed repo is a CLI tool."
              }
            ]
          }
@@ -69,11 +74,11 @@ defmodule Roundtable.CLITest do
       :ok
     end
 
-    test "includes parsed comments and provenance-tagged claims" do
+    test "includes parsed comments, provenance-tagged claims, and adversarial turn flags" do
       assert {:ok, %{12 => question}} = CLI.get_discussion_state("owner/repo")
 
-      assert question.comment_count == 1
-      assert [%{agent: :codex, body: body, claims: claims}] = question.comments
+      assert question.comment_count == 2
+      assert [%{agent: :codex, body: body, claims: claims}, %{agent: :gemini}] = question.comments
       assert body =~ "The repo uses Nix"
 
       assert [
@@ -82,6 +87,17 @@ defmodule Roundtable.CLITest do
              ] = claims
 
       assert question.claims == claims
+      assert question.has_adversarial
+
+      assert [
+               %{agent: :codex, is_skeptic: false, has_collision: false, satisfaction: :unknown},
+               %{
+                 agent: :gemini,
+                 is_skeptic: true,
+                 has_collision: true,
+                 satisfaction: :needs_more_evidence
+               }
+             ] = Enum.map(question.turns, &Map.take(&1, [:agent, :is_skeptic, :has_collision, :satisfaction]))
     end
   end
 end

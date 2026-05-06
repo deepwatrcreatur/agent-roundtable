@@ -20,7 +20,7 @@ defmodule Roundtable.CLI do
   """
 
   alias Roundtable.Actions.Gh
-  alias Roundtable.{DiscussionRepo, Orchestrator, Provenance}
+  alias Roundtable.{DiscussionRepo, Orchestrator, Provenance, Satisfaction}
 
   # ----------------------------------------------------------------
   # Mix task / shell entry point
@@ -186,6 +186,7 @@ defmodule Roundtable.CLI do
             labels = Enum.map(issue["labels"] || [], & &1["name"])
             comments = normalize_comments(issue["comments"] || [])
             claims = Enum.flat_map(comments, & &1.claims)
+            turns = Enum.map(comments, &comment_turn/1)
             {
               issue["number"],
               %{
@@ -195,6 +196,8 @@ defmodule Roundtable.CLI do
                 comment_count: length(comments),
                 comments: comments,
                 claims: claims,
+                turns: turns,
+                has_adversarial: Enum.any?(turns, &(&1.is_skeptic or &1.has_collision)),
                 satisfaction: infer_satisfaction(labels),
                 url: issue["url"]
               }
@@ -346,5 +349,43 @@ defmodule Roundtable.CLI do
       String.contains?(body, "## DeepSeek") -> :deepseek
       true -> nil
     end
+  end
+
+  defp comment_turn(%{id: id, body: body, agent: agent}) do
+    satisfaction =
+      case Satisfaction.parse_marker(body) do
+        "satisfied" -> :satisfied
+        "satisfied-conditional" -> :satisfied_conditional
+        "no-objection" -> :no_objection
+        "needs-more-evidence" -> :needs_more_evidence
+        _ -> :unknown
+      end
+
+    %{
+      id: id,
+      agent: agent,
+      satisfaction: satisfaction,
+      is_skeptic: satisfaction in [:no_objection, :needs_more_evidence],
+      has_collision: premise_collision?(body),
+      preview: comment_preview(body)
+    }
+  end
+
+  defp premise_collision?(body) do
+    normalized = String.downcase(body)
+
+    String.contains?(normalized, "premise collision") or
+      String.contains?(normalized, "premise contradiction") or
+      String.contains?(normalized, "brief assumption conflict") or
+      String.contains?(normalized, "contradicts the brief")
+  end
+
+  defp comment_preview(body) do
+    body
+    |> String.split("\n", trim: true)
+    |> Enum.reject(&String.starts_with?(&1, "## "))
+    |> List.first("")
+    |> String.trim()
+    |> String.slice(0, 140)
   end
 end
