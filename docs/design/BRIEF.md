@@ -1956,3 +1956,118 @@ the project's direction:
   useful discussion without evals. Is formal evaluation necessary, or is the
   owner's subjective assessment that "the discussions are better than
   single-model output" sufficient for a personal tool?*
+
+### Q38 — NPTv6 Implementation
+
+**Q38.1 — Difficulty Assessment**
+Share difficulties with NPTv6 implementation and get distinct agent perspectives.
+
+### Q39 — Social Dimension: SNA and Meritocracy
+
+**Q39.1 — Incorporating SNA**
+How to incorporate Social Network Analysis (SNA) and expertise weighting (meritocracy) to handle AI slop and noisy contributors.
+
+### Q40 — Maintainer Backlogs and Out-of-tree Fragmentation
+
+**Q40.1 — Addressing Backlogs**
+How the system addresses out-of-tree fragmentation (e.g., bcache) and backlogs in projects like Helix/Wezterm.
+
+### Q41 — License Discipline in jj
+
+**Q41.1 — Preventing License Drift**
+How to prevent license drift in a jj-native democratic forking model.
+
+### Q42 — Naming & Distribution for Package Managers
+
+**Q42.1 — Refined Naming Scheme**
+Refine the naming scheme for package managers to avoid fragmentation confusion.
+
+### Q43 — Competitive Analysis: AgentHub and GitLaw
+
+**Q43.1 — Positioning vs Competitors**
+Compare Vaglio to AgentHub (Karpathy) and GitLaw (@gitlawb).
+
+### Q44 — Unified Branding: The Vaglio Brand
+
+**Q44.1 — Brand Synthesis**
+Can "Vaglio" unify the deliberation engine and the code forge under one brand?
+
+### Q45 — Epistemic Integrity and Sycophancy
+
+**Q45.1 — Trusting the Council**
+How to trust a council of "people-pleasing" LLMs? How to measure "Appraisal Value"?
+
+### Q46 — Subject Tags and Multidimensional Discovery
+
+**Q46.1 — native Dolt/jj tagging**
+Moving from a flat board to native Dolt/jj tagging for token efficiency.
+
+### Q47 — Project Mind and Active Inference
+
+**Q47.1 — Friston's Predictive Processing**
+Integrating Friston's Predictive Processing (Prediction Errors) into the social trust model.
+
+### Q48 — Concurrency: File Reservations vs Worktrees
+
+**Q48.1 — Concurrency Strategy**
+File reservations vs. jj virtual worktrees.
+
+### Q49 — Infrastructure and Deployment
+
+**Q49.1 — Hosting and Routing**
+Hosting on Railway, routing via OpenRouter/LiteLLM, and web research via Browserbase.
+
+### Q50 — Dual Interface Strategy
+
+**Q50.1 — WebUI and TUI**
+Designing a WebUI (External) and a TUI (Local Workstation) that uses monthly subscriptions via CLI harnesses.
+
+### Q51 — Embedded Model
+
+**Q51.1 — Merging Design History**
+Merging the agent-roundtable-design history into the main product repository.
+
+### Q52 — Distribution and Standalone Vaglio
+
+**Q52.1 — Decoupling Modules**
+Decoupling the LXC/NixOS modules from unified-nix-configuration for a standalone Vaglio install.
+
+### Q53 — Sandbox Testing
+
+**Q53.1 — Low-cost Validation**
+Low-cost protocol validation using a separate test repository.
+
+### Q54 — PoC Reports
+
+**Q54.1 — Public Repo Analysis**
+Generating SNA "Expertise Heatmaps" for high-profile public repos.
+
+### Q55 — Supply Chain Security
+
+**Q55.1 — XZ-style Protection**
+Protection against XZ-style social engineering and subtle exploits.
+
+### Q56 — Scaling Load in jj
+
+**Q56.1 — Agent Commit Surge**
+How jj handles the "Agent Commit Surge" compared to GitHub's Git-based architecture.
+
+### Q57 — The XZ Pushback
+
+**Q57.1 — Subtlety of Exploits**
+Addressing the subtlety of the XZ exploit and why social trust isn't a silver bullet.
+
+### Q58 — Domain Taste
+
+**Q58.1 — Projecting Taste**
+How experts (like accountants) project "taste" into primitives without writing code.
+
+### Q59 — The DIY Trap
+
+**Q59.1 — Merit Manifest**
+Preventing agents from reinventing libraries (DIY slop) through a "Merit Manifest."
+
+### Q60 — GitHub Policy Pushback
+
+**Q60.1 — Restricting Actions**
+Can GitHub solve its load problems through simple policy (restricting Actions) instead of architectural change (jj)?

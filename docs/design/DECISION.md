@@ -1092,3 +1092,13 @@ Stay on direct `api.deepseek.com` HTTP via `Req`. Do not switch to Ollama Cloud.
 - Ollama Cloud as fallback provider — revisit if direct API has reliability issues
 - Local Ollama fallback — revisit when inference VM VRAM is confirmed
 - Provider abstraction — not warranted with single provider
+
+--- 
+
+## Round 51 — NPTv6 Protocol (Q38, 2026-05-04)
+
+**Decision:** Adopt snat ip6 prefix to as the canonical NPTv6 implementation in nftables.
+
+- **Syntax Fix:** Replace the non-standard npt keyword (which caused "No symbol type information" errors) with the official prefix modifier in NAT statements.
+- **Checksum Neutrality:** Use the nat table to leverage the kernel's automatic RFC 6296 checksum adjustments.
+- **Scope:** This provides true 1:1 prefix translation for VPN and out-of-tree networking subtrees.
