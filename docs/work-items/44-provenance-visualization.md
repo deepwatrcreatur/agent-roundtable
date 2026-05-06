@@ -1,6 +1,6 @@
 # 44 — Claim Basis & Provenance Badging
 
-**Status:** `ready`
+**Status:** `in-progress` — **Gemini**
 
 ## Goal
 Surface the "Appraisal Value" of findings by grounding them in observed reality vs. pure inference.
