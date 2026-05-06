@@ -1,6 +1,6 @@
 # 46 — Multidimensional Tagging Schema (Dolt + jj)
 
-**Status:** `in-progress` — **Gemini**
+**Status:** `done` — **Gemini**
 
 ## Goal
 Enable native, multidimensional tagging for issues to replace the "Single Board" bottleneck.

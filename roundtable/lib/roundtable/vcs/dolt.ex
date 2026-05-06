@@ -53,7 +53,21 @@ defmodule Roundtable.Vcs.Dolt do
   end
 
   @impl true
-  def query(_revset, _opts), do: {:ok, []}
+  def query(sql, opts) when is_binary(sql) do
+    with {:ok, repo_path} <- fetch_repo_path(opts) do
+      revision = Keyword.get(opts, :revision, "HEAD")
+      case dolt(["sql", "-r", revision, "-q", sql, "-r", "json"], repo_path, opts) do
+        {:ok, content} ->
+          case Jason.decode(content) do
+            {:ok, %{"rows" => rows}} -> {:ok, rows}
+            {:ok, []} -> {:ok, []}
+            {:ok, _} -> {:ok, []}
+            {:error, _} = err -> err
+          end
+        {:error, _} = err -> err
+      end
+    end
+  end
 
   @impl true
   def diff(_revision, _opts), do: {:ok, ""}
