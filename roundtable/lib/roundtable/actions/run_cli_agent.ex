@@ -20,6 +20,66 @@ defmodule Roundtable.Actions.RunCliAgent do
 
   @deepseek_api_url "https://api.deepseek.com/v1/chat/completions"
   @deepseek_default_model "deepseek-chat"
+  @supported_agents [:claude, :codex, :gemini, :deepseek, :claude_ic]
+
+  @doc """
+  Validate that the requested agent can be invoked in the current environment.
+
+  This is intentionally side-effect light: it only checks local prerequisites
+  needed to avoid discovering obvious failures after a round has already started.
+  """
+  @spec validate_agent(atom()) :: :ok | {:error, term()}
+  def validate_agent(agent)
+
+  def validate_agent(:claude_ic), do: validate_agent(:claude)
+
+  def validate_agent(:deepseek) do
+    case System.get_env("DEEPSEEK_API_KEY") do
+      nil -> {:error, {:agent_prereq_missing, :deepseek, :deepseek_api_key_missing}}
+      "" -> {:error, {:agent_prereq_missing, :deepseek, :deepseek_api_key_missing}}
+      _ -> :ok
+    end
+  end
+
+  def validate_agent(agent) when agent in [:claude, :codex, :gemini] do
+    case System.find_executable(to_string(agent)) do
+      nil -> {:error, {:agent_prereq_missing, agent, :binary_not_found}}
+      _ -> :ok
+    end
+  end
+
+  def validate_agent(agent), do: {:error, {:unsupported_agent, agent}}
+
+  @doc """
+  Validate an entire requested roster before a round starts.
+  """
+  @spec validate_agents([atom()]) :: :ok | {:error, term()}
+  def validate_agents(agents) when is_list(agents) do
+    duplicates = duplicate_agents(agents)
+    invalid = Enum.reject(agents, &(&1 in @supported_agents))
+
+    cond do
+      agents == [] ->
+        {:error, :no_agents_configured}
+
+      duplicates != [] ->
+        {:error, {:duplicate_agents, duplicates}}
+
+      invalid != [] ->
+        {:error, {:unsupported_agents, invalid}}
+
+      true ->
+        case Enum.find_value(agents, fn agent ->
+               case validate_agent(agent) do
+                 :ok -> nil
+                 {:error, reason} -> reason
+               end
+             end) do
+          nil -> :ok
+          reason -> {:error, reason}
+        end
+    end
+  end
 
   @impl true
   def run(%{agent: :deepseek, prompt: prompt} = params, _context) do
@@ -27,6 +87,12 @@ defmodule Roundtable.Actions.RunCliAgent do
   end
 
   def run(params, _context) do
+    with :ok <- validate_agent(params.agent) do
+      do_run(params)
+    end
+  end
+
+  defp do_run(params) do
     runner = Map.get(params, :runner) ||
              Application.get_env(:roundtable, :cmd_runner, Roundtable.SystemCmdRunner)
 
@@ -59,7 +125,10 @@ defmodule Roundtable.Actions.RunCliAgent do
   defp run_deepseek(prompt, params) do
     case params[:api_key] || System.get_env("DEEPSEEK_API_KEY") do
       nil ->
-        {:error, :deepseek_api_key_missing}
+        {:error, {:agent_prereq_missing, :deepseek, :deepseek_api_key_missing}}
+
+      "" ->
+        {:error, {:agent_prereq_missing, :deepseek, :deepseek_api_key_missing}}
 
       api_key ->
         model = params[:deepseek_model] ||
@@ -85,6 +154,13 @@ defmodule Roundtable.Actions.RunCliAgent do
             {:error, {:deepseek_http_error, reason}}
         end
     end
+  end
+
+  defp duplicate_agents(agents) do
+    agents
+    |> Enum.frequencies()
+    |> Enum.filter(fn {_agent, count} -> count > 1 end)
+    |> Enum.map(fn {agent, _count} -> agent end)
   end
 
   # ------------------------------------------------------------------

@@ -35,4 +35,11 @@ defmodule Roundtable.CLITest do
       assert function_exported?(CLI, :inject_question, 3)
     end
   end
+
+  describe "start_discussion/2 roster validation" do
+    test "fails fast when a requested agent is unsupported", %{brief_path: brief_path} do
+      assert {:error, {:unsupported_agents, [:copilot]}} =
+               CLI.start_discussion(brief_path, agents: [:codex, :copilot])
+    end
+  end
 end

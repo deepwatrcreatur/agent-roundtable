@@ -19,7 +19,7 @@ defmodule Roundtable.CLI do
       roundtable docs/design/BRIEF.md
   """
 
-  alias Roundtable.Actions.Gh
+  alias Roundtable.Actions.{Gh, RunCliAgent}
   alias Roundtable.{DiscussionRepo, Orchestrator}
 
   # ----------------------------------------------------------------
@@ -94,18 +94,21 @@ defmodule Roundtable.CLI do
   """
   @spec start_discussion(String.t(), keyword()) :: {:ok, list()} | {:error, term()}
   def start_discussion(source, opts \\ []) do
-    if repo_slug?(source) do
-      repo =
-        DiscussionRepo.new(source,
-          token: Keyword.get(opts, :token),
-          local_path: Keyword.get(opts, :local_path),
-          issues_enabled: Keyword.get(opts, :issues_enabled, false)
-        )
-      Orchestrator.run_with_repo(repo, opts)
-    else
-      # Legacy: brief_path → GitHub Issues
-      with {:ok, questions} <- load_or_create_issues(source, opts) do
-        {:ok, Orchestrator.run(source, questions, opts)}
+    with :ok <- validate_requested_agents(opts) do
+      if repo_slug?(source) do
+        repo =
+          DiscussionRepo.new(source,
+            token: Keyword.get(opts, :token),
+            local_path: Keyword.get(opts, :local_path),
+            issues_enabled: Keyword.get(opts, :issues_enabled, false)
+          )
+
+        Orchestrator.run_with_repo(repo, opts)
+      else
+        # Legacy: brief_path → GitHub Issues
+        with {:ok, questions} <- load_or_create_issues(source, opts) do
+          {:ok, Orchestrator.run(source, questions, opts)}
+        end
       end
     end
   end
@@ -159,6 +162,14 @@ defmodule Roundtable.CLI do
     Regex.match?(~r/\A[A-Za-z0-9_.\-]+\/[A-Za-z0-9_.\-]+\z/, s) and
       not String.starts_with?(s, "/") and
       not String.starts_with?(s, ".")
+  end
+
+  defp validate_requested_agents(opts) do
+    RunCliAgent.validate_agents(Keyword.get(opts, :agents, default_agents()))
+  end
+
+  defp default_agents do
+    Application.get_env(:roundtable, :agents, [:codex, :gemini, :deepseek, :claude_ic])
   end
 
   @doc """

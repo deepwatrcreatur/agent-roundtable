@@ -33,3 +33,12 @@ head. To prevent stale-success promotion, each private change must carry enough
 metadata for the orchestrator to detect causal and architectural overlap before
 full revalidation. Architecturally incompatible but locally valid changes go to
 arbitration rather than “first to the gate wins.”
+
+## Round 49: Controversial Open Source Figures as Case Studies
+**Consensus:** Vaglio must not score people directly. It should score contested
+objects and protocol events, while allowing only bounded, project-local views of
+ actor-centrality to high-stress objects. Dashboards should separate technical,
+governance, and people/power conflict, with a shared stress timeline. The
+system may route, slow, tag, and recommend process interventions, but it must
+not emit public reputation scores, automated person sanctions, or personality
+judgments.

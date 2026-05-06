@@ -25,6 +25,7 @@ being built now.
 | `docs/design/BRIEF.md` | The original design questions (Q1–Q10). Start here for context. |
 | `docs/design/DECISION.md` | The closed architecture decisions. The authoritative spec. |
 | `docs/design/ACTIVE_DISCUSSION.md` | Full discussion record. Read only — do not append during implementation. |
+| `docs/design/ORCHESTRATION_GUIDE.md` | Practical runbook for discussion leaders running real rounds. |
 | `docs/work-items/README.md` | Work queue with statuses. Check this before claiming a task. |
 | `docs/work-items/NN-*.md` | Individual work items. One item = one module. |
 | `ATTRIBUTION.md` | Prior art and external projects this design borrows from. |
@@ -52,6 +53,16 @@ All design questions use the satisfied protocol:
 The IC (Claude) synthesises each round and decides whether to continue or close.
 The IC does not close a question until all active agents have posted a satisfaction
 marker. If you are a participant, mark every question you address.
+
+If a human explicitly requests a particular roster for a round (for example:
+Codex, Gemini, DeepSeek, and Copilot), do **not** silently omit one of those
+voices. Either:
+
+- include the requested agent, or
+- fail fast and say exactly which prerequisite is missing (for example
+  `DEEPSEEK_API_KEY`), so the round is not mistaken for a complete quorum.
+
+Incomplete rosters must be treated as degraded rounds, not normal ones.
 
 ---
 
