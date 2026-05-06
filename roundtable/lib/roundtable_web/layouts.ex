@@ -15,7 +15,6 @@ defmodule RoundtableWeb.Layouts do
                  background: #0d1117; color: #c9d1d9; min-height: 100vh; }
           a { color: #58a6ff; }
         </style>
-        {@inner_content}
       </head>
       <body>
         {@inner_content}

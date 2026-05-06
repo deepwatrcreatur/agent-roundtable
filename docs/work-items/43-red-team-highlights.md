@@ -1,6 +1,6 @@
 # 43 — Adversarial Turn UI
 
-**Status:** `ready`
+**Status:** `done` — **Codex** (implemented from Gemini memo)
 
 ## Goal
 Promote and highlight "Skeptic" turns to prove the council is actively testing for failure modes.

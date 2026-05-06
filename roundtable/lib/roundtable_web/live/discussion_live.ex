@@ -32,6 +32,7 @@ defmodule RoundtableWeb.DiscussionLive do
       |> assign(:running, false)
       |> assign(:flash_msg, nil)
       |> assign(:conflicts, [])
+      |> assign(:red_team_only, false)
       |> assign(:selected_number, nil)
       |> assign(:expanded_claim, nil)
       |> load_state(repo)
@@ -134,6 +135,11 @@ defmodule RoundtableWeb.DiscussionLive do
   end
 
   @impl true
+  def handle_event("toggle_red_team", _params, socket) do
+    {:noreply, assign(socket, :red_team_only, !socket.assigns.red_team_only)}
+  end
+
+  @impl true
   def handle_event("resolve_conflict", %{"path" => path, "vcs" => vcs}, socket) do
     local_path = System.get_env("ROUNDTABLE_LOCAL_PATH")
     vcs_atom = String.to_existing_atom(vcs)
@@ -179,7 +185,23 @@ defmodule RoundtableWeb.DiscussionLive do
           No roundtable issues found. Create one below or push a BRIEF.md.
         </div>
 
-        <.question_card :for={{number, q} <- Enum.sort(@questions)} number={number} q={q} />
+        <label style="display: inline-flex; align-items: center; gap: 0.45rem; margin-bottom: 0.85rem; color: #c9d1d9; font-size: 0.84rem;">
+          <input type="checkbox" phx-click="toggle_red_team" checked={@red_team_only} />
+          Red Team Only
+        </label>
+
+        <div
+          :if={@red_team_only and displayed_questions(@questions, true) == []}
+          style="color: #8b949e; font-style: italic; margin-bottom: 0.75rem;"
+        >
+          No adversarial turns surfaced yet.
+        </div>
+
+        <.question_card
+          :for={{number, q} <- displayed_questions(@questions, @red_team_only)}
+          number={number}
+          q={q}
+        />
       </section>
 
       <section :if={selected_question(@questions, @selected_number)} style="margin-bottom: 2rem;">
@@ -247,7 +269,7 @@ defmodule RoundtableWeb.DiscussionLive do
   defp question_card(assigns) do
     ~H"""
     <div style={"border: 1px solid #{border_color(@q.satisfaction)}; border-radius: 6px;
-                 padding: 1rem; margin-bottom: 0.75rem; background: #161b22;"}>
+                 padding: 1rem; margin-bottom: 0.75rem; background: #161b22;" <> adversarial_outline(@q)}>
       <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
         <a href={@q.url} target="_blank" style="font-weight: 600; font-size: 0.95rem; color: #f0f6fc;">
           #{@number} {@q.title}
@@ -271,6 +293,59 @@ defmodule RoundtableWeb.DiscussionLive do
           {if @q.state == :open, do: "open", else: "closed"}
         </span>
       </div>
+      <div :if={@q.has_adversarial} style="display: flex; align-items: center; gap: 0.45rem; margin-top: 0.6rem; color: #f78166; font-size: 0.76rem; font-weight: 600;">
+        <span>Red Team</span>
+        <span style="color: #8b949e; font-weight: 400;">Hard-truth turn(s) detected</span>
+      </div>
+      <div :if={length(@q.turns || []) > 0} style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.65rem;">
+        <.turn_pip :for={turn <- @q.turns} turn={turn} />
+      </div>
+    </div>
+    """
+  end
+
+  defp turn_pip(assigns) do
+    label =
+      cond do
+        assigns.turn.has_collision -> "Premise collision"
+        assigns.turn.is_skeptic -> "Disconfirmation pass"
+        true -> "Standard turn"
+      end
+
+    {border, text, bg} =
+      cond do
+        assigns.turn.has_collision -> {"#f85149", "#f85149", "rgba(248,81,73,0.12)"}
+        assigns.turn.is_skeptic -> {"#f78166", "#f78166", "rgba(247,129,102,0.12)"}
+        true -> {"#30363d", "#8b949e", "#0d1117"}
+      end
+
+    agent_text =
+      case assigns.turn.agent do
+        nil -> "unknown"
+        agent -> agent |> Atom.to_string() |> String.upcase()
+      end
+
+    assigns =
+      assign(assigns,
+        label: label,
+        border: border,
+        text: text,
+        bg: bg,
+        agent_text: agent_text
+      )
+
+    ~H"""
+    <div
+      title={"#{@label}: #{@turn.preview}"}
+      style={"border: 1px solid #{@border}; background: #{@bg}; color: #{@text}; border-radius: 999px;
+             padding: 0.18rem 0.55rem; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 0.3rem;"}
+    >
+      <span :if={@turn.has_collision}>!</span>
+      <span :if={!@turn.has_collision and @turn.is_skeptic}>?</span>
+      <span>{@agent_text}</span>
+      <span :if={@turn.is_skeptic or @turn.has_collision} style="text-transform: uppercase; font-weight: 600;">
+        {if @turn.has_collision, do: "collision", else: "skeptic"}
+      </span>
     </div>
     """
   end
@@ -499,4 +574,17 @@ defmodule RoundtableWeb.DiscussionLive do
   defp chain_text(%{tag: :testimony}), do: "Epistemic chain: testimony -> reported claim"
   defp chain_text(%{tag: :inferred}), do: "Epistemic chain: inferred claim -> synthesis"
   defp chain_text(_claim), do: "Epistemic chain unavailable"
+
+  defp displayed_questions(questions, false), do: Enum.sort(questions)
+
+  defp displayed_questions(questions, true) do
+    questions
+    |> Enum.filter(fn {_number, q} -> q.has_adversarial end)
+    |> Enum.sort()
+  end
+
+  defp adversarial_outline(%{has_adversarial: true}),
+    do: " box-shadow: inset 0 0 0 1px rgba(247,129,102,0.38);"
+
+  defp adversarial_outline(_question), do: ""
 end
