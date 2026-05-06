@@ -32,6 +32,8 @@ defmodule RoundtableWeb.DiscussionLive do
       |> assign(:running, false)
       |> assign(:flash_msg, nil)
       |> assign(:conflicts, [])
+      |> assign(:selected_number, nil)
+      |> assign(:expanded_claim, nil)
       |> load_state(repo)
 
     {:ok, socket}
@@ -110,6 +112,28 @@ defmodule RoundtableWeb.DiscussionLive do
   end
 
   @impl true
+  def handle_event("select_question", %{"number" => number}, socket) do
+    number = String.to_integer(number)
+
+    {:noreply,
+     socket
+     |> assign(:selected_number, number)
+     |> assign(:expanded_claim, nil)}
+  end
+
+  @impl true
+  def handle_event("toggle_claim_detail", %{"index" => index}, socket) do
+    index = String.to_integer(index)
+
+    expanded =
+      if socket.assigns.expanded_claim == index,
+        do: nil,
+        else: index
+
+    {:noreply, assign(socket, :expanded_claim, expanded)}
+  end
+
+  @impl true
   def handle_event("resolve_conflict", %{"path" => path, "vcs" => vcs}, socket) do
     local_path = System.get_env("ROUNDTABLE_LOCAL_PATH")
     vcs_atom = String.to_existing_atom(vcs)
@@ -156,6 +180,17 @@ defmodule RoundtableWeb.DiscussionLive do
         </div>
 
         <.question_card :for={{number, q} <- Enum.sort(@questions)} number={number} q={q} />
+      </section>
+
+      <section :if={selected_question(@questions, @selected_number)} style="margin-bottom: 2rem;">
+        <h2 style="font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+          Evidence Map
+        </h2>
+        <.claim_panel
+          question={selected_question(@questions, @selected_number)}
+          issue_number={@selected_number}
+          expanded_claim={@expanded_claim}
+        />
       </section>
 
       <section :if={length(@conflicts) > 0} style="margin-bottom: 2rem;">
@@ -219,6 +254,14 @@ defmodule RoundtableWeb.DiscussionLive do
         </a>
         <.satisfaction_badge sat={@q.satisfaction} />
       </div>
+      <div :if={length(@q.claims || []) > 0} style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <div style="font-size: 0.78rem; color: #8b949e;">
+          {length(@q.claims)} provenance-tagged claim(s)
+        </div>
+        <button phx-click="select_question" phx-value-number={@number} style={btn_style(:ghost)}>
+          View evidence
+        </button>
+      </div>
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
         <.label_chip :for={l <- @q.labels} label={l} />
       </div>
@@ -229,6 +272,67 @@ defmodule RoundtableWeb.DiscussionLive do
         </span>
       </div>
     </div>
+    """
+  end
+
+  defp claim_panel(assigns) do
+    ~H"""
+    <div style="border: 1px solid #30363d; border-radius: 6px; background: #161b22; padding: 1rem;">
+      <div style="margin-bottom: 0.75rem;">
+        <div style="font-weight: 600; color: #f0f6fc;">Issue ##{@issue_number}: {@question.title}</div>
+        <div style="font-size: 0.78rem; color: #8b949e;">
+          Evidence chain from current transcript comments and provenance markers
+        </div>
+      </div>
+
+      <div :if={@question.claims == []} style="color: #8b949e; font-style: italic;">
+        No provenance-tagged claims found yet. Look for `[observed]`, `[testimony]`, or `[inferred]` markers in agent turns.
+      </div>
+
+      <div :for={{claim, idx} <- Enum.with_index(@question.claims)} style="border-top: 1px solid #21262d; padding: 0.75rem 0;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+          <.provenance_badge tag={claim.tag} />
+          <span :if={claim.agent} style="font-size: 0.72rem; color: #8b949e; text-transform: uppercase;">
+            {claim.agent}
+          </span>
+          <span style="color: #c9d1d9; font-size: 0.9rem;">{claim.claim}</span>
+        </div>
+        <div style="font-size: 0.75rem; color: #8b949e; margin-top: 0.35rem;">
+          {chain_text(claim)}
+        </div>
+        <button
+          :if={claim.detail}
+          phx-click="toggle_claim_detail"
+          phx-value-index={idx}
+          style={btn_style(:ghost)}
+        >
+          <%= if @expanded_claim == idx, do: "Hide raw detail", else: "View raw detail" %>
+        </button>
+        <pre
+          :if={claim.detail && @expanded_claim == idx}
+          style="margin-top: 0.5rem; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 0.75rem; color: #c9d1d9; overflow-x: auto; white-space: pre-wrap;"
+        ><%= claim.detail %></pre>
+      </div>
+    </div>
+    """
+  end
+
+  defp provenance_badge(assigns) do
+    {text, color, bg} =
+      case assigns.tag do
+        :observed -> {"observed", "#3fb950", "rgba(63,185,80,0.12)"}
+        :testimony -> {"testimony", "#58a6ff", "rgba(88,166,255,0.12)"}
+        :inferred -> {"inferred", "#bc8cff", "rgba(188,140,255,0.12)"}
+        _ -> {"unknown", "#8b949e", "rgba(139,148,158,0.12)"}
+      end
+
+    assigns = assign(assigns, text: text, color: color, bg: bg)
+
+    ~H"""
+    <span style={"border: 1px solid #{@color}; background: #{@bg}; color: #{@color}; font-size: 0.7rem;
+                 padding: 0.1rem 0.45rem; border-radius: 999px; text-transform: uppercase; font-weight: 600;"}>
+      {@text}
+    </span>
     """
   end
 
@@ -305,13 +409,18 @@ defmodule RoundtableWeb.DiscussionLive do
     socket
     |> assign(:questions, %{})
     |> assign(:conflicts, [])
+    |> assign(:selected_number, nil)
   end
 
   defp load_state(socket, repo) do
     # Fetch GitHub issues
     socket =
       case CLI.get_discussion_state(repo) do
-        {:ok, state} -> assign(socket, :questions, state)
+        {:ok, state} ->
+          socket
+          |> assign(:questions, state)
+          |> preserve_selected_question(state)
+
         {:error, _} -> assign(socket, :questions, %{})
       end
 
@@ -349,10 +458,45 @@ defmodule RoundtableWeb.DiscussionLive do
      cursor: pointer; font-family: inherit; font-size: 0.9rem;"
   end
 
+  defp btn_style(:ghost) do
+    "background: transparent; color: #58a6ff; border: none; padding: 0.25rem 0;
+     cursor: pointer; font-family: inherit; font-size: 0.8rem;"
+  end
+
   defp format_event({:round_start, id, n}), do: "#{id}: round #{n} started"
   defp format_event({:agent_done, agent, _issue}), do: "#{agent} posted"
   defp format_event({:question_satisfied, id, n}), do: "#{id} satisfied after #{n} round(s)"
   defp format_event({:question_max_rounds, id}), do: "#{id} needs human review"
   defp format_event({:round_complete, n}), do: "Round complete — #{n} question(s) processed"
   defp format_event(_), do: nil
+
+  defp selected_question(questions, selected_number) when is_integer(selected_number),
+    do: Map.get(questions, selected_number)
+
+  defp selected_question(_questions, _selected_number), do: nil
+
+  defp preserve_selected_question(socket, state) do
+    selected = socket.assigns[:selected_number]
+
+    if is_integer(selected) and Map.has_key?(state, selected) do
+      socket
+    else
+      assign(socket, :selected_number, default_selected_number(state))
+    end
+  end
+
+  defp default_selected_number(state) do
+    case Enum.sort(Map.keys(state)) do
+      [first | _] -> first
+      [] -> nil
+    end
+  end
+
+  defp chain_text(%{tag: :observed, detail: detail}) when is_binary(detail),
+    do: "Epistemic chain: observed fact -> raw detail"
+
+  defp chain_text(%{tag: :observed}), do: "Epistemic chain: observed fact"
+  defp chain_text(%{tag: :testimony}), do: "Epistemic chain: testimony -> reported claim"
+  defp chain_text(%{tag: :inferred}), do: "Epistemic chain: inferred claim -> synthesis"
+  defp chain_text(_claim), do: "Epistemic chain unavailable"
 end
