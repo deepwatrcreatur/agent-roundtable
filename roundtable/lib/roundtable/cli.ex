@@ -20,7 +20,7 @@ defmodule Roundtable.CLI do
   """
 
   alias Roundtable.Actions.{Gh, RunCliAgent}
-  alias Roundtable.{DiscussionRepo, Orchestrator}
+  alias Roundtable.{DiscussionRepo, Orchestrator, Provenance}
 
   # ----------------------------------------------------------------
   # Mix task / shell entry point
@@ -187,20 +187,25 @@ defmodule Roundtable.CLI do
   """
   @spec get_discussion_state(String.t()) :: {:ok, map()} | {:error, term()}
   def get_discussion_state(repo) do
+    gh_module = Application.get_env(:roundtable, :gh_module, Gh)
     gh_config = %{repo: repo}
 
-    case Gh.list_issues([state: "all", label: "roundtable"], gh_config) do
+    case gh_module.list_issues([state: "all", label: "roundtable"], gh_config) do
       {:ok, issues} ->
         state =
           Map.new(issues, fn issue ->
             labels = Enum.map(issue["labels"] || [], & &1["name"])
+            comments = normalize_comments(issue["comments"] || [])
+            claims = Enum.flat_map(comments, & &1.claims)
             {
               issue["number"],
               %{
                 title: issue["title"],
                 state: if(issue["state"] == "OPEN", do: :open, else: :closed),
                 labels: labels,
-                comment_count: length(issue["comments"] || []),
+                comment_count: length(comments),
+                comments: comments,
+                claims: claims,
                 satisfaction: infer_satisfaction(labels),
                 url: issue["url"]
               }
@@ -327,6 +332,30 @@ defmodule Roundtable.CLI do
       "satisfied" in labels -> :satisfied
       "no-objection" in labels -> :no_objection
       true -> :unknown
+    end
+  end
+
+  defp normalize_comments(comments) do
+    Enum.map(comments, fn comment ->
+      body = comment["body"] || ""
+      agent = infer_comment_agent(body)
+
+      %{
+        id: comment["id"],
+        body: body,
+        agent: agent,
+        claims: Provenance.parse_claims(body, agent)
+      }
+    end)
+  end
+
+  defp infer_comment_agent(body) do
+    cond do
+      String.contains?(body, "## Codex") -> :codex
+      String.contains?(body, "## Gemini") -> :gemini
+      String.contains?(body, "## Claude") -> :claude
+      String.contains?(body, "## DeepSeek") -> :deepseek
+      true -> nil
     end
   end
 end

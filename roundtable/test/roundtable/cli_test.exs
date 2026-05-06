@@ -3,6 +3,28 @@ defmodule Roundtable.CLITest do
 
   alias Roundtable.CLI
 
+  defmodule FakeGh do
+    def list_issues(_opts, _config) do
+      {:ok,
+       [
+         %{
+           "number" => 12,
+           "title" => "Q1",
+           "state" => "OPEN",
+           "labels" => [%{"name" => "roundtable"}, %{"name" => "satisfied"}],
+           "url" => "https://example.test/issues/12",
+           "comments" => [
+             %{
+               "id" => "c1",
+               "body" =>
+                 "## Codex\n\nThe repo uses Nix [observed: cat flake.nix]. Therefore use a flake [inferred]."
+             }
+           ]
+         }
+       ]}
+    end
+  end
+
   setup do
     brief_path = Path.join(System.tmp_dir!(), "test_brief_cli_#{System.unique_integer()}.md")
     File.write!(brief_path, "# Brief\n\n### Q1 — Architecture\n\nWhat should we build?\n")
@@ -40,6 +62,33 @@ defmodule Roundtable.CLITest do
     test "fails fast when a requested agent is unsupported", %{brief_path: brief_path} do
       assert {:error, {:unsupported_agents, [:copilot]}} =
                CLI.start_discussion(brief_path, agents: [:codex, :copilot])
+    end
+  end
+
+  describe "get_discussion_state/1" do
+    setup do
+      Application.put_env(:roundtable, :gh_module, FakeGh)
+
+      on_exit(fn ->
+        Application.delete_env(:roundtable, :gh_module)
+      end)
+
+      :ok
+    end
+
+    test "includes parsed comments and provenance-tagged claims" do
+      assert {:ok, %{12 => question}} = CLI.get_discussion_state("owner/repo")
+
+      assert question.comment_count == 1
+      assert [%{agent: :codex, body: body, claims: claims}] = question.comments
+      assert body =~ "The repo uses Nix"
+
+      assert [
+               %{claim: "The repo uses Nix", tag: :observed, detail: "cat flake.nix", agent: :codex},
+               %{claim: "Therefore use a flake", tag: :inferred, detail: nil, agent: :codex}
+             ] = claims
+
+      assert question.claims == claims
     end
   end
 end
