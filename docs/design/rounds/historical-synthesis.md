@@ -42,3 +42,11 @@ governance, and people/power conflict, with a shared stress timeline. The
 system may route, slow, tag, and recommend process interventions, but it must
 not emit public reputation scores, automated person sanctions, or personality
 judgments.
+
+## Round 50: Active Inference, Merit, and the "Slop Shield"
+**Consensus:** Active inference is useful as a bounded operator theory for
+evidence routing, uncertainty reduction, and boundary design around code
+objects. Merit should be decomposed into object-scoped correctness,
+reliability, calibration, reproducibility, and coordination value rather than
+person status. "Slop shield" is acceptable as user-facing language for
+discovery filtering, but not as the core legitimacy vocabulary of governance.
