@@ -62,3 +62,56 @@ is the termination signal the orchestrator reads.
 
 The architecture is determined by the agents in `docs/design/`. Human review
 happens at the decision stage, not between rounds.
+
+## Standalone Vaglio deployment
+
+This repo now contains a **standalone** Nix flake and NixOS modules so users do
+not need to fork `unified-nix-configuration` just to run Vaglio.
+
+### Quick start: generic LXC-style profile
+
+From this repository root:
+
+```bash
+sudo nixos-rebuild switch --flake .#vaglio
+```
+
+That profile gives you:
+
+- the Phoenix / LiveView web service on port `4000`
+- the `roundtable` CLI
+- a local maintainer toolchain for CLI/TUI-style workflows:
+  `git`, `gh`, `dolt`, `jj`, and `tmux`
+- no dependency on private homelab inventory or aspects
+
+### What it does **not** require
+
+- `unified-nix-configuration`
+- your homelab inventory
+- agenix
+- Authentik / OIDC
+
+If you do not provide a `SECRET_KEY_BASE`, the standalone module will generate
+one in its state directory automatically on first start.
+
+### Optional credentials
+
+The standalone service can run with no model credentials at all, but GitHub and
+multi-model features become available if you set any of these module options:
+
+- `services.roundtable.githubTokenFile`
+- `services.roundtable.anthropicApiKeyFile`
+- `services.roundtable.openaiApiKeyFile`
+- `services.roundtable.geminiApiKeyFile`
+- `services.roundtable.deepseekApiKeyFile`
+
+### Reusing the module in your own flake
+
+You can also import the service/profile modules directly:
+
+- `nixosModules.roundtable`
+- `nixosModules.vaglio-lxc`
+
+The current focus is the **Elixir app** and a **CLI/TUI-capable environment**.
+The richer OpenCode/dmux TUI remains a later work item, but the standalone
+profile already ships the local tools that workflow depends on.
