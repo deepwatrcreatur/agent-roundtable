@@ -50,3 +50,29 @@ objects. Merit should be decomposed into object-scoped correctness,
 reliability, calibration, reproducibility, and coordination value rather than
 person status. "Slop shield" is acceptable as user-facing language for
 discovery filtering, but not as the core legitimacy vocabulary of governance.
+
+## Round 51: Clarifying the "Project Mind"
+**Consensus:** The core intuition survives, but "project mind" is too
+anthropomorphic if taken literally. The disciplined replacement is a
+history-shaped governance pattern: project evidence history, precedent model,
+policy surface, or latent project model. Agents should help reconstruct that
+pattern from decisions, surface uncertainty and drift, and support bounded
+novelty, while final legitimacy-critical judgments remain human-owned.
+
+## Round 52: Social Epistemology vs Active Inference
+**Consensus:** Social-epistemic convergence remains the legitimacy foundation:
+it explains why heterogeneous agreement is evidence and why prestige/PageRank
+is insufficient. Active inference adds a distinct governance layer for
+attention allocation, boundary design, novelty handling, object stress, and
+uncertainty routing. Its value is real, but only when translated into explicit
+protocol rather than metaphysical rhetoric.
+
+## Round 53: Self-Escalation and Protocol Friction
+**Consensus:** Behavior such as self-escalation, attention-mining, and
+lane-bypassing should be represented as object-scoped protocol friction, not as
+personality defects. Vaglio should measure escalation pressure, reviewer churn,
+queue distortion, and evidence delta at the object level, then apply explicit,
+reversible friction such as cooldowns, bundling, slower lanes, neutral review,
+and typed exception requests. Public language should emphasize fair lanes,
+reviewer bandwidth, and visible exceptions rather than psychology or AI
+diagnosis.
