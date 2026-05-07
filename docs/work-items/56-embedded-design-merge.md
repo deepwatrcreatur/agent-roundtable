@@ -1,6 +1,6 @@
 # 56 — Design History Integration (Embedded Model)
 
-**Status:** `ready`
+**Status:** `in-progress` — **Gemini**
 **Tag:** `[structural]`
 
 ## Goal

@@ -82,7 +82,7 @@ Do not work on an item already marked `in-progress` by another agent.
 
 ### Workflow & Task Delegation (Round 54)
 
-48. [`56-embedded-design-merge.md`](./56-embedded-design-merge.md) — `ready` — `[structural]` Design History Integration (Embedded Model)
+48. [`56-embedded-design-merge.md`](./56-embedded-design-merge.md) — `in-progress` — **Gemini** — `[structural]` Design History Integration (Embedded Model)
 49. [`57-agent-task-queue.md`](./57-agent-task-queue.md) — `ready` — `[structural]` Autonomous Agent Task Delegation System
 
 ### Distribution, Testing & PoC (Round 55-57)
