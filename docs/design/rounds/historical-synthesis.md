@@ -76,3 +76,13 @@ reversible friction such as cooldowns, bundling, slower lanes, neutral review,
 and typed exception requests. Public language should emphasize fair lanes,
 reviewer bandwidth, and visible exceptions rather than psychology or AI
 diagnosis.
+
+## Round 54: Contributor Support and Re-Engagement
+**Consensus:** A humane contributor-support layer is compatible with the prior
+ philosophy if it stays object-scoped and dignity-preserving. Agents may
+ reconstruct probable fit conditions from public project history, generate
+ bounded mismatch hypotheses, offer practice lanes and re-entry options, and
+ compress repeated guidance for maintainers. The platform may sell preparation
+ and coaching infrastructure, but must never sell acceptance likelihood, queue
+ priority, or person-level worth, and may not repurpose contributor failure data
+ without explicit consent and strong boundaries.
