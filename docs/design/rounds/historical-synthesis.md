@@ -105,3 +105,13 @@ ground truth. The responsible default is technical-first routing and visibility,
 with bounded, transparent tuning for governance sensitivity. Mixed cases should
 be explicit, confidence-tagged, and routed through special review paths rather
 than forced into simplistic technical or social labels.
+
+## Round 57: Governance Collapse, Constitutional Gaps, and Branch Naming
+**Consensus:** `jj`-based democratic branching materially improves survivability
+by making disagreement forkable, inspectable, and less dependent on a single
+write-path bottleneck, but it is not a constitution. Vaglio still needs explicit
+legitimacy machinery around endorsement, escalation, transition, and naming.
+Contributor- or org-scoped namespaces should be the default, while labels that
+imply shared authority or endorsement must be mechanically earned through
+published criteria rather than granted informally or inferred from popularity
+alone.
