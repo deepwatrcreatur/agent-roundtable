@@ -33,6 +33,7 @@ defmodule Roundtable.CLI do
         case start_discussion(brief_path, opts) do
           {:ok, results} ->
             IO.puts("\nDiscussion complete.")
+
             Enum.each(results, fn r ->
               IO.puts("  #{r.id} (issue ##{r.issue_number}): #{r.state}")
             end)
@@ -58,12 +59,14 @@ defmodule Roundtable.CLI do
 
   defp parse_flags([], acc), do: acc
   defp parse_flags(["--repo", repo | rest], acc), do: parse_flags(rest, [{:repo, repo} | acc])
+
   defp parse_flags(["--max-rounds", n | rest], acc) do
     case Integer.parse(n) do
       {int, ""} -> parse_flags(rest, [{:max_rounds, int} | acc])
       _ -> parse_flags(rest, acc)
     end
   end
+
   defp parse_flags([_ | rest], acc), do: parse_flags(rest, acc)
 
   # ----------------------------------------------------------------
@@ -143,7 +146,10 @@ defmodule Roundtable.CLI do
   """
   def resolve_conflict(local_path, path, :jj) do
     # Simple resolution for jj: describe the conflict away
-    case System.cmd("jj", ["describe", "-m", "resolved conflict in #{path}"], cd: local_path, stderr_to_stdout: true) do
+    case System.cmd("jj", ["describe", "-m", "resolved conflict in #{path}"],
+           cd: local_path,
+           stderr_to_stdout: true
+         ) do
       {_, 0} -> :ok
       {out, _} -> {:error, out}
     end
@@ -151,7 +157,10 @@ defmodule Roundtable.CLI do
 
   def resolve_conflict(local_path, path, :dolt) do
     # Simple resolution for dolt: take 'mine' version for the table
-    case System.cmd("dolt", ["conflicts", "resolve", "--mine", path], cd: local_path, stderr_to_stdout: true) do
+    case System.cmd("dolt", ["conflicts", "resolve", "--mine", path],
+           cd: local_path,
+           stderr_to_stdout: true
+         ) do
       {_, 0} -> :ok
       {out, _} -> {:error, out}
     end
@@ -170,6 +179,51 @@ defmodule Roundtable.CLI do
 
   defp default_agents do
     Application.get_env(:roundtable, :agents, [:codex, :gemini, :deepseek, :claude_ic])
+  end
+
+  @doc """
+  Returns GitHub repos discoverable for Vaglio management.
+
+  This is intentionally lightweight: we query GitHub repository topics using the
+  authenticated `gh` CLI and return candidate repo slugs the web UI can offer as
+  source targets.
+  """
+  @spec list_candidate_repos(String.t()) :: {:ok, [map()]} | {:error, term()}
+  def list_candidate_repos(topic \\ "vaglio") do
+    query = "topic:#{topic} archived:false"
+
+    case System.cmd(
+           "gh",
+           [
+             "api",
+             "search/repositories",
+             "-f",
+             "q=#{query}",
+             "-f",
+             "per_page=50"
+           ],
+           stderr_to_stdout: true
+         ) do
+      {output, 0} ->
+        with {:ok, %{"items" => items}} <- Jason.decode(output) do
+          repos =
+            items
+            |> Enum.map(fn item ->
+              %{
+                slug: item["full_name"],
+                description: item["description"],
+                homepage: item["homepage"],
+                private: item["private"] || false
+              }
+            end)
+            |> Enum.sort_by(& &1.slug)
+
+          {:ok, repos}
+        end
+
+      {output, code} ->
+        {:error, {:gh_failed, code, output}}
+    end
   end
 
   @doc """
@@ -194,6 +248,7 @@ defmodule Roundtable.CLI do
         state =
           Map.new(issues, fn issue ->
             labels = Enum.map(issue["labels"] || [], & &1["name"])
+
             {
               issue["number"],
               %{
@@ -293,13 +348,21 @@ defmodule Roundtable.CLI do
             trimmed_title = String.trim(title)
             trimmed_body = String.trim(body)
 
-            case Gh.create_issue(trimmed_title, trimmed_body, ["roundtable", "needs-more-evidence"], gh_config) do
+            case Gh.create_issue(
+                   trimmed_title,
+                   trimmed_body,
+                   ["roundtable", "needs-more-evidence"],
+                   gh_config
+                 ) do
               {:ok, issue_number} ->
                 IO.puts("Created issue ##{issue_number} for #{trimmed_title}")
-                id = case Regex.run(~r/Q\d+/, trimmed_title) do
-                  [match | _] -> match
-                  _ -> trimmed_title
-                end
+
+                id =
+                  case Regex.run(~r/Q\d+/, trimmed_title) do
+                    [match | _] -> match
+                    _ -> trimmed_title
+                  end
+
                 {:ok, %{id: id, issue_number: issue_number, state: :open}}
 
               {:error, reason} ->

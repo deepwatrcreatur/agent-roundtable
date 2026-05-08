@@ -22,7 +22,13 @@ defmodule Roundtable.CLITest do
 
   describe "module API exports" do
     # get_discussion_state requires gh CLI; tested via satisfaction label inference
-    # which is exposed indirectly. We verify the module loads and exports the right API.
+    # which is exposed indirectly. Ensure the module is loaded before checking
+    # exported functions so the assertion reflects the compiled API, not code-loading timing.
+    setup do
+      Code.ensure_loaded(CLI)
+      :ok
+    end
+
     test "module exports start_discussion/2" do
       assert function_exported?(CLI, :start_discussion, 2)
     end

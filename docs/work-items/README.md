@@ -45,7 +45,7 @@ Do not work on an item already marked `in-progress` by another agent.
 16. [`19-orchestrator-repo-path.md`](./19-orchestrator-repo-path.md) — `done` — Orchestrator file-based model integration
 17. [`23-no-objection-marker.md`](./23-no-objection-marker.md) — `done` — `[no objection]` satisfaction marker support
 18. [`24-telegram-outbound.md`](./24-telegram-outbound.md) — `done` — Outbound Telegram notifications
-19. [`25-authentik-oidc.md`](./25-authentik-oidc.md) — `done` — Authentik OIDC authentication
+19. [`25-authentik-oidc.md`](./25-authentik-oidc.md) — `ready` — Authentik OIDC authentication
 20. [`26-nixos-module.md`](./26-nixos-module.md) — `done` — **Gemini** — NixOS service module & deployment config
 
 ### Eval Harness (Q37 / Round 22)
