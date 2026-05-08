@@ -115,3 +115,14 @@ Contributor- or org-scoped namespaces should be the default, while labels that
 imply shared authority or endorsement must be mechanically earned through
 published criteria rather than granted informally or inferred from popularity
 alone.
+
+## Round 58: Git Compatibility on a `jj`-Native Host
+**Consensus:** Vaglio should treat strong git compatibility as an adoption and
+trust requirement at the transport and integration edge, while keeping
+governance, deliberation, promotion, and canonical history modeling
+structurally `jj`-native. The right architecture is neither pure bridge mode nor
+full dual-authority storage, but a disciplined translation layer: ordinary users
+can keep `git clone` / `fetch` / `push`, familiar review entry points, and CI
+integrations, while Vaglio's real product value appears above transport as
+forkable governance, inspectable alternatives, durable project memory, and
+explicit legitimacy around accepted history.
