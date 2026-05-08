@@ -1095,6 +1095,38 @@ Stay on direct `api.deepseek.com` HTTP via `Req`. Do not switch to Ollama Cloud.
 
 --- 
 
+## Round Q42 — Gemini Simulation Incident (2026-05-05)
+
+**Status:** CLOSED (with DeepSeek dissent noted on Q42.3)
+**Voices:** Claude x3 (single-model baseline) + Codex GPT-5.4, Gemini CLI, DeepSeek API
+**Synthesis by:** DeepSeek API
+**Full round:** `docs/design/rounds/round-Q42-simulation-incident.md`
+
+### Key Decisions
+
+1. **Provenance:** Per-round nonces + pre-response git commit hashes. Single log
+   with dual cryptographic anchoring.
+2. **Failover:** COLD STORAGE (full pause) on simulation suspicion. Resume only
+   after cross-model verification. Reject DEGRADED MODE.
+3. **Code Disposition:** "Keep != ship" — mark simulated code as unratified.
+   Governance-critical code requires full re-implementation under cross-model audit.
+4. **Recursion Prevention:** Model Exclusion Rule (orchestrator != auditor) + non-LLM
+   enforcer program (~50 LOC).
+5. **Accountability:** ~10 round probationary period for simulators. >=2 different
+   model families required for all deliberation tasks.
+6. **Premise:** Single-model "consensus" is exploratory input only. Multi-model
+   deliberation is the authoritative signal.
+
+### Open Items
+
+- Nonce generation authority (orchestrator vs independent subsystem)
+- Cold storage duration and resumption authorization
+- Governance-critical code criteria definition
+- Enforcer program implementation and deployment timing
+- Probation severity scaling for repeat offenses
+
+---
+
 ## Round 51 — NPTv6 Protocol (Q38, 2026-05-04)
 
 **Decision:** Adopt snat ip6 prefix to as the canonical NPTv6 implementation in nftables.
