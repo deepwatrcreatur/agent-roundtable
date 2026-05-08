@@ -133,61 +133,77 @@ defmodule RoundtableWeb.DiscussionLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <div style="max-width: 900px; margin: 0 auto; padding: 2rem 1rem;">
-      <header style="margin-bottom: 2rem;">
-        <h1 style="font-size: 1.4rem; color: #f0f6fc; margin-bottom: 0.25rem;">
-          Roundtable
-        </h1>
-        <p style="color: #8b949e; font-size: 0.85rem;">
-          {@repo}
-          <span :if={@running} style="color: #d29922; margin-left: 1rem;">● running</span>
-        </p>
+    <div class="rt-shell">
+      <header class="rt-header">
+        <div class="rt-header-copy">
+          <div class="rt-code-chip">[+] vaglio / live roundtable</div>
+          <div class="rt-terminal">
+            <div class="rt-terminal-title">opencode-style deliberation console</div>
+            <div class="rt-title">Discussion Control Surface</div>
+            <p class="rt-meta rt-meta--header">{@repo}</p>
+          </div>
+        </div>
+        <span class={run_status_class(@running)}>
+          <%= if @running, do: "[·] round running", else: "[+] idle" %>
+        </span>
       </header>
 
       <.flash_banner :if={@flash_msg} msg={@flash_msg} />
 
-      <section style="margin-bottom: 2rem;">
-        <h2 style="font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
-          Questions
-        </h2>
+      <section class="rt-section">
+        <div class="rt-section-head">
+          <h2 class="rt-section-title">[+] Questions</h2>
+          <p class="rt-section-note">Live GitHub issue state, labels, and satisfaction markers.</p>
+        </div>
 
-        <div :if={map_size(@questions) == 0} style="color: #8b949e; font-style: italic;">
+        <div :if={map_size(@questions) == 0} class="rt-panel rt-panel--empty">
           No roundtable issues found. Create one below or push a BRIEF.md.
         </div>
 
-        <.question_card :for={{number, q} <- Enum.sort(@questions)} number={number} q={q} />
+        <div class="rt-stack">
+          <.question_card :for={{number, q} <- Enum.sort(@questions)} number={number} q={q} />
+        </div>
       </section>
 
-      <section :if={length(@conflicts) > 0} style="margin-bottom: 2rem;">
-        <h2 style="font-size: 1rem; color: #f78166; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
-          Logical Conflicts
-        </h2>
-        <.conflict_card :for={c <- @conflicts} c={c} />
+      <section :if={length(@conflicts) > 0} class="rt-section">
+        <div class="rt-section-head">
+          <h2 class="rt-section-title">[-] Logical Conflicts</h2>
+          <p class="rt-section-note">Local VCS paths that still need manual reconciliation.</p>
+        </div>
+        <div class="rt-stack">
+          <.conflict_card :for={c <- @conflicts} c={c} />
+        </div>
       </section>
 
-      <section style="margin-bottom: 2rem;">
-        <h2 style="font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
-          Inject Question
-        </h2>
-        <form phx-submit="inject_question" style="display: flex; gap: 0.5rem; align-items: flex-start;">
-          <textarea
-            name="text"
-            placeholder="New question text…"
-            rows="3"
-            style="flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 6px;
-                   color: #c9d1d9; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.9rem; resize: vertical;"
-          >{@inject_text}</textarea>
-          <button type="submit" style={btn_style(:primary)}>Add</button>
+      <section class="rt-section">
+        <div class="rt-section-head">
+          <h2 class="rt-section-title">[+] Inject Question</h2>
+          <p class="rt-section-note">Open a new discussion issue without leaving Vaglio.</p>
+        </div>
+        <form phx-submit="inject_question" class="rt-form">
+          <label class="rt-field">
+            <span class="rt-field-label">Prompt</span>
+            <textarea
+              class="rt-textarea"
+              name="text"
+              placeholder="New question text..."
+              rows="4"
+            >{@inject_text}</textarea>
+          </label>
+          <div class="rt-actions">
+            <button type="submit" class={button_class(:primary)}>[+] add issue</button>
+          </div>
         </form>
       </section>
 
-      <section>
-        <h2 style="font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
-          Controls
-        </h2>
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-          <button phx-click="trigger_round" disabled={@running} style={btn_style(:action)}>
-            <%= if @running, do: "Running…", else: "Trigger round" %>
+      <section class="rt-section">
+        <div class="rt-section-head">
+          <h2 class="rt-section-title">[x] Controls</h2>
+          <p class="rt-section-note">Start the next orchestrated pass for unsatisfied questions.</p>
+        </div>
+        <div class="rt-actions rt-actions--wrap">
+          <button phx-click="trigger_round" disabled={@running} class={button_class(:action)}>
+            <%= if @running, do: "[·] running...", else: "[>] trigger round" %>
           </button>
         </div>
       </section>
@@ -199,60 +215,61 @@ defmodule RoundtableWeb.DiscussionLive do
 
   defp flash_banner(assigns) do
     ~H"""
-    <div style="background: #1c2128; border: 1px solid #30363d; border-radius: 6px;
-                padding: 0.75rem 1rem; margin-bottom: 1.5rem; display: flex;
-                justify-content: space-between; align-items: center;">
-      <span style="color: #c9d1d9; font-size: 0.9rem;">{@msg}</span>
-      <button phx-click="dismiss_flash" style="background: none; border: none; color: #8b949e;
-                cursor: pointer; font-size: 1.1rem; line-height: 1;">×</button>
+    <div class="rt-panel rt-banner">
+      <span class="rt-banner-text">{@msg}</span>
+      <button phx-click="dismiss_flash" class="rt-banner-close" aria-label="Dismiss message">
+        [x]
+      </button>
     </div>
     """
   end
 
   defp question_card(assigns) do
     ~H"""
-    <div style={"border: 1px solid #{border_color(@q.satisfaction)}; border-radius: 6px;
-                 padding: 1rem; margin-bottom: 0.75rem; background: #161b22;"}>
-      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.5rem;">
-        <a href={@q.url} target="_blank" style="font-weight: 600; font-size: 0.95rem; color: #f0f6fc;">
-          #{@number} {@q.title}
+    <article class={question_card_class(@q.satisfaction)}>
+      <div class="rt-card-head">
+        <a href={@q.url} target="_blank" class="rt-card-link">
+          <span class="rt-card-index">#{@number}</span>
+          <span>{@q.title}</span>
         </a>
         <.satisfaction_badge sat={@q.satisfaction} />
       </div>
-      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+      <div :if={@q.labels != []} class="rt-chip-row">
         <.label_chip :for={l <- @q.labels} label={l} />
       </div>
-      <div style="font-size: 0.8rem; color: #8b949e; margin-top: 0.5rem;">
+      <div class="rt-meta rt-meta--card">
         {@q.comment_count} comment(s) ·
-        <span style={"color: #{if @q.state == :open, do: "#3fb950", else: "#8b949e"};"}>
+        <span class={state_class(@q.state)}>
           {if @q.state == :open, do: "open", else: "closed"}
         </span>
       </div>
-    </div>
+    </article>
     """
   end
 
   defp satisfaction_badge(assigns) do
-    {text, color} =
+    text =
       case assigns.sat do
-        :satisfied -> {"✓ satisfied", "#3fb950"}
-        :satisfied_conditional -> {"~ conditional", "#d29922"}
-        :no_objection -> {"· no objection", "#58a6ff"}
-        :needs_more_evidence -> {"○ needs evidence", "#f78166"}
-        _ -> {"– unknown", "#8b949e"}
+        :satisfied -> "[+] satisfied"
+        :satisfied_conditional -> "[~] conditional"
+        :no_objection -> "[·] no objection"
+        :needs_more_evidence -> "[-] needs evidence"
+        _ -> "[ ] unknown"
       end
 
-    assigns = assign(assigns, text: text, color: color)
+    assigns =
+      assigns
+      |> assign(:text, text)
+      |> assign(:class, satisfaction_badge_class(assigns.sat))
 
     ~H"""
-    <span style={"font-size: 0.75rem; color: #{@color}; font-weight: 600;"}>{@text}</span>
+    <span class={@class}>{@text}</span>
     """
   end
 
   defp label_chip(assigns) do
     ~H"""
-    <span style="background: #21262d; border: 1px solid #30363d; border-radius: 12px;
-                 padding: 0.1rem 0.6rem; font-size: 0.75rem; color: #8b949e;">
+    <span class="rt-code-chip">
       {@label}
     </span>
     """
@@ -260,42 +277,47 @@ defmodule RoundtableWeb.DiscussionLive do
 
   defp conflict_card(assigns) do
     ~H"""
-    <div style="border: 1px solid #da3633; border-radius: 6px; padding: 1rem;
-                margin-bottom: 0.75rem; background: #161b22; display: flex;
-                justify-content: space-between; align-items: center;">
-      <div>
-        <div style="color: #f0f6fc; font-weight: 600; font-size: 0.9rem;">
-          {@c.path}
+    <article class="rt-panel rt-panel--conflict">
+      <div class="rt-card-head rt-card-head--conflict">
+        <div class="rt-conflict-copy">
+          <div class="rt-conflict-path">
+            {@c.path}
+          </div>
+          <div class="rt-conflict-meta">
+            Unresolved evolution in {@c.vcs |> Atom.to_string() |> String.upcase()}
+          </div>
         </div>
-        <div style="color: #8b949e; font-size: 0.75rem; margin-top: 0.25rem;">
-          Unresolved evolution in {@c.vcs |> Atom.to_string() |> String.upcase()}
+        <div class="rt-actions">
+          <button
+            phx-click="resolve_conflict"
+            phx-value-path={@c.path}
+            phx-value-vcs={@c.vcs}
+            class={button_class(:action)}
+          >
+            [>] resolve
+          </button>
+          <.vcs_badge vcs={@c.vcs} />
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <button phx-click="resolve_conflict" phx-value-path={@c.path} phx-value-vcs={@c.vcs}
-                style={btn_style(:action)}>
-          Resolve
-        </button>
-        <.vcs_badge vcs={@c.vcs} />
-      </div>
-    </div>
+    </article>
     """
   end
 
   defp vcs_badge(assigns) do
-    {text, color} =
+    text =
       case assigns.vcs do
-        :jj -> {"jj", "#58a6ff"}
-        :dolt -> {"dolt", "#3fb950"}
-        _ -> {"vcs", "#8b949e"}
+        :jj -> "jj"
+        :dolt -> "dolt"
+        _ -> "vcs"
       end
 
-    assigns = assign(assigns, text: text, color: color)
+    assigns =
+      assigns
+      |> assign(:text, text)
+      |> assign(:class, vcs_badge_class(assigns.vcs))
 
     ~H"""
-    <span style={"border: 1px solid #{@color}; color: #{@color}; font-size: 0.65rem;
-                  padding: 0.1rem 0.4rem; border-radius: 4px; text-transform: uppercase;
-                  font-weight: bold;"}>{@text}</span>
+    <span class={@class}>{@text}</span>
     """
   end
 
@@ -333,21 +355,43 @@ defmodule RoundtableWeb.DiscussionLive do
 
   defp schedule_poll, do: Process.send_after(self(), :poll, @poll_interval_ms)
 
-  defp border_color(:satisfied), do: "#238636"
-  defp border_color(:satisfied_conditional), do: "#9e6a03"
-  defp border_color(:no_objection), do: "#1f6feb"
-  defp border_color(:needs_more_evidence), do: "#da3633"
-  defp border_color(_), do: "#30363d"
+  defp question_card_class(:satisfied), do: "rt-panel rt-panel--question rt-panel--satisfied"
 
-  defp btn_style(:primary) do
-    "background: #238636; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1rem;
-     cursor: pointer; font-family: inherit; font-size: 0.9rem;"
-  end
+  defp question_card_class(:satisfied_conditional),
+    do: "rt-panel rt-panel--question rt-panel--conditional"
 
-  defp btn_style(:action) do
-    "background: #1f6feb; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1rem;
-     cursor: pointer; font-family: inherit; font-size: 0.9rem;"
-  end
+  defp question_card_class(:no_objection),
+    do: "rt-panel rt-panel--question rt-panel--no-objection"
+
+  defp question_card_class(:needs_more_evidence),
+    do: "rt-panel rt-panel--question rt-panel--needs-evidence"
+
+  defp question_card_class(_), do: "rt-panel rt-panel--question"
+
+  defp satisfaction_badge_class(:satisfied), do: "rt-badge rt-badge--satisfied"
+
+  defp satisfaction_badge_class(:satisfied_conditional),
+    do: "rt-badge rt-badge--conditional"
+
+  defp satisfaction_badge_class(:no_objection), do: "rt-badge rt-badge--no-objection"
+
+  defp satisfaction_badge_class(:needs_more_evidence),
+    do: "rt-badge rt-badge--needs-evidence"
+
+  defp satisfaction_badge_class(_), do: "rt-badge rt-badge--unknown"
+
+  defp state_class(:open), do: "rt-state rt-state--open"
+  defp state_class(_), do: "rt-state rt-state--closed"
+
+  defp button_class(:primary), do: "rt-button rt-button--primary"
+  defp button_class(:action), do: "rt-button rt-button--action"
+
+  defp run_status_class(true), do: "rt-status-pill rt-status-pill--running"
+  defp run_status_class(false), do: "rt-status-pill rt-status-pill--idle"
+
+  defp vcs_badge_class(:jj), do: "rt-vcs-badge rt-vcs-badge--jj"
+  defp vcs_badge_class(:dolt), do: "rt-vcs-badge rt-vcs-badge--dolt"
+  defp vcs_badge_class(_), do: "rt-vcs-badge rt-vcs-badge--default"
 
   defp format_event({:round_start, id, n}), do: "#{id}: round #{n} started"
   defp format_event({:agent_done, agent, _issue}), do: "#{agent} posted"
