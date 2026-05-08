@@ -95,6 +95,7 @@ Do not work on an item already marked `in-progress` by another agent.
 
 53. [`61-slsa-attestation-hooks.md`](./61-slsa-attestation-hooks.md) — `ready` — `[integrity]` SLSA-Signed Integrity Hooks
 54. [`62-jj-high-velocity-ingest.md`](./62-jj-high-velocity-ingest.md) — `ready` — `[structural]` Scalable jj Ingestion Layer
+55. [`66-repo-source-selector.md`](./66-repo-source-selector.md) — `in-progress` — **Codex** — `[product-surface]` Vaglio Repo + Source Selector
 
 ### Platform Evolution (JJ + Dolt + Provenance)
 
