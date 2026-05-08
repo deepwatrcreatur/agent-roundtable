@@ -54,7 +54,7 @@ Do not work on an item already marked `in-progress` by another agent.
 22. [`29-eval-judge.md`](./29-eval-judge.md) — `done` — **Codex** — LLM-as-judge metrics (`Vaglio.Eval.Judge`)
 23. [`30-eval-task-set.md`](./30-eval-task-set.md) — `done` — **Gemini** — design 12 eval tasks
 31. [`31-blind-comparison.md`](./31-blind-comparison.md) — `done` — **Codex** — blind side-by-side comparison interface
-32. [`32-run-first-eval.md`](./32-run-first-eval.md) — `in-progress` — **Gemini** — execute 6-task eval batch + report
+32. [`32-run-first-eval.md`](./32-run-first-eval.md) — `blocked` — provider credentials / responsiveness required before eval batch can run
 
 ### Epistemic Integrity & WebUI (Protocol 15)
 
@@ -105,5 +105,5 @@ Do not work on an item already marked `in-progress` by another agent.
 28. [`36-unified-conflict-dashboard.md`](./36-unified-conflict-dashboard.md) — `done` — **Gemini** — Unified jj/Dolt conflict management dashboard
 29. [`37-evolution-based-prompting.md`](./37-evolution-based-prompting.md) — `done` — **Codex** — Evolution-based prompting
 30. [`38-revset-context-pruning.md`](./38-revset-context-pruning.md) — `done` — **Gemini** — Revset-driven context pruning
-31. [`39-deliberative-slsa.md`](./39-deliberative-slsa.md) — `in-progress` — **DeepSeek** — Deliberative SLSA (GPG-signed agent turns)
-32. [`40-s3-mega-backup.md`](./40-s3-mega-backup.md) — `in-progress` — **GitHub Copilot** — S3/Mega backup strategy & automation
+31. [`39-deliberative-slsa.md`](./39-deliberative-slsa.md) — `ready` — Deliberative SLSA (GPG-signed agent turns)
+32. [`40-s3-mega-backup.md`](./40-s3-mega-backup.md) — `ready` — S3/Mega backup strategy & automation

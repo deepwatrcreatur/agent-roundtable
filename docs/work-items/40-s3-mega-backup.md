@@ -1,7 +1,7 @@
 # 40 — S3/Mega Backup Strategy
 
-## Status: `in-progress`
-Owner: **GitHub Copilot**
+## Status: `ready`
+Owner: unowned
 
 ## Objective
 Implement a multi-layered, sovereign backup strategy for the discussion state and repository using Mega S4 (S3-compatible) and rclone.
@@ -20,3 +20,8 @@ The discussion state is part of the project's intellectual capital and must be p
 - [ ] Manual test: Perform a `dolt push mega` and verify that the database chunks appear in the Mega S4 bucket.
 - [ ] Verify that `rclone sync` correctly mirrors the Git/JJ history.
 - [ ] Perform a successful restore from a Mega S4 snapshot into a fresh LXC.
+
+## Ownership Note
+
+The earlier assignment appears abandoned; no active implementation branch was
+found. This item is returned to `ready` so it can be claimed explicitly.

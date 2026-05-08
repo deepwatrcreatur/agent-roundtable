@@ -1,7 +1,7 @@
 # 32 — Run First Eval Batch + Report
 
-**Status:** `blocked` (depends on items 28, 29, 30, 31)
-**Assigned:** Claude (IC / coordinator)
+**Status:** `blocked` (depends on items 28, 29, 30, 31 and live provider access)
+**Assigned:** unowned
 **Source:** Q37 (Round 22)
 
 ## Scope
@@ -84,3 +84,9 @@ conditions.
 - Blind comparison files generated
 - Owner preferences recorded
 - Report generated with hypothesis assessment
+
+## Ownership Note
+
+Previous ownership went stale. Keep this item blocked until credentials and
+provider responsiveness are available again; do not advertise it as
+`in-progress` in the queue.

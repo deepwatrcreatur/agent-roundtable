@@ -1,7 +1,7 @@
 # 39 — Deliberative SLSA (Sovereign Provenance)
 
-## Status: `in-progress`
-Owner: **DeepSeek**
+## Status: `ready`
+Owner: unowned
 
 ## Objective
 Implement cryptographic signing for all agent deliberation turns using GPG-signed `jj` and `Dolt` commits to provide verifiable deliberative provenance.
@@ -20,3 +20,8 @@ To ensure the "Record of Reason" is tamper-evident, we must move beyond simple p
 - [ ] Assert that any attempt to modify a past round transcript results in a broken signature chain.
 - [ ] Verify that the IC correctly blocks closure of an unsigned round.
 - [ ] Generate a "Deliberative SLSA Report" for a completed question.
+
+## Ownership Note
+
+The earlier assignment appears abandoned; no active implementation branch was
+found. This item is returned to `ready` so it can be claimed explicitly.
