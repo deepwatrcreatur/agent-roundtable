@@ -86,3 +86,22 @@ diagnosis.
  and coaching infrastructure, but must never sell acceptance likelihood, queue
  priority, or person-level worth, and may not repurpose contributor failure data
  without explicit consent and strong boundaries.
+
+## Round 55: Socially Coupled Priors and Brigading
+**Consensus:** Active inference can accommodate social constraints in prior
+updating, but Vaglio still needs explicit social-epistemic and anti-capture
+protocols because consensus is often socially coupled rather than independent.
+The system should measure timing concentration, basis diversity, consensus
+velocity, and evidence-to-label ratios at the object/process level, then apply
+visible anti-cascade mechanisms such as delayed visibility, diversity-of-basis
+requirements, structured disconfirmation, and separate evidence signals from
+coalition signals. Hidden trust scores, ideological profiling, and secret
+de-boosting remain out of bounds.
+
+## Round 56: Design Stress vs Social Stress
+**Consensus:** Vaglio can partially infer the difference between design /
+implementation stress and coordination / social friction, but not automate it as
+ground truth. The responsible default is technical-first routing and visibility,
+with bounded, transparent tuning for governance sensitivity. Mixed cases should
+be explicit, confidence-tagged, and routed through special review paths rather
+than forced into simplistic technical or social labels.
