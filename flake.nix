@@ -78,7 +78,9 @@
 
       nixosModuleSet = {
         roundtable = import ./nix/modules/services/roundtable.nix;
+        vaglio-base = import ./nix/modules/profiles/vaglio-base.nix;
         vaglio-lxc = import ./nix/modules/profiles/vaglio-lxc.nix;
+        vaglio-installer-iso = import ./nix/modules/profiles/vaglio-installer-iso.nix;
       };
     in
       flake-utils.lib.eachDefaultSystem (system:
@@ -129,6 +131,13 @@
             ({ ... }: { nixpkgs.overlays = [ self.overlays.default ]; })
             nixosModuleSet.roundtable
             nixosModuleSet.vaglio-lxc
+          ];
+        };
+
+        nixosConfigurations.vaglio-installer = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = [
+            nixosModuleSet.vaglio-installer-iso
           ];
         };
       };

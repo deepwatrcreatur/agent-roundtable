@@ -91,6 +91,24 @@ That profile gives you:
 - agenix
 - Authentik / OIDC
 
+### Standalone installer ISO
+
+If you want an installer image from this repo directly, build:
+
+```bash
+nix build .#nixosConfigurations.vaglio-installer.config.system.build.isoImage
+```
+
+That gives you a minimal NixOS installer ISO with:
+
+- SSH enabled
+- your existing public SSH key authorized for the `nixos` user
+- `git`, `curl`, `wget`, and `vim`
+- no dependency on `unified-nix-configuration`
+
+The ISO is only an install/bootstrap environment. The actual Vaglio service
+configuration still lives in this flake's modules and profiles.
+
 If you do not provide a `SECRET_KEY_BASE`, the standalone module will generate
 one in its state directory automatically on first start.
 
@@ -105,12 +123,28 @@ multi-model features become available if you set any of these module options:
 - `services.roundtable.geminiApiKeyFile`
 - `services.roundtable.deepseekApiKeyFile`
 
+These should point at **local or encrypted secret files**, not checked-in raw
+credentials. For example:
+
+```nix
+services.roundtable = {
+  githubTokenFile = "/var/lib/roundtable-secrets/github-token";
+  geminiApiKeyFile = "/var/lib/roundtable-secrets/gemini-api-key";
+  deepseekApiKeyFile = "/var/lib/roundtable-secrets/deepseek-api-key";
+};
+```
+
+Do not commit plaintext secrets to this repository, even if the service itself
+is public.
+
 ### Reusing the module in your own flake
 
 You can also import the service/profile modules directly:
 
 - `nixosModules.roundtable`
+- `nixosModules.vaglio-base`
 - `nixosModules.vaglio-lxc`
+- `nixosModules.vaglio-installer-iso`
 
 The current focus is the **Elixir app** and a **CLI/TUI-capable environment**.
 The richer OpenCode/dmux TUI remains a later work item, but the standalone
