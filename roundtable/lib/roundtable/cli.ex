@@ -239,12 +239,25 @@ defmodule Roundtable.CLI do
     * `:satisfaction` — `:satisfied | :satisfied_conditional | :needs_more_evidence | :unknown`
     * `:url` — issue URL
   """
-  @spec get_discussion_state(String.t()) :: {:ok, map()} | {:error, term()}
-  def get_discussion_state(repo) do
+  @spec get_discussion_state(String.t(), keyword()) :: {:ok, map()} | {:error, term()}
+  def get_discussion_state(repo, opts \\ []) do
+    detailed? = Keyword.get(opts, :detailed, false)
     gh_config = %{repo: repo}
 
     case Gh.list_issues([state: "all", label: "roundtable"], gh_config) do
       {:ok, issues} ->
+        issues =
+          if detailed? do
+            Enum.map(issues, fn issue ->
+              case Gh.view_issue(issue["number"], [fields: ["number", "title", "body", "labels", "state", "comments", "url"]], gh_config) do
+                {:ok, detailed_issue} -> detailed_issue
+                {:error, _} -> issue
+              end
+            end)
+          else
+            issues
+          end
+
         state =
           Map.new(issues, fn issue ->
             labels = Enum.map(issue["labels"] || [], & &1["name"])
@@ -256,6 +269,8 @@ defmodule Roundtable.CLI do
                 state: if(issue["state"] == "OPEN", do: :open, else: :closed),
                 labels: labels,
                 comment_count: length(issue["comments"] || []),
+                body: issue["body"] || "",
+                comments: issue["comments"] || [],
                 satisfaction: infer_satisfaction(labels),
                 url: issue["url"]
               }

@@ -1,6 +1,6 @@
 # 41 — Sycophancy & Integrity Dashboard
 
-**Status:** `in-progress` — **GitHub Copilot** — `/tmp/agent-roundtable-item41-94123`
+**Status:** `done` — **GitHub Copilot**
 
 ## Goal
 Provide an objective measure of how much the council challenged the user's initial premises vs. simply "people-pleasing."
@@ -15,3 +15,8 @@ Provide an objective measure of how much the council challenged the user's initi
 - Dashboard displays a numeric/visual score for each completed question.
 - High scores correlate with documented disagreements and shifts in design.
 - Low scores trigger a "Sycophancy Warning" UI banner.
+
+## Outcome
+- Added `Roundtable.IntegrityMetrics` to score completed questions from `BRIEF.md`, GitHub discussion turns, and `DECISION.md`.
+- Extended the discussion dashboard with an "Integrity Scorecard" section showing divergence, vocabulary innovation, premise challenge rate, and per-question warnings.
+- Enriched discussion issue loading so the dashboard can analyze full issue/comment content, not just labels.

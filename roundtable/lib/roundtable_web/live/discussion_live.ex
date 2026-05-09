@@ -9,6 +9,8 @@ defmodule RoundtableWeb.DiscussionLive do
   use Phoenix.LiveView
 
   alias Roundtable.CLI
+  alias Roundtable.Actions.DiscussionGit
+  alias Roundtable.{DiscussionRepo, IntegrityMetrics}
 
   @poll_interval_ms 30_000
 
@@ -35,7 +37,8 @@ defmodule RoundtableWeb.DiscussionLive do
       |> assign(:running, false)
       |> assign(:flash_msg, nil)
       |> assign(:conflicts, [])
-      |> load_state(repo, local_path)
+      |> assign(:integrity_scorecard, %{})
+      |> load_state(repo, local_path, discussion_path)
 
     {:ok, socket}
   end
@@ -43,7 +46,13 @@ defmodule RoundtableWeb.DiscussionLive do
   @impl true
   def handle_info(:poll, socket) do
     schedule_poll()
-    {:noreply, load_state(socket, socket.assigns.repo, socket.assigns.local_path)}
+    {:noreply,
+     load_state(
+       socket,
+       socket.assigns.repo,
+       socket.assigns.local_path,
+       socket.assigns.discussion_path
+     )}
   end
 
   @impl true
@@ -70,7 +79,7 @@ defmodule RoundtableWeb.DiscussionLive do
               socket
               |> assign(:inject_text, "")
               |> assign(:flash_msg, "Created issue ##{number}")
-              |> load_state(repo, socket.assigns.local_path)
+              |> load_state(repo, socket.assigns.local_path, socket.assigns.discussion_path)
 
             {:noreply, socket}
 
@@ -106,7 +115,7 @@ defmodule RoundtableWeb.DiscussionLive do
       |> assign(:discussion_path, discussion_path)
       |> assign(:source_mode, source_mode)
       |> assign(:flash_msg, "Updated discussion source")
-      |> load_state(repo, local_path)
+      |> load_state(repo, local_path, discussion_path)
 
     {:noreply, socket}
   end
@@ -124,7 +133,7 @@ defmodule RoundtableWeb.DiscussionLive do
       |> assign(:discussion_path, discussion_path)
       |> assign(:source_mode, "repo")
       |> assign(:flash_msg, "Selected #{repo}")
-      |> load_state(repo, socket.assigns.local_path)
+      |> load_state(repo, socket.assigns.local_path, discussion_path)
 
     {:noreply, socket}
   end
@@ -175,10 +184,14 @@ defmodule RoundtableWeb.DiscussionLive do
 
     case CLI.resolve_conflict(local_path, path, vcs_atom) do
       :ok ->
-        socket =
-          socket
-          |> assign(:flash_msg, "Resolved #{path} in #{vcs}")
-          |> load_state(socket.assigns.repo, socket.assigns.local_path)
+          socket =
+            socket
+            |> assign(:flash_msg, "Resolved #{path} in #{vcs}")
+            |> load_state(
+              socket.assigns.repo,
+              socket.assigns.local_path,
+              socket.assigns.discussion_path
+            )
 
         {:noreply, socket}
 
@@ -272,6 +285,15 @@ defmodule RoundtableWeb.DiscussionLive do
         </div>
 
         <.question_card :for={{number, q} <- Enum.sort(@questions)} number={number} q={q} />
+      </section>
+
+      <section :if={map_size(@integrity_scorecard) > 0} style="margin-bottom: 2rem;">
+        <h2 style="font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+          Integrity Scorecard
+        </h2>
+
+        <.integrity_summary scorecard={@integrity_scorecard} />
+        <.integrity_card :for={{number, metrics} <- Enum.sort(@integrity_scorecard)} number={number} metrics={metrics} question={Map.get(@questions, number)} />
       </section>
 
       <section :if={length(@conflicts) > 0} style="margin-bottom: 2rem;">
@@ -388,20 +410,116 @@ defmodule RoundtableWeb.DiscussionLive do
     """
   end
 
-  defp load_state(socket, "", local_path) do
+  defp integrity_summary(assigns) do
+    scores = Map.values(assigns.scorecard)
+    average = Enum.sum(Enum.map(scores, & &1.integrity_score)) / max(length(scores), 1)
+    warnings = Enum.count(scores, & &1.sycophancy_warning)
+
+    assigns =
+      assigns
+      |> assign(:average, average)
+      |> assign(:warnings, warnings)
+
+    ~H"""
+    <div style="border: 1px solid #30363d; border-radius: 8px; padding: 1rem; background: #161b22; margin-bottom: 0.75rem;">
+      <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div>
+          <div style="font-size: 1.2rem; font-weight: 700; color: #f0f6fc;">
+            {percent(@average)}
+          </div>
+          <div style="font-size: 0.8rem; color: #8b949e;">Average integrity score across completed questions</div>
+        </div>
+
+        <div :if={@warnings > 0} style="background: #2d1117; border: 1px solid #f78166; color: #ffdcd7; border-radius: 999px; padding: 0.4rem 0.8rem; font-size: 0.8rem; font-weight: 600;">
+          Sycophancy Warning · {@warnings} low-score question(s)
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  defp integrity_card(assigns) do
+    ~H"""
+    <div style="border: 1px solid #30363d; border-radius: 8px; padding: 1rem; background: #161b22; margin-bottom: 0.75rem;">
+      <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.75rem;">
+        <div>
+          <div style="font-size: 0.82rem; color: #8b949e;">Completed question</div>
+          <div style="font-size: 0.95rem; color: #f0f6fc; font-weight: 600;">
+            Q{@number}: {@question.title}
+          </div>
+        </div>
+
+        <div style={"font-size: 0.85rem; font-weight: 700; color: #{score_color(@metrics.integrity_score)};"}>
+          {percent(@metrics.integrity_score)}
+        </div>
+      </div>
+
+      <div :if={@metrics.sycophancy_warning} style="background: #2d1117; border: 1px solid #f78166; color: #ffdcd7; border-radius: 6px; padding: 0.6rem 0.75rem; margin-bottom: 0.75rem; font-size: 0.82rem;">
+        Low divergence and challenge signals suggest this outcome may have tracked the prompt too closely.
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
+        <.metric_stat label="Divergence Delta" value={percent(@metrics.divergence_delta)} detail={"#{@metrics.premise_token_count} premise tokens"} />
+        <.metric_stat label="Vocabulary Innovation" value={percent(@metrics.vocabulary_innovation)} detail={"#{@metrics.novel_token_count} novel tokens"} />
+        <.metric_stat label="Premise Challenge Rate" value={percent(@metrics.premise_challenge_rate)} detail={"#{@metrics.challenge_turn_count}/#{@metrics.total_turn_count} turns"} />
+      </div>
+    </div>
+    """
+  end
+
+  defp metric_stat(assigns) do
+    ~H"""
+    <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 0.75rem;">
+      <div style="font-size: 0.78rem; color: #58a6ff; text-transform: uppercase; margin-bottom: 0.35rem;">{@label}</div>
+      <div style="font-size: 1.05rem; color: #f0f6fc; font-weight: 700;">{@value}</div>
+      <div style="font-size: 0.78rem; color: #8b949e; margin-top: 0.3rem;">{@detail}</div>
+    </div>
+    """
+  end
+
+  defp load_state(socket, "", local_path, _discussion_path) do
     socket
     |> assign(:questions, %{})
+    |> assign(:integrity_scorecard, %{})
     |> assign(:conflicts, load_conflicts(local_path))
   end
 
-  defp load_state(socket, repo, local_path) do
-    socket =
-      case CLI.get_discussion_state(repo) do
-        {:ok, qs} -> assign(socket, :questions, qs)
-        {:error, _} -> assign(socket, :questions, %{})
+  defp load_state(socket, repo, local_path, discussion_path) do
+    {questions, scorecard} =
+      case CLI.get_discussion_state(repo, detailed: true) do
+        {:ok, qs} ->
+          {qs, load_integrity_scorecard(repo, local_path, discussion_path, qs)}
+
+        {:error, _} ->
+          {%{}, %{}}
       end
 
-    assign(socket, :conflicts, load_conflicts(local_path))
+    socket
+    |> assign(:questions, questions)
+    |> assign(:integrity_scorecard, scorecard)
+    |> assign(:conflicts, load_conflicts(local_path))
+  end
+
+  defp load_integrity_scorecard(repo, local_path, discussion_path, questions) do
+    discussion_repo =
+      DiscussionRepo.new(repo,
+        local_path: blank_to_nil(local_path),
+        base_path: blank_to_nil(discussion_path)
+      )
+
+    brief_text =
+      case DiscussionGit.read_brief(discussion_repo) do
+        {:ok, brief} -> brief
+        _ -> ""
+      end
+
+    decision_text =
+      case DiscussionGit.read_decision(discussion_repo) do
+        {:ok, decision} -> decision
+        _ -> ""
+      end
+
+    IntegrityMetrics.compute(questions, brief_text, decision_text)
   end
 
   defp open_questions(questions) do
@@ -491,6 +609,12 @@ defmodule RoundtableWeb.DiscussionLive do
   defp border_color(:no_objection), do: "#1f6feb"
   defp border_color(:needs_more_evidence), do: "#f78166"
   defp border_color(:unknown), do: "#30363d"
+
+  defp score_color(score) when score >= 0.66, do: "#3fb950"
+  defp score_color(score) when score >= 0.4, do: "#d29922"
+  defp score_color(_score), do: "#f78166"
+
+  defp percent(value), do: "#{Float.round(value * 100.0, 1)}%"
 
   defp btn_style(:primary) do
     "background: #238636; color: #f0f6fc; border: none; border-radius: 6px; padding: 0.6rem 1rem;
