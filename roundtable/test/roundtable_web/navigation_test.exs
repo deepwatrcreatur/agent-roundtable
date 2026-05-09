@@ -13,14 +13,28 @@ defmodule RoundtableWeb.NavigationTest do
     :ok
   end
 
-  test "roundtable dashboard includes shared navigation" do
+  test "landing page exposes the shareable demo entry" do
     conn = get(build_conn(), "/")
     html = html_response(conn, 200)
 
     assert html =~ "Deepwater Roundtable"
-    assert html =~ "Roundtable Dashboard · discussion ops"
-    assert html =~ "Forgejo Demo Shell · investor demo"
+    assert html =~ "Vaglio Demo Home"
+    assert html =~ "Forgejo Demo Shell"
+    assert html =~ "Roundtable Ops"
+    assert html =~ "Forgejo outside."
+    assert html =~ "Open Recommended Demo"
     assert html =~ "href=\"/forgejo-shell\""
+  end
+
+  test "roundtable dashboard lives at /roundtable" do
+    conn = get(build_conn(), "/roundtable")
+    html = html_response(conn, 200)
+
+    assert html =~ "Deepwater Roundtable"
+    assert html =~ "Vaglio Demo Home"
+    assert html =~ "Forgejo Demo Shell"
+    assert html =~ "Roundtable Ops"
+    assert html =~ "Inject Question"
   end
 
   test "forgejo shell includes shared navigation" do
@@ -28,8 +42,9 @@ defmodule RoundtableWeb.NavigationTest do
     html = html_response(conn, 200)
 
     assert html =~ "Deepwater Roundtable"
-    assert html =~ "Roundtable Dashboard · discussion ops"
-    assert html =~ "Forgejo Demo Shell · investor demo"
-    assert html =~ "href=\"/\""
+    assert html =~ "Vaglio Demo Home"
+    assert html =~ "Forgejo Demo Shell"
+    assert html =~ "Roundtable Ops"
+    assert html =~ "href=\"/roundtable\""
   end
 end

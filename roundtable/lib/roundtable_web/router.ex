@@ -19,8 +19,10 @@ defmodule RoundtableWeb.Router do
     get("/auth/callback", AuthController, :callback)
     get("/auth/sign_out", AuthController, :sign_out)
 
+    live("/", LandingLive)
+
     live_session :authenticated, on_mount: [{RoundtableWeb.UserAuth, :ensure_authenticated}] do
-      live("/", DiscussionLive)
+      live("/roundtable", DiscussionLive)
     end
 
     live("/forgejo-shell", ForgejoShellLive)

@@ -278,7 +278,11 @@ defmodule Roundtable.InvestorDemo do
   end
 
   @spec default_id() :: String.t()
-  def default_id, do: hd(@profiles).id
+  def default_id do
+    @profiles
+    |> Enum.find(hd(@profiles), &(&1.id == "forgejo"))
+    |> Map.fetch!(:id)
+  end
 
   @spec import(String.t(), keyword() | map()) :: {:ok, map()} | {:error, term()}
   def import(id, opts \\ []) do
