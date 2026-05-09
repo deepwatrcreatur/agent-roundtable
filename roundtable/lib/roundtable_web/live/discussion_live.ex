@@ -10,7 +10,7 @@ defmodule RoundtableWeb.DiscussionLive do
 
   alias Roundtable.CLI
   alias Roundtable.Actions.DiscussionGit
-  alias Roundtable.{DiscussionRepo, IntegrityMetrics, RedTeamHighlights, RobustnessMetrics}
+  alias Roundtable.{DiscussionRepo, IntegrityMetrics, ProvenanceMap, RedTeamHighlights, RobustnessMetrics}
 
   @poll_interval_ms 30_000
 
@@ -42,6 +42,7 @@ defmodule RoundtableWeb.DiscussionLive do
       |> assign(:low_robustness_history, [])
       |> assign(:red_team_only, false)
       |> assign(:red_team_views, %{})
+      |> assign(:provenance_views, %{})
       |> load_state(repo, local_path, discussion_path)
 
     {:ok, socket}
@@ -309,6 +310,7 @@ defmodule RoundtableWeb.DiscussionLive do
           q={q}
           robustness={Map.get(@robustness_meters, number)}
           red_team_view={Map.get(@red_team_views, number, %{hard_truth_count: 0, premise_collision_count: 0})}
+          provenance_view={Map.get(@provenance_views, number, %{provenance_claim_count: 0})}
         />
       </section>
 
@@ -361,6 +363,7 @@ defmodule RoundtableWeb.DiscussionLive do
           number={number}
           question={Map.get(@questions, number)}
           view={view}
+          provenance_view={Map.get(@provenance_views, number, %{turns: [], evidence_map: [], chain: %{observed: [], testimony: [], inferred: []}})}
           red_team_only={@red_team_only}
         />
       </section>
@@ -444,6 +447,12 @@ defmodule RoundtableWeb.DiscussionLive do
           Premise Collisions: {@red_team_view.premise_collision_count}
         </span>
       </div>
+
+      <div :if={Map.get(@provenance_view, :provenance_claim_count, 0) > 0} style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
+        <span style="background: #0d2238; border: 1px solid #58a6ff; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.75rem; color: #d6ecff;">
+          Provenance Claims: {@provenance_view.provenance_claim_count}
+        </span>
+      </div>
     </div>
     """
   end
@@ -492,7 +501,12 @@ defmodule RoundtableWeb.DiscussionLive do
 
   defp round_history_card(assigns) do
     turns = visible_turns(assigns.view, assigns.red_team_only)
-    assigns = assign(assigns, :turns, turns)
+    provenance_turns = visible_provenance_turns(assigns.provenance_view, assigns.red_team_only, turns)
+
+    assigns =
+      assigns
+      |> assign(:turns, turns)
+      |> assign(:provenance_turns, provenance_turns)
 
     ~H"""
     <div style="border: 1px solid #30363d; border-radius: 8px; padding: 1rem; background: #161b22; margin-bottom: 0.75rem;">
@@ -507,7 +521,14 @@ defmodule RoundtableWeb.DiscussionLive do
         </div>
       </div>
 
-      <.transcript_turn :for={turn <- @turns} turn={turn} />
+      <.transcript_turn
+        :for={turn <- @turns}
+        turn={turn}
+        provenance_turn={Map.get(@provenance_turns, turn.agent_name, %{claims: []})}
+      />
+
+      <.evidence_map :if={@provenance_view.evidence_map != []} evidence_map={@provenance_view.evidence_map} />
+      <.epistemic_chain :if={has_epistemic_chain?(@provenance_view.chain)} chain={@provenance_view.chain} />
     </div>
     """
   end
@@ -534,6 +555,72 @@ defmodule RoundtableWeb.DiscussionLive do
 
       <div :if={@turn.observed_evidence != []} style="margin-top: 0.55rem; font-size: 0.78rem; color: #ffdfb6;">
         Observed evidence: {Enum.join(@turn.observed_evidence, " · ")}
+      </div>
+
+      <div :if={@provenance_turn.claims != []} style="margin-top: 0.7rem; display: grid; gap: 0.45rem;">
+        <.provenance_claim :for={claim <- @provenance_turn.claims} claim={claim} />
+      </div>
+    </div>
+    """
+  end
+
+  defp provenance_claim(assigns) do
+    ~H"""
+    <details style="background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 0.5rem 0.65rem;">
+      <summary style="cursor: pointer; list-style: none; display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;">
+        <span style={"background: #{provenance_background(@claim.kind)}; border: 1px solid #{provenance_border(@claim.kind)}; border-radius: 999px; padding: 0.1rem 0.55rem; font-size: 0.72rem; color: #{provenance_text(@claim.kind)};"}>
+          {String.capitalize(@claim.kind)}
+        </span>
+        <span style="font-size: 0.82rem; color: #c9d1d9;">{@claim.claim_text}</span>
+      </summary>
+
+      <div style="margin-top: 0.55rem; font-size: 0.78rem; color: #8b949e;">
+        <strong style="color: #c9d1d9;">Raw observation data:</strong>
+        <span>{if @claim.evidence == "", do: "No explicit source detail provided.", else: @claim.evidence}</span>
+      </div>
+    </details>
+    """
+  end
+
+  defp evidence_map(assigns) do
+    ~H"""
+    <div style="border-top: 1px solid #30363d; margin-top: 0.9rem; padding-top: 0.9rem;">
+      <div style="font-size: 0.82rem; color: #8b949e; text-transform: uppercase; margin-bottom: 0.5rem;">Evidence Map</div>
+      <div style="display: grid; gap: 0.45rem;">
+        <details :for={claim <- @evidence_map} style="background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 0.5rem 0.65rem;">
+          <summary style="cursor: pointer; list-style: none; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            <span style="color: #c9d1d9; font-size: 0.82rem;">{claim.claim_text}</span>
+            <span style="color: #58a6ff; font-size: 0.75rem;">{claim.agent_name}</span>
+          </summary>
+          <div style="margin-top: 0.55rem; font-size: 0.78rem; color: #8b949e;">{claim.evidence}</div>
+        </details>
+      </div>
+    </div>
+    """
+  end
+
+  defp epistemic_chain(assigns) do
+    ~H"""
+    <div style="border-top: 1px solid #30363d; margin-top: 0.9rem; padding-top: 0.9rem;">
+      <div style="font-size: 0.82rem; color: #8b949e; text-transform: uppercase; margin-bottom: 0.5rem;">Epistemic Chain</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
+        <.chain_column title="Inferred Claim" claims={@chain.inferred} kind="inferred" />
+        <.chain_column title="Testimony" claims={@chain.testimony} kind="testimony" />
+        <.chain_column title="Observed Fact" claims={@chain.observed} kind="observed" />
+      </div>
+    </div>
+    """
+  end
+
+  defp chain_column(assigns) do
+    ~H"""
+    <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 0.75rem;">
+      <div style={"font-size: 0.78rem; color: #{provenance_text(@kind)}; text-transform: uppercase; margin-bottom: 0.45rem;"}>
+        {@title}
+      </div>
+      <div :if={@claims == []} style="font-size: 0.78rem; color: #8b949e; font-style: italic;">None tagged yet.</div>
+      <div :for={claim <- Enum.take(@claims, 3)} style="font-size: 0.8rem; color: #c9d1d9; margin-bottom: 0.35rem;">
+        {claim.claim_text}
       </div>
     </div>
     """
@@ -695,22 +782,24 @@ defmodule RoundtableWeb.DiscussionLive do
     |> assign(:robustness_meters, %{})
     |> assign(:low_robustness_history, [])
     |> assign(:red_team_views, %{})
+    |> assign(:provenance_views, %{})
     |> assign(:conflicts, load_conflicts(local_path))
   end
 
   defp load_state(socket, repo, local_path, discussion_path) do
-    {questions, integrity_scorecard, robustness_meters, low_robustness_history, red_team_views} =
+    {questions, integrity_scorecard, robustness_meters, low_robustness_history, red_team_views,
+     provenance_views} =
       case CLI.get_discussion_state(repo, detailed: true) do
         {:ok, qs} ->
           {brief_text, decision_text} = load_discussion_texts(repo, local_path, discussion_path)
           robustness = RobustnessMetrics.compute(qs, decision_text)
 
           {qs, IntegrityMetrics.compute(qs, brief_text, decision_text), robustness,
-           RobustnessMetrics.low_robustness_history(qs, robustness),
-           RedTeamHighlights.build(qs, brief_text)}
+           RobustnessMetrics.low_robustness_history(qs, robustness), RedTeamHighlights.build(qs, brief_text),
+           ProvenanceMap.build(qs)}
 
         {:error, _} ->
-          {%{}, %{}, %{}, [], %{}}
+          {%{}, %{}, %{}, [], %{}, %{}}
       end
 
     socket
@@ -719,6 +808,7 @@ defmodule RoundtableWeb.DiscussionLive do
     |> assign(:robustness_meters, robustness_meters)
     |> assign(:low_robustness_history, low_robustness_history)
     |> assign(:red_team_views, red_team_views)
+    |> assign(:provenance_views, provenance_views)
     |> assign(:conflicts, load_conflicts(local_path))
   end
 
@@ -850,9 +940,39 @@ defmodule RoundtableWeb.DiscussionLive do
   defp visible_turns(view, true), do: view.red_team_turns
   defp visible_turns(view, false), do: view.turns
 
+  defp visible_provenance_turns(provenance_view, true, visible_turns) do
+    visible_agents = MapSet.new(Enum.map(visible_turns, & &1.agent_name))
+
+    provenance_view.turns
+    |> Enum.filter(&(MapSet.member?(visible_agents, &1.agent_name) and &1.claims != []))
+    |> Map.new(&{&1.agent_name, &1})
+  end
+
+  defp visible_provenance_turns(provenance_view, false, _visible_turns) do
+    provenance_view.turns
+    |> Enum.filter(&(&1.claims != []))
+    |> Map.new(&{&1.agent_name, &1})
+  end
+
+  defp has_epistemic_chain?(chain) do
+    chain.observed != [] or chain.testimony != [] or chain.inferred != []
+  end
+
   defp score_color(score) when score >= 0.66, do: "#3fb950"
   defp score_color(score) when score >= 0.4, do: "#d29922"
   defp score_color(_score), do: "#f78166"
+
+  defp provenance_background("observed"), do: "#0d2238"
+  defp provenance_background("testimony"), do: "#2d1f03"
+  defp provenance_background("inferred"), do: "#211436"
+
+  defp provenance_border("observed"), do: "#58a6ff"
+  defp provenance_border("testimony"), do: "#d29922"
+  defp provenance_border("inferred"), do: "#a371f7"
+
+  defp provenance_text("observed"), do: "#d6ecff"
+  defp provenance_text("testimony"), do: "#ffdfb6"
+  defp provenance_text("inferred"), do: "#eadcff"
 
   defp robustness_color(:deep_green), do: "#3fb950"
   defp robustness_color(:pale_green), do: "#8ddb8c"

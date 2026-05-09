@@ -1,6 +1,6 @@
 # 44 — Claim Basis & Provenance Badging
 
-**Status:** `in-progress` — **GitHub Copilot** — `/tmp/agent-roundtable-item44-147790`
+**Status:** `done` — **GitHub Copilot**
 
 ## Goal
 Surface the "Appraisal Value" of findings by grounding them in observed reality vs. pure inference.
@@ -14,3 +14,8 @@ Surface the "Appraisal Value" of findings by grounding them in observed reality 
 ## Acceptance Criteria
 - Claims in the WebUI are color-coded or badged by provenance.
 - Clicking a Badge reveals the raw "Observation" data.
+
+## Outcome
+- Added `Roundtable.ProvenanceMap` to parse `[observed: ...]`, `[testimony: ...]`, and `[inferred: ...]` tags from transcript turns into claims, an evidence map, and an epistemic chain.
+- Extended `DiscussionLive` so transcript turns show provenance badges whose disclosure panels reveal the raw supporting source text.
+- Added question-level provenance counts plus per-question `Evidence Map` and `Epistemic Chain` views, and updated prompts so future turns can emit the provenance tags consistently.

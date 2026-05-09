@@ -386,6 +386,11 @@ defmodule Roundtable.Orchestrator do
     - `[satisfied]`
     - `[satisfied-conditional: <condition>]`
     - `[needs more evidence: <what>]`
+
+    When you make factual claims, annotate them inline where possible with:
+    - `[observed: <command output, file read, or direct observation>]`
+    - `[testimony: <reported source>]`
+    - `[inferred: <reasoning basis>]`
     """
   end
 

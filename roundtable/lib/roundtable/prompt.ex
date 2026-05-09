@@ -26,7 +26,12 @@ defmodule Roundtable.Prompt do
     ### Instructions
     1. Read the brief and the current discussion carefully.
     2. Provide your signed position on the current question.
-    3. You MUST end your response with exactly one of these markers for the current question:
+    3. When you make factual or evidentiary claims, annotate them inline where possible with:
+       [observed: <command output, file read, or direct observation>]
+       [testimony: <reported source or witness>]
+       [inferred: <reasoning basis>]
+       Keep the supporting source text concise but specific.
+    4. You MUST end your response with exactly one of these markers for the current question:
        [satisfied]
        [satisfied-conditional: <condition>]
        [needs more evidence: <what>]
