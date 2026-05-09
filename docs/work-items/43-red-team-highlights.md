@@ -1,6 +1,6 @@
 # 43 — Adversarial Turn UI
 
-**Status:** `ready`
+**Status:** `in-progress` — **GitHub Copilot** — `/tmp/agent-roundtable-item43-135813`
 
 ## Goal
 Promote and highlight "Skeptic" turns to prove the council is actively testing for failure modes.
