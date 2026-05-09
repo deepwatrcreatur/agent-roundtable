@@ -1,6 +1,6 @@
 # 44 — Claim Basis & Provenance Badging
 
-**Status:** `ready`
+**Status:** `in-progress` — **GitHub Copilot** — `/tmp/agent-roundtable-item44-147790`
 
 ## Goal
 Surface the "Appraisal Value" of findings by grounding them in observed reality vs. pure inference.
