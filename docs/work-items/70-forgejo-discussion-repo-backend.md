@@ -1,6 +1,6 @@
 # 70 — Forgejo DiscussionRepo Backend
 
-**Status:** `ready`
+**Status:** `done`
 **Tag:** `[product]`
 
 ## Goal
@@ -20,3 +20,12 @@ Implement the missing `Roundtable.Adapters.Forgejo` backend so file-based discus
 - `DiscussionRepo.new(..., backend: Roundtable.Adapters.Forgejo)` is viable for file-backed repo operations.
 - The Forgejo adapter preserves the same high-level backend contract as GitHub without pretending the APIs are identical.
 - Tests cover both happy-path file operations and expected API failure modes.
+
+## Outcome
+- Added `Roundtable.Adapters.Forgejo` using Forgejo's contents API via `curl`.
+- Kept backend-specific seams explicit:
+  - required Forgejo host config via `:base_url` or `:api_base_url`
+  - `POST` for create vs `PUT` for update
+  - configurable `token` vs `bearer` auth header mode
+- Added focused adapter coverage for reads, writes, listings, auth, and failure handling.
+- Updated `DiscussionRepo` docs/tests to surface backend-specific config.

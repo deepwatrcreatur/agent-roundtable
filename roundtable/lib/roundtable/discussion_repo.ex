@@ -1,6 +1,6 @@
 defmodule Roundtable.DiscussionRepo do
   @moduledoc """
-  Represents a GitHub repository that holds a roundtable discussion.
+  Represents a repository-backed roundtable discussion.
 
   A discussion repo follows the canonical layout (Q23 / Protocol Update 10):
 
@@ -18,7 +18,13 @@ defmodule Roundtable.DiscussionRepo do
 
   ## Usage
 
-      repo = DiscussionRepo.new("owner/my-discussion", token: System.get_env("GH_TOKEN"))
+      repo =
+        DiscussionRepo.new("owner/my-discussion",
+          token: System.get_env("GH_TOKEN"),
+          backend: Roundtable.Adapters.Forgejo,
+          config: %{base_url: "https://forgejo.example.org"}
+        )
+
       {:ok, brief} = DiscussionRepo.read_file(repo, "BRIEF.md")
   """
 
@@ -45,15 +51,16 @@ defmodule Roundtable.DiscussionRepo do
   ]
 
   @doc """
-  Build a `DiscussionRepo` from a GitHub slug (`"owner/repo"`).
+  Build a `DiscussionRepo` from a repository slug (`"owner/repo"`).
 
   ## Options
 
-  - `:token`          — GitHub PAT; when nil the `gh` CLI's ambient auth is used
+  - `:token`          — API token; interpretation depends on the configured backend
   - `:local_path`     — local working-copy path (optional; used for git operations)
   - `:base_path`      — optional discussion root inside the repo (e.g. `docs/design`)
   - `:issues_enabled` — whether the GitHub Issues overlay is active (default `false`)
   - `:backend`        — the `Backend` module to use (default `Adapters.GitHub`)
+  - `:config`         — backend-specific configuration map (e.g. Forgejo `:base_url`)
   """
   @spec new(String.t(), keyword()) :: t()
   def new(gh_slug, opts \\ []) do

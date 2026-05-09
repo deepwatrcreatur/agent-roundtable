@@ -109,8 +109,8 @@ Do not work on an item already marked `in-progress` by another agent.
 
 ### Code Server Prototype (Forgejo + jj)
 
-55. [`66-forgejo-code-server-shell.md`](./66-forgejo-code-server-shell.md) — `ready` — `[product]` Forgejo-based code server shell
+55. [`66-forgejo-code-server-shell.md`](./66-forgejo-code-server-shell.md) — `done` — `[product]` Forgejo-based code server shell
 56. [`67-git-jj-translation-gateway.md`](./67-git-jj-translation-gateway.md) — `done` — `[structural]` Git ↔ jj translation gateway
-57. [`68-public-repo-investor-demo.md`](./68-public-repo-investor-demo.md) — `ready` — `[market]` Public repo import & investor demo
+57. [`68-public-repo-investor-demo.md`](./68-public-repo-investor-demo.md) — `done` — `[market]` Public repo import & investor demo
 58. [`69-jj-vs-git-infra-benchmark.md`](./69-jj-vs-git-infra-benchmark.md) — `ready` — `[structural]` jj vs. Git infrastructure benchmark
-59. [`70-forgejo-discussion-repo-backend.md`](./70-forgejo-discussion-repo-backend.md) — `ready` — `[product]` Forgejo DiscussionRepo backend
+59. [`70-forgejo-discussion-repo-backend.md`](./70-forgejo-discussion-repo-backend.md) — `done` — `[product]` Forgejo DiscussionRepo backend

@@ -21,16 +21,20 @@ defmodule Roundtable.DiscussionRepoTest do
     end
 
     test "accepts all options" do
-      r = DiscussionRepo.new("owner/repo",
-        token: "tok",
-        local_path: "/tmp/repo",
-        issues_enabled: true,
-        backend: StubBackend
-      )
+      r =
+        DiscussionRepo.new("owner/repo",
+          token: "tok",
+          local_path: "/tmp/repo",
+          issues_enabled: true,
+          backend: StubBackend,
+          config: %{base_url: "https://forgejo.example.org"}
+        )
+
       assert r.token == "tok"
       assert r.local_path == "/tmp/repo"
       assert r.issues_enabled == true
       assert r.backend == StubBackend
+      assert r.config == %{base_url: "https://forgejo.example.org"}
     end
   end
 
@@ -57,11 +61,13 @@ defmodule Roundtable.DiscussionRepoTest do
 
   describe "list_files/2" do
     test "returns entry names at path" do
-      r = repo(%{
-        "rounds/round-01-q1.md" => "a",
-        "rounds/round-02-q2.md" => "b",
-        "BRIEF.md" => "c"
-      })
+      r =
+        repo(%{
+          "rounds/round-01-q1.md" => "a",
+          "rounds/round-02-q2.md" => "b",
+          "BRIEF.md" => "c"
+        })
+
       {:ok, names} = DiscussionRepo.list_files(r, "rounds")
       assert Enum.sort(names) == ["round-01-q1.md", "round-02-q2.md"]
     end

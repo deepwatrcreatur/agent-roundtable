@@ -8,6 +8,13 @@ defmodule Roundtable.TestSupport.FakeRunner do
     parent = Process.get(:test_pid, self())
     send(parent, {:cmd, command, args, opts})
 
-    Process.get(:runner_result, {"", 0})
+    case Process.get(:runner_result_seq) do
+      [next | rest] ->
+        Process.put(:runner_result_seq, rest)
+        next
+
+      _ ->
+        Process.get(:runner_result, {"", 0})
+    end
   end
 end

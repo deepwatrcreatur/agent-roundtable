@@ -3,17 +3,18 @@ defmodule RoundtableWeb.Router do
   import Phoenix.LiveView.Router
 
   pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, html: {RoundtableWeb.Layouts, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_live_flash)
+    plug(:put_root_layout, html: {RoundtableWeb.Layouts, :root})
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
   end
 
   scope "/", RoundtableWeb do
-    pipe_through :browser
+    pipe_through(:browser)
 
-    live "/", DiscussionLive
+    live("/", DiscussionLive)
+    live("/forgejo-shell", ForgejoShellLive)
   end
 end
