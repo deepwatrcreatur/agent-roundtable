@@ -99,7 +99,9 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
         <div :if={@demo} style="background: linear-gradient(180deg, rgba(22,27,34,0.96), rgba(13,17,23,0.96)); border: 1px solid #30363d; border-radius: 16px; padding: 1.1rem;">
           <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem;">
-            Recommended first view
+            {if @selected_demo == InvestorDemo.default_id(),
+              do: "Recommended first view",
+              else: "Selected demo details"}
           </div>
           <div style="color: #f0f6fc; font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem;">
             {@demo.name}
@@ -128,7 +130,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
             id={"demo-#{demo.id}"}
             style={demo_card_style(demo.id == @selected_demo)}
           >
-            <span :if={demo.id == @selected_demo} style="display: inline-flex; margin-bottom: 0.55rem; color: #3fb950; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em;">
+            <span :if={demo.id == InvestorDemo.default_id()} style="display: inline-flex; margin-bottom: 0.55rem; color: #3fb950; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em;">
               Recommended first click
             </span>
             <span style="display: block; color: #f0f6fc; font-weight: 600;">{demo.name}</span>

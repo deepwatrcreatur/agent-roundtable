@@ -127,9 +127,8 @@ defmodule RoundtableWeb.LandingLive do
   end
 
   defp recommended_demo do
-    InvestorDemo.catalog()
-    |> Enum.find(fn demo -> demo.id == "forgejo" end)
-    |> Kernel.||(List.first(InvestorDemo.catalog()))
+    catalog = InvestorDemo.catalog()
+    Enum.find(catalog, List.first(catalog), &(&1.id == InvestorDemo.default_id()))
   end
 
   defp section_heading_style do
