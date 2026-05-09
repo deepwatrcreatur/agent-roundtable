@@ -309,6 +309,10 @@ defmodule RoundtableWeb.DiscussionLive do
           Discussion Source
         </h2>
 
+        <p style="color: #8b949e; font-size: 0.82rem; line-height: 1.5; margin-bottom: 0.9rem;">
+          Click a repo card to select it immediately. The selected repo and default discussion path will populate below without needing the Apply button.
+        </p>
+
         <div :if={length(@candidate_repos) > 0} style="display: grid; gap: 0.75rem; margin-bottom: 1rem;">
           <button
             :for={candidate <- @candidate_repos}
@@ -320,6 +324,9 @@ defmodule RoundtableWeb.DiscussionLive do
           >
             <span style="display: block; font-size: 0.95rem; font-weight: 600; color: #f0f6fc;">
               {candidate.slug}
+              <span :if={candidate.slug == @repo} style="margin-left: 0.45rem; color: #58a6ff; font-size: 0.75rem; text-transform: uppercase;">
+                selected
+              </span>
             </span>
             <span :if={candidate.description} style="display: block; margin-top: 0.35rem; color: #8b949e; font-size: 0.82rem;">
               {candidate.description}
@@ -328,6 +335,25 @@ defmodule RoundtableWeb.DiscussionLive do
               {candidate_topic_line(candidate)}
             </span>
           </button>
+        </div>
+
+        <div
+          :if={@source_mode == "repo" and blank_to_nil(@repo)}
+          style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 0.85rem 1rem; margin-bottom: 1rem;"
+        >
+          <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase; margin-bottom: 0.35rem;">
+            Active discussion target
+          </div>
+          <div style="color: #f0f6fc; font-weight: 600;">
+            {@repo}
+          </div>
+          <div style="color: #8b949e; font-size: 0.82rem; margin-top: 0.35rem; line-height: 1.5;">
+            Discussion path:
+            <strong style="color: #c9d1d9; font-weight: 600;">
+              {if blank_to_nil(@discussion_path), do: @discussion_path, else: "(repo root)"}
+            </strong>
+            . New questions and round state will be read from and written to this repo/path.
+          </div>
         </div>
 
         <form phx-submit="set_source" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; align-items: end; margin-bottom: 0.5rem;">
@@ -340,23 +366,35 @@ defmodule RoundtableWeb.DiscussionLive do
           </label>
 
           <label style="display: flex; flex-direction: column; gap: 0.35rem; color: #8b949e; font-size: 0.8rem;">
-            GitHub repo
+            Discussion repo
             <input type="text" name="repo" value={@repo} placeholder="owner/repo" style={input_style()} />
+            <span style="color: #8b949e; font-size: 0.74rem; line-height: 1.4;">
+              The remote repo where roundtable files and issue-backed discussion state live.
+            </span>
           </label>
 
           <label style="display: flex; flex-direction: column; gap: 0.35rem; color: #8b949e; font-size: 0.8rem;">
             Discussion path
             <input type="text" name="discussion_path" value={@discussion_path} placeholder="repo root or embedded folder" style={input_style()} />
+            <span style="color: #8b949e; font-size: 0.74rem; line-height: 1.4;">
+              Optional folder inside the discussion repo, such as <code style="color: #c9d1d9;">docs/design</code>.
+            </span>
           </label>
 
           <label style="display: flex; flex-direction: column; gap: 0.35rem; color: #8b949e; font-size: 0.8rem;">
             Legacy BRIEF path
             <input type="text" name="brief_path" value={@brief_path} placeholder="docs/design/BRIEF.md" style={input_style()} />
+            <span style="color: #8b949e; font-size: 0.74rem; line-height: 1.4;">
+              Used only in legacy BRIEF-file mode instead of repo-backed discussions.
+            </span>
           </label>
 
           <label style="display: flex; flex-direction: column; gap: 0.35rem; color: #8b949e; font-size: 0.8rem;">
             Local checkout
             <input type="text" name="local_path" value={@local_path} placeholder="/path/to/repo" style={input_style()} />
+            <span style="color: #8b949e; font-size: 0.74rem; line-height: 1.4;">
+              Local clone used for conflict inspection and resolve actions. It does not decide which remote repo receives discussion updates.
+            </span>
           </label>
 
           <button type="submit" style={btn_style(:primary)}>Apply</button>

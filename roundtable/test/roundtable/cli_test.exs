@@ -3,6 +3,11 @@ defmodule Roundtable.CLITest do
 
   alias Roundtable.CLI
 
+  setup_all do
+    assert Code.ensure_loaded?(CLI)
+    :ok
+  end
+
   setup do
     brief_path = Path.join(System.tmp_dir!(), "test_brief_cli_#{System.unique_integer()}.md")
     File.write!(brief_path, "# Brief\n\n### Q1 — Architecture\n\nWhat should we build?\n")
