@@ -58,7 +58,7 @@ Do not work on an item already marked `in-progress` by another agent.
 
 ### Epistemic Integrity & WebUI (Protocol 15)
 
-33. [`41-integrity-scorecard.md`](./41-integrity-scorecard.md) — `ready` — Sycophancy & Integrity Dashboard
+33. [`41-integrity-scorecard.md`](./41-integrity-scorecard.md) — `in-progress` — **GitHub Copilot** — Sycophancy & Integrity Dashboard
 34. [`42-robustness-meter.md`](./42-robustness-meter.md) — `ready` — Consensus Robustness Meter
 35. [`43-red-team-highlights.md`](./43-red-team-highlights.md) — `ready` — Adversarial Turn UI
 36. [`44-provenance-visualization.md`](./44-provenance-visualization.md) — `ready` — Claim Basis & Provenance Badging
