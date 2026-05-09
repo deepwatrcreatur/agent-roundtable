@@ -1,6 +1,6 @@
 # 69 — jj vs. Git Infrastructure Benchmark
 
-**Status:** `ready`
+**Status:** `done`
 **Tag:** `[structural]`
 
 ## Goal
@@ -27,3 +27,19 @@ Benchmark Vaglio's `jj`-native direction against Git-compatible agent infrastruc
 - The benchmark uses a reproducible workload instead of anecdotal impressions.
 - Results make the tradeoff legible to both technical and product stakeholders.
 - The outcome informs queue priority for `jj`-heavy items and any Git-compatibility layer work.
+
+## Outcome
+- Added `Roundtable.ArchitectureBenchmark` with reproducible benchmark profiles for:
+  - `nixpkgs`
+  - `kubernetes`
+  - `forgejo`
+- Each profile now defines:
+  - an agent-scale workload
+  - a `jj`-native path
+  - a Git-compatible path
+  - an explicit recommendation for what should stay native versus compatible
+- Wired the benchmark into `/forgejo-shell` so the investor demo now includes:
+  - workload size and provenance hooks
+  - side-by-side path cards for `jj` vs Git-compatible infrastructure
+  - a clear "keep native" vs "keep compatible" recommendation
+- Added focused benchmark tests and extended the shell page test to cover the benchmark section.

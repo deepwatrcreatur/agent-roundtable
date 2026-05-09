@@ -5,7 +5,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
   use Phoenix.LiveView
 
-  alias Roundtable.{ForgejoShell, InvestorDemo}
+  alias Roundtable.{ArchitectureBenchmark, ForgejoShell, InvestorDemo}
 
   @impl true
   def mount(params, _session, socket) do
@@ -30,6 +30,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
       |> assign(:selected_demo, selected_demo)
       |> assign(:inputs, inputs)
       |> assign_demo(selected_demo, inputs)
+      |> assign_benchmark(selected_demo)
       |> assign_shell(inputs)
 
     {:ok, socket}
@@ -48,6 +49,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
      |> assign(:selected_demo, selected_demo)
      |> assign(:inputs, inputs)
      |> assign_demo(selected_demo, inputs)
+     |> assign_benchmark(selected_demo)
      |> assign_shell(inputs)}
   end
 
@@ -64,6 +66,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
          |> assign(:selected_demo, selected_demo)
          |> assign(:inputs, inputs)
          |> assign(:demo, demo)
+         |> assign_benchmark(selected_demo)
          |> assign_shell(inputs)}
 
       {:error, reason} ->
@@ -210,6 +213,39 @@ defmodule RoundtableWeb.ForgejoShellLive do
         </div>
       </section>
 
+      <section :if={@benchmark} style="margin-bottom: 2rem;">
+        <h2 style={section_heading_style()}>JJ vs Git Infrastructure Benchmark</h2>
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+          <div style="color: #f0f6fc; font-weight: 600; margin-bottom: 0.45rem;">{@benchmark.title}</div>
+          <p style="margin: 0; color: #8b949e; line-height: 1.5;">
+            {@benchmark.recommendation.summary}
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
+          <.workload_metric_card label="Concurrent changes" value={@benchmark.workload.concurrent_changes} />
+          <.workload_metric_card label="Ephemeral workspaces" value={@benchmark.workload.ephemeral_workspaces} />
+          <.workload_metric_card label="Conflict recovery cases" value={@benchmark.workload.conflict_recovery_cases} />
+          <.workload_metric_card label="Ingest window" value={@benchmark.workload.ingest_window} />
+        </div>
+
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+          <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase; margin-bottom: 0.5rem;">Reproducible workload hooks</div>
+          <ul style="margin: 0; padding-left: 1.1rem; color: #8b949e; line-height: 1.6;">
+            <li :for={hook <- @benchmark.workload.provenance_hooks}>{hook}</li>
+          </ul>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
+          <.benchmark_path_card :for={path <- @benchmark.paths} path={path} />
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem;">
+          <.detail_list_card title="Keep native in jj" items={Enum.map(@benchmark.recommendation.native_zone, &%{title: &1, detail: "Best handled inside the native Vaglio core."})} />
+          <.detail_list_card title="Keep compatible at the edge" items={Enum.map(@benchmark.recommendation.compatible_zone, &%{title: &1, detail: "Expose through the Forgejo/Git-facing shell for adoption."})} />
+        </div>
+      </section>
+
       <section :if={@shell}>
         <h2 style={section_heading_style()}>Extension Seams</h2>
         <div style="display: grid; gap: 0.75rem;">
@@ -238,6 +274,13 @@ defmodule RoundtableWeb.ForgejoShellLive do
     case InvestorDemo.import(selected_demo, base_url: inputs.base_url) do
       {:ok, demo} -> assign(socket, :demo, demo)
       {:error, _reason} -> assign(socket, :demo, nil)
+    end
+  end
+
+  defp assign_benchmark(socket, selected_demo) do
+    case ArchitectureBenchmark.compare(selected_demo) do
+      {:ok, benchmark} -> assign(socket, :benchmark, benchmark)
+      {:error, _reason} -> assign(socket, :benchmark, nil)
     end
   end
 
@@ -342,6 +385,38 @@ defmodule RoundtableWeb.ForgejoShellLive do
     """
   end
 
+  defp workload_metric_card(assigns) do
+    ~H"""
+    <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;">
+      <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase;">{@label}</div>
+      <div style="color: #f0f6fc; font-size: 1.35rem; font-weight: 700; margin-top: 0.45rem;">{@value}</div>
+    </div>
+    """
+  end
+
+  defp benchmark_path_card(assigns) do
+    ~H"""
+    <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;">
+      <div style="display: flex; justify-content: space-between; gap: 0.75rem; align-items: baseline; margin-bottom: 0.75rem;">
+        <strong style="color: #f0f6fc;">{@path.label}</strong>
+        <span style={"color: #{owner_color(path_owner(@path.posture))}; font-size: 0.78rem; text-transform: uppercase;"}>{path_posture_label(@path.posture)}</span>
+      </div>
+
+      <div style="display: grid; gap: 0.55rem; margin-bottom: 0.75rem;">
+        <div :for={metric <- @path.metrics} style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.5rem; align-items: baseline;">
+          <span style="color: #58a6ff; font-size: 0.82rem;">{metric.label}</span>
+          <span style="color: #f0f6fc; font-weight: 700;">{metric.value}</span>
+          <span style="grid-column: 1 / -1; color: #8b949e; font-size: 0.8rem; line-height: 1.45;">{metric.note}</span>
+        </div>
+      </div>
+
+      <ul style="margin: 0; padding-left: 1.1rem; color: #8b949e; line-height: 1.6;">
+        <li :for={tradeoff <- @path.tradeoffs}>{tradeoff}</li>
+      </ul>
+    </div>
+    """
+  end
+
   defp detail_list_card(assigns) do
     ~H"""
     <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;">
@@ -391,6 +466,16 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
   defp owner_color(:forgejo), do: "#3fb950"
   defp owner_color(:vaglio), do: "#d2a8ff"
+
+  defp path_owner(:native), do: :vaglio
+  defp path_owner("native"), do: :vaglio
+  defp path_owner(:compatible), do: :forgejo
+  defp path_owner("compatible"), do: :forgejo
+
+  defp path_posture_label(:native), do: "native"
+  defp path_posture_label("native"), do: "native"
+  defp path_posture_label(:compatible), do: "compatible"
+  defp path_posture_label("compatible"), do: "compatible"
 
   defp status_label(:done), do: "done"
   defp status_label(other), do: to_string(other)
