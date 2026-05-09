@@ -73,17 +73,25 @@ defmodule Roundtable.Vcs.Dolt do
   def diff(_revision, _opts), do: {:ok, ""}
 
   @impl true
-  def write_files(%{message: message, branch: branch, changes: _changes}, opts)
+  def write_files(%{message: message, branch: branch, changes: _changes} = params, opts)
       when is_binary(message) and is_binary(branch) do
     # For Dolt, write_files is a logical commit of the CURRENT database state.
     # We assume the caller has already performed SQL updates via a separate action.
     with {:ok, repo_path} <- fetch_repo_path(opts),
          {:ok, _} <- dolt(["add", "."], repo_path, opts),
-         {:ok, _} <- dolt(["commit", "-m", message], repo_path, opts),
+         {:ok, _} <- dolt(commit_args(params), repo_path, opts),
          {:ok, commit_sha} <- current_head(branch, opts) do
       {:ok, %{commit_id: commit_sha, change_id: nil, branch: branch}}
     end
   end
+
+  defp commit_args(%{message: message} = params) do
+    ["commit"] ++ signing_args(params) ++ ["-m", message]
+  end
+
+  defp signing_args(%{sign?: true, signing_key: key}) when is_binary(key) and key != "", do: ["-S", key]
+  defp signing_args(%{sign?: true}), do: ["-S"]
+  defp signing_args(_params), do: []
 
   defp fetch_repo_path(opts) do
     case Keyword.get(opts, :repo_path) do

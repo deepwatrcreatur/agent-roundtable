@@ -10,7 +10,14 @@ defmodule RoundtableWeb.DiscussionLive do
 
   alias Roundtable.CLI
   alias Roundtable.Actions.DiscussionGit
-  alias Roundtable.{DiscussionRepo, IntegrityMetrics, ProvenanceMap, RedTeamHighlights, RobustnessMetrics}
+  alias Roundtable.{
+    DiscussionRepo,
+    HumanAnchor,
+    IntegrityMetrics,
+    ProvenanceMap,
+    RedTeamHighlights,
+    RobustnessMetrics
+  }
 
   @poll_interval_ms 30_000
 
@@ -43,6 +50,9 @@ defmodule RoundtableWeb.DiscussionLive do
       |> assign(:red_team_only, false)
       |> assign(:red_team_views, %{})
       |> assign(:provenance_views, %{})
+      |> assign(:anchor_statuses, %{})
+      |> assign(:maintainer_options, HumanAnchor.maintainer_options())
+      |> assign(:selected_maintainer, HumanAnchor.maintainer_options() |> List.first())
       |> load_state(repo, local_path, discussion_path)
 
     {:ok, socket}
@@ -198,6 +208,64 @@ defmodule RoundtableWeb.DiscussionLive do
   end
 
   @impl true
+  def handle_event("set_maintainer", %{"maintainer" => maintainer}, socket) do
+    {:noreply, assign(socket, :selected_maintainer, maintainer)}
+  end
+
+  @impl true
+  def handle_event("verify_integrity", %{"number" => number}, socket) do
+    with {:ok, issue_number} <- parse_number(number),
+         {:ok, maintainer} <- selected_maintainer(socket),
+         :ok <-
+           HumanAnchor.verify_finding(
+             blank_to_nil(socket.assigns.local_path),
+             issue_number,
+             maintainer,
+             socket.assigns.questions[issue_number].satisfaction
+           ) do
+      socket =
+        socket
+        |> assign(:flash_msg, "Anchored issue ##{issue_number} with #{maintainer}")
+        |> load_state(socket.assigns.repo, socket.assigns.local_path, socket.assigns.discussion_path)
+
+      {:noreply, socket}
+    else
+      {:error, :no_local_repo} ->
+        {:noreply, assign(socket, :flash_msg, "Configure a local checkout before recording a human anchor.")}
+
+      {:error, reason} ->
+        {:noreply, assign(socket, :flash_msg, "Failed to anchor: #{inspect(reason)}")}
+    end
+  end
+
+  @impl true
+  def handle_event("verify_claim", %{"number" => number, "claim" => claim_key}, socket) do
+    with {:ok, issue_number} <- parse_number(number),
+         {:ok, maintainer} <- selected_maintainer(socket),
+         :ok <-
+           HumanAnchor.verify_claim(
+             blank_to_nil(socket.assigns.local_path),
+             issue_number,
+             claim_key,
+             maintainer,
+             socket.assigns.questions[issue_number].satisfaction
+           ) do
+      socket =
+        socket
+        |> assign(:flash_msg, "Vouched claim #{String.slice(claim_key, 0, 8)} for issue ##{issue_number}")
+        |> load_state(socket.assigns.repo, socket.assigns.local_path, socket.assigns.discussion_path)
+
+      {:noreply, socket}
+    else
+      {:error, :no_local_repo} ->
+        {:noreply, assign(socket, :flash_msg, "Configure a local checkout before recording a claim vouch.")}
+
+      {:error, reason} ->
+        {:noreply, assign(socket, :flash_msg, "Failed to vouch claim: #{inspect(reason)}")}
+    end
+  end
+
+  @impl true
   def handle_event("resolve_conflict", %{"path" => path, "vcs" => vcs}, socket) do
     local_path = socket.assigns.local_path
     vcs_atom = String.to_existing_atom(vcs)
@@ -300,6 +368,21 @@ defmodule RoundtableWeb.DiscussionLive do
           Questions
         </h2>
 
+        <form phx-change="set_maintainer" style="display: flex; gap: 0.75rem; align-items: end; flex-wrap: wrap; margin-bottom: 1rem;">
+          <label style="display: flex; flex-direction: column; gap: 0.35rem; color: #8b949e; font-size: 0.8rem;">
+            Verifying maintainer
+            <select name="maintainer" style={input_style()}>
+              <option :for={maintainer <- @maintainer_options} value={maintainer} selected={maintainer == @selected_maintainer}>
+                {maintainer}
+              </option>
+            </select>
+          </label>
+
+          <div style="font-size: 0.78rem; color: #8b949e; max-width: 28rem;">
+            Human anchors are durable Dolt trust-table commits. A finding becomes project-binding once a maintainer vouches for it.
+          </div>
+        </form>
+
         <div :if={map_size(@questions) == 0} style="color: #8b949e; font-style: italic;">
           No roundtable issues found for the selected repo.
         </div>
@@ -311,6 +394,7 @@ defmodule RoundtableWeb.DiscussionLive do
           robustness={Map.get(@robustness_meters, number)}
           red_team_view={Map.get(@red_team_views, number, %{hard_truth_count: 0, premise_collision_count: 0})}
           provenance_view={Map.get(@provenance_views, number, %{provenance_claim_count: 0})}
+          anchor_status={Map.get(@anchor_statuses, number, %{anchored?: false, status_label: "Awaiting Human Anchor", delta_label: "Awaiting review", finding_vouch_count: 0, claim_vouch_counts: %{}, maintainers: []})}
         />
       </section>
 
@@ -364,6 +448,7 @@ defmodule RoundtableWeb.DiscussionLive do
           question={Map.get(@questions, number)}
           view={view}
           provenance_view={Map.get(@provenance_views, number, %{turns: [], evidence_map: [], chain: %{observed: [], testimony: [], inferred: []}})}
+          anchor_status={Map.get(@anchor_statuses, number, %{claim_vouch_counts: %{}})}
           red_team_only={@red_team_only}
         />
       </section>
@@ -453,6 +538,27 @@ defmodule RoundtableWeb.DiscussionLive do
           Provenance Claims: {@provenance_view.provenance_claim_count}
         </span>
       </div>
+
+      <div style="margin-top: 0.85rem; border-top: 1px solid #30363d; padding-top: 0.75rem; display: flex; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+        <div style="display: grid; gap: 0.25rem;">
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+            <span style={"background: #{anchor_background(@anchor_status.anchored?)}; border: 1px solid #{anchor_border(@anchor_status.anchored?)}; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.75rem; color: #{anchor_text(@anchor_status.anchored?)};"}>
+              Human Anchor: {@anchor_status.status_label}
+            </span>
+            <span style="background: #21262d; border: 1px solid #30363d; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.75rem; color: #c9d1d9;">
+              Human/AI Delta: {@anchor_status.delta_label}
+            </span>
+          </div>
+          <div style="font-size: 0.78rem; color: #8b949e;">
+            {@anchor_status.finding_vouch_count} maintainer vouch(es)
+            <span :if={@anchor_status.maintainers != []}> · {Enum.join(@anchor_status.maintainers, ", ")}</span>
+          </div>
+        </div>
+
+        <button phx-click="verify_integrity" phx-value-number={@number} style={btn_style(:secondary)}>
+          Verify Integrity
+        </button>
+      </div>
     </div>
     """
   end
@@ -525,6 +631,8 @@ defmodule RoundtableWeb.DiscussionLive do
         :for={turn <- @turns}
         turn={turn}
         provenance_turn={Map.get(@provenance_turns, turn.agent_name, %{claims: []})}
+        number={@number}
+        claim_vouch_counts={Map.get(@anchor_status, :claim_vouch_counts, %{})}
       />
 
       <.evidence_map :if={@provenance_view.evidence_map != []} evidence_map={@provenance_view.evidence_map} />
@@ -558,7 +666,12 @@ defmodule RoundtableWeb.DiscussionLive do
       </div>
 
       <div :if={@provenance_turn.claims != []} style="margin-top: 0.7rem; display: grid; gap: 0.45rem;">
-        <.provenance_claim :for={claim <- @provenance_turn.claims} claim={claim} />
+        <.provenance_claim
+          :for={claim <- @provenance_turn.claims}
+          claim={claim}
+          number={@number}
+          vouch_count={Map.get(@claim_vouch_counts, claim.claim_id, 0)}
+        />
       </div>
     </div>
     """
@@ -572,12 +685,19 @@ defmodule RoundtableWeb.DiscussionLive do
           {String.capitalize(@claim.kind)}
         </span>
         <span style="font-size: 0.82rem; color: #c9d1d9;">{@claim.claim_text}</span>
+        <span :if={@vouch_count > 0} style="background: #0d2238; border: 1px solid #58a6ff; border-radius: 999px; padding: 0.1rem 0.55rem; font-size: 0.72rem; color: #d6ecff;">
+          Human Vouches: {@vouch_count}
+        </span>
       </summary>
 
       <div style="margin-top: 0.55rem; font-size: 0.78rem; color: #8b949e;">
         <strong style="color: #c9d1d9;">Raw observation data:</strong>
         <span>{if @claim.evidence == "", do: "No explicit source detail provided.", else: @claim.evidence}</span>
       </div>
+
+      <button phx-click="verify_claim" phx-value-number={@number} phx-value-claim={@claim.claim_id} style={compact_btn_style()}>
+        Vouch claim
+      </button>
     </details>
     """
   end
@@ -783,23 +903,25 @@ defmodule RoundtableWeb.DiscussionLive do
     |> assign(:low_robustness_history, [])
     |> assign(:red_team_views, %{})
     |> assign(:provenance_views, %{})
+    |> assign(:anchor_statuses, %{})
     |> assign(:conflicts, load_conflicts(local_path))
   end
 
   defp load_state(socket, repo, local_path, discussion_path) do
     {questions, integrity_scorecard, robustness_meters, low_robustness_history, red_team_views,
-     provenance_views} =
+     provenance_views, anchor_statuses} =
       case CLI.get_discussion_state(repo, detailed: true) do
         {:ok, qs} ->
           {brief_text, decision_text} = load_discussion_texts(repo, local_path, discussion_path)
           robustness = RobustnessMetrics.compute(qs, decision_text)
+          vouches = load_vouches(local_path)
 
           {qs, IntegrityMetrics.compute(qs, brief_text, decision_text), robustness,
            RobustnessMetrics.low_robustness_history(qs, robustness), RedTeamHighlights.build(qs, brief_text),
-           ProvenanceMap.build(qs)}
+           ProvenanceMap.build(qs), HumanAnchor.build_statuses(qs, vouches)}
 
         {:error, _} ->
-          {%{}, %{}, %{}, [], %{}, %{}}
+          {%{}, %{}, %{}, [], %{}, %{}, %{}}
       end
 
     socket
@@ -809,6 +931,7 @@ defmodule RoundtableWeb.DiscussionLive do
     |> assign(:low_robustness_history, low_robustness_history)
     |> assign(:red_team_views, red_team_views)
     |> assign(:provenance_views, provenance_views)
+    |> assign(:anchor_statuses, anchor_statuses)
     |> assign(:conflicts, load_conflicts(local_path))
   end
 
@@ -854,6 +977,13 @@ defmodule RoundtableWeb.DiscussionLive do
     conflicts
   end
 
+  defp load_vouches(local_path) do
+    case HumanAnchor.list_vouches(blank_to_nil(local_path)) do
+      {:ok, vouches} -> vouches
+      {:error, _} -> []
+    end
+  end
+
   defp require_repo(socket) do
     case blank_to_nil(socket.assigns.repo) do
       nil -> {:error, "Configure a GitHub repo before injecting questions or running rounds."}
@@ -876,6 +1006,20 @@ defmodule RoundtableWeb.DiscussionLive do
 
   defp blank_to_nil(value) when value in [nil, ""], do: nil
   defp blank_to_nil(value), do: value
+
+  defp parse_number(value) do
+    case Integer.parse(to_string(value)) do
+      {number, ""} -> {:ok, number}
+      _ -> {:error, :invalid_issue_number}
+    end
+  end
+
+  defp selected_maintainer(socket) do
+    case blank_to_nil(socket.assigns.selected_maintainer) do
+      nil -> {:error, :no_maintainer_selected}
+      maintainer -> {:ok, maintainer}
+    end
+  end
 
   defp current_source_label(assigns) do
     case assigns.source_mode do
@@ -915,6 +1059,13 @@ defmodule RoundtableWeb.DiscussionLive do
   defp input_style do
     "background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.9rem;"
   end
+
+  defp anchor_background(true), do: "#0d2238"
+  defp anchor_background(false), do: "#3b2300"
+  defp anchor_border(true), do: "#58a6ff"
+  defp anchor_border(false), do: "#d29922"
+  defp anchor_text(true), do: "#d6ecff"
+  defp anchor_text(false), do: "#ffdfb6"
 
   defp border_color(:satisfied), do: "#238636"
   defp border_color(:satisfied_conditional), do: "#9e6a03"
@@ -997,6 +1148,11 @@ defmodule RoundtableWeb.DiscussionLive do
   defp btn_style(:secondary) do
     "background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; padding: 0.4rem 0.8rem;
      cursor: pointer; font-family: inherit; font-size: 0.8rem;"
+  end
+
+  defp compact_btn_style do
+    "background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; padding: 0.3rem 0.65rem;
+     cursor: pointer; font-family: inherit; font-size: 0.75rem; margin-top: 0.65rem;"
   end
 
   defp candidate_card_style(true) do

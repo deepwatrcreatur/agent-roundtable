@@ -62,7 +62,7 @@ Do not work on an item already marked `in-progress` by another agent.
 34. [`42-robustness-meter.md`](./42-robustness-meter.md) — `done` — **GitHub Copilot** — Consensus Robustness Meter
 35. [`43-red-team-highlights.md`](./43-red-team-highlights.md) — `done` — **GitHub Copilot** — Adversarial Turn UI
 36. [`44-provenance-visualization.md`](./44-provenance-visualization.md) — `done` — **GitHub Copilot** — Claim Basis & Provenance Badging
-37. [`45-vouch-anchoring.md`](./45-vouch-anchoring.md) — `in-progress` — **GitHub Copilot** — Human Vouch Anchoring
+37. [`45-vouch-anchoring.md`](./45-vouch-anchoring.md) — `done` — **GitHub Copilot** — Human Vouch Anchoring
 38. [`46-dolt-tag-schema.md`](./46-dolt-tag-schema.md) — `done` — **Gemini** — Multidimensional Tagging Schema (Dolt + jj)
 39. [`47-tag-based-context-pruning.md`](./47-tag-based-context-pruning.md) — `ready` — Tag-Based Context Pruning
 40. [`48-prediction-error-heatmap.md`](./48-prediction-error-heatmap.md) — `ready` — Prediction Error Heatmap (System Stress UI)

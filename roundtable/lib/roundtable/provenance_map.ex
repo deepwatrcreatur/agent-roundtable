@@ -14,6 +14,7 @@ defmodule Roundtable.ProvenanceMap do
   @kinds ~w(observed testimony inferred)
 
   @type claim :: %{
+          claim_id: String.t(),
           kind: String.t(),
           claim_text: String.t(),
           evidence: String.t(),
@@ -120,11 +121,20 @@ defmodule Roundtable.ProvenanceMap do
       |> String.trim()
 
     %{
+      claim_id: claim_id(kind, cleaned, evidence, agent_name),
       kind: String.downcase(kind),
       claim_text: if(cleaned == "", do: default_claim_text(kind, evidence), else: cleaned),
       evidence: String.trim(evidence),
       agent_name: agent_name
     }
+  end
+
+  defp claim_id(kind, claim_text, evidence, agent_name) do
+    [kind, claim_text, evidence, agent_name]
+    |> Enum.join("|")
+    |> then(&:crypto.hash(:sha256, &1))
+    |> Base.encode16(case: :lower)
+    |> String.slice(0, 16)
   end
 
   defp default_claim_text(kind, evidence) when kind in @kinds and evidence != "", do: evidence
