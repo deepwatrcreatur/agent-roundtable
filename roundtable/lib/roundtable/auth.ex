@@ -15,7 +15,8 @@ defmodule Roundtable.Auth do
 
   def authorization_url(state, redirect_uri) do
     with :ok <- ensure_enabled(),
-         {:ok, metadata} <- discovery_document() do
+         {:ok, metadata} <- discovery_document(),
+         {:ok, %{authorization_endpoint: authorization_endpoint}} <- endpoint_metadata(metadata) do
       params = %{
         "client_id" => client_id(),
         "redirect_uri" => redirect_uri,
@@ -24,15 +25,18 @@ defmodule Roundtable.Auth do
         "state" => state
       }
 
-      {:ok, metadata["authorization_endpoint"] <> "?" <> URI.encode_query(params)}
+      {:ok, authorization_endpoint <> "?" <> URI.encode_query(params)}
     end
   end
 
   def exchange_code_for_user(code, redirect_uri) do
     with :ok <- ensure_enabled(),
          {:ok, metadata} <- discovery_document(),
-         {:ok, tokens} <- exchange_code(metadata["token_endpoint"], code, redirect_uri),
-         {:ok, userinfo} <- fetch_userinfo(metadata["userinfo_endpoint"], tokens["access_token"]),
+         {:ok, %{token_endpoint: token_endpoint, userinfo_endpoint: userinfo_endpoint}} <-
+           endpoint_metadata(metadata),
+         {:ok, tokens} <- exchange_code(token_endpoint, code, redirect_uri),
+         {:ok, access_token} <- access_token(tokens),
+         {:ok, userinfo} <- fetch_userinfo(userinfo_endpoint, access_token),
          {:ok, current_user} <- normalize_user(userinfo) do
       {:ok, current_user}
     end
@@ -48,15 +52,9 @@ defmodule Roundtable.Auth do
         {:error, :missing_service_pat}
 
       token ->
-        url = "#{@github_api}/repos/#{repo}/collaborators/#{github_login}/permission"
-
-        headers = [
-          {"authorization", "Bearer #{token}"},
-          {"accept", "application/vnd.github+json"},
-          {"x-github-api-version", "2022-11-28"}
-        ]
-
-        with {:ok, %{status: 200, body: body}} <- request(:get, url, headers: headers) do
+        with {:ok, url} <- repo_permission_url(repo, github_login),
+             {:ok, %{status: 200, body: body}} <- request(:get, url, headers: github_headers(token)),
+             true <- is_map(body) or {:error, {:unexpected_github_body, body}} do
           permission = String.downcase(body["permission"] || "")
           {:ok, permission in @read_permissions}
         else
@@ -141,6 +139,28 @@ defmodule Roundtable.Auth do
     if enabled?(), do: :ok, else: {:error, :oidc_disabled}
   end
 
+  defp endpoint_metadata(metadata) when is_map(metadata) do
+    with authz when is_binary(authz) and authz != "" <- metadata["authorization_endpoint"],
+         token when is_binary(token) and token != "" <- metadata["token_endpoint"],
+         userinfo when is_binary(userinfo) and userinfo != "" <- metadata["userinfo_endpoint"] do
+      {:ok,
+       %{
+         authorization_endpoint: authz,
+         token_endpoint: token,
+         userinfo_endpoint: userinfo
+       }}
+    else
+      _ -> {:error, :missing_oidc_metadata}
+    end
+  end
+
+  defp endpoint_metadata(_), do: {:error, :missing_oidc_metadata}
+
+  defp access_token(%{"access_token" => token}) when is_binary(token) and token != "",
+    do: {:ok, token}
+
+  defp access_token(_), do: {:error, :missing_access_token}
+
   defp issuer_url do
     config_value(:issuer_url, "OIDC_ISSUER_URL")
     |> to_string()
@@ -173,20 +193,70 @@ defmodule Roundtable.Auth do
     Keyword.get(config, key) || System.get_env(env_var) || ""
   end
 
-  defp request(method, url, opts \\ []) do
-    case Keyword.get(Application.get_env(:roundtable, __MODULE__, []), :http_client) do
-      fun when is_function(fun, 3) ->
-        fun.(method, url, opts)
+  defp github_headers(token) do
+    [
+      {"authorization", "Bearer #{token}"},
+      {"accept", "application/vnd.github+json"},
+      {"x-github-api-version", "2022-11-28"}
+    ]
+  end
+
+  defp repo_permission_url(repo, github_login) do
+    with {:ok, {owner, name}} <- split_repo_slug(repo),
+         {:ok, encoded_login} <- encode_github_login(github_login) do
+      {:ok, "#{@github_api}/repos/#{owner}/#{name}/collaborators/#{encoded_login}/permission"}
+    end
+  end
+
+  defp split_repo_slug(repo) do
+    case String.split(to_string(repo), "/", parts: 2) do
+      [owner, name] ->
+        owner = String.trim(owner)
+        name = String.trim(name)
+
+        if valid_repo_segment?(owner) and valid_repo_segment?(name) do
+          {:ok, {URI.encode(owner, &URI.char_unreserved?/1), URI.encode(name, &URI.char_unreserved?/1)}}
+        else
+          {:error, :invalid_repo}
+        end
 
       _ ->
-        request_opts =
-          [method: method, url: url, headers: Keyword.get(opts, :headers, [])]
-          |> maybe_put(:form, Keyword.get(opts, :form))
+        {:error, :invalid_repo}
+    end
+  end
 
-        case Req.request(request_opts) do
-          {:ok, %Req.Response{status: status, body: body}} -> {:ok, %{status: status, body: body}}
-          {:error, reason} -> {:error, reason}
-        end
+  defp encode_github_login(github_login) do
+    login = github_login |> to_string() |> String.trim()
+
+    if Regex.match?(~r/\A[a-zA-Z0-9-]+\z/, login) do
+      {:ok, URI.encode(login, &URI.char_unreserved?/1)}
+    else
+      {:error, :invalid_github_login}
+    end
+  end
+
+  defp valid_repo_segment?(segment) do
+    segment != "" and Regex.match?(~r/\A[A-Za-z0-9._-]+\z/, segment)
+  end
+
+  defp request(method, url, opts \\ []) do
+    if not is_binary(url) or url == "" do
+      {:error, :invalid_url}
+    else
+      case Keyword.get(Application.get_env(:roundtable, __MODULE__, []), :http_client) do
+        fun when is_function(fun, 3) ->
+          fun.(method, url, opts)
+
+        _ ->
+          request_opts =
+            [method: method, url: url, headers: Keyword.get(opts, :headers, [])]
+            |> maybe_put(:form, Keyword.get(opts, :form))
+
+          case Req.request(request_opts) do
+            {:ok, %Req.Response{status: status, body: body}} -> {:ok, %{status: status, body: body}}
+            {:error, reason} -> {:error, reason}
+          end
+      end
     end
   end
 

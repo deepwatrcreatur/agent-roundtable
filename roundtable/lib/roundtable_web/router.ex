@@ -9,12 +9,20 @@ defmodule RoundtableWeb.Router do
     plug(:put_root_layout, html: {RoundtableWeb.Layouts, :root})
     plug(:protect_from_forgery)
     plug(:put_secure_browser_headers)
+    plug(RoundtableWeb.UserAuth)
   end
 
   scope "/", RoundtableWeb do
     pipe_through(:browser)
 
-    live("/", DiscussionLive)
+    get("/auth/sign_in", AuthController, :sign_in)
+    get("/auth/callback", AuthController, :callback)
+    get("/auth/sign_out", AuthController, :sign_out)
+
+    live_session :authenticated, on_mount: [{RoundtableWeb.UserAuth, :ensure_authenticated}] do
+      live("/", DiscussionLive)
+    end
+
     live("/forgejo-shell", ForgejoShellLive)
   end
 end

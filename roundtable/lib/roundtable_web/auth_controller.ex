@@ -60,13 +60,9 @@ defmodule RoundtableWeb.AuthController do
     |> redirect(to: "/")
   end
 
-  defp redirect_uri(conn) do
-    %URI{
-      scheme: Atom.to_string(conn.scheme),
-      host: conn.host,
-      port: conn.port,
-      path: "/auth/callback"
-    }
+  defp redirect_uri(_conn) do
+    RoundtableWeb.Endpoint.url()
+    |> URI.merge("/auth/callback")
     |> URI.to_string()
   end
 
