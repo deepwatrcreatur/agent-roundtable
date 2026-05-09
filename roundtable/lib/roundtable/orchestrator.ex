@@ -53,7 +53,7 @@ defmodule Roundtable.Orchestrator do
   """
 
   alias Roundtable.Actions.{Gh, RunCliAgent, DiscussionGit}
-  alias Roundtable.{DiscussionRepo, Satisfaction, Prompt, RoundRun, Telemetry}
+  alias Roundtable.{DiscussionRepo, Prompt, RoundArchive, RoundRun, Satisfaction, Telemetry}
 
   @default_agents [:codex, :gemini, :deepseek, :claude_ic]
   @default_max_rounds 5
@@ -99,6 +99,7 @@ defmodule Roundtable.Orchestrator do
   @spec run(String.t(), [question()], keyword()) :: [result()]
   def run(brief_path, questions, opts \\ []) do
     brief = File.read!(brief_path)
+    opts = maybe_put_archive_repo_root(opts, brief_path)
     agents = Keyword.get(opts, :agents, @default_agents)
     max_rounds = Keyword.get(opts, :max_rounds, @default_max_rounds)
     gh_config = build_gh_config(opts)
@@ -129,6 +130,7 @@ defmodule Roundtable.Orchestrator do
     }
 
     result_run = run_issue_loop(run, context)
+    maybe_mirror_issue(question.issue_number, gh_config, opts)
 
     result = %{question | state: phase_to_state(result_run.phase)}
     notify(opts, {:question_done, question.id, result.state})
@@ -755,6 +757,7 @@ defmodule Roundtable.Orchestrator do
 
         case Gh.comment_issue(issue_number, comment_body, gh_config) do
           :ok ->
+            maybe_mirror_issue(issue_number, gh_config, opts)
             # Attempt inline satisfaction detection; apply label immediately if found.
             # Agents without a marker will be handled in :triage_missing_markers.
             case Satisfaction.parse_marker(text) do
@@ -797,7 +800,9 @@ defmodule Roundtable.Orchestrator do
 
   defp apply_effect({:gh_comment, issue_number, body}, context) do
     case Gh.comment_issue(issue_number, body, context.gh_config) do
-      :ok -> :ok
+      :ok ->
+        maybe_mirror_issue(issue_number, context.gh_config, context.opts)
+        :ok
       {:error, reason} -> notify(context.opts, {:gh_error, :comment_issue, reason})
     end
   end
@@ -811,7 +816,9 @@ defmodule Roundtable.Orchestrator do
 
   defp apply_effect({:gh_close, issue_number, comment}, context) do
     case Gh.close_issue(issue_number, [comment: comment], context.gh_config) do
-      :ok -> :ok
+      :ok ->
+        maybe_mirror_issue(issue_number, context.gh_config, context.opts)
+        :ok
       {:error, reason} -> notify(context.opts, {:gh_error, :close_issue, reason})
     end
   end
@@ -940,15 +947,42 @@ defmodule Roundtable.Orchestrator do
   # ------------------------------------------------------------------
 
   defp extract_text(raw, _agent) do
-    case JSON.decode(raw) do
-      {:ok, %{"result" => text}} when is_binary(text) -> text
-      {:ok, %{"content" => text}} when is_binary(text) -> text
-      {:ok, %{"message" => text}} when is_binary(text) -> text
-      {:ok, %{"text" => text}} when is_binary(text) -> text
-      {:ok, data} when is_list(data) -> extract_from_list(data)
-      _ -> raw
+    case decode_text_payload(raw) do
+      nil -> raw
+      text -> text
     end
   end
+
+  defp decode_text_payload(raw) do
+    case JSON.decode(raw) do
+      {:ok, decoded} ->
+        decoded_text(decoded)
+
+      _ ->
+        raw
+        |> String.split("\n", trim: true)
+        |> Enum.reduce(nil, fn line, acc ->
+          case JSON.decode(line) do
+            {:ok, decoded} -> decoded_text(decoded) || acc
+            _ -> acc
+          end
+        end)
+    end
+  end
+
+  defp decoded_text(%{"result" => text}) when is_binary(text), do: text
+  defp decoded_text(%{"response" => text}) when is_binary(text), do: text
+  defp decoded_text(%{"content" => text}) when is_binary(text), do: text
+  defp decoded_text(%{"message" => text}) when is_binary(text), do: text
+  defp decoded_text(%{"text" => text}) when is_binary(text), do: text
+  defp decoded_text(%{"type" => "result", "result" => text}) when is_binary(text), do: text
+
+  defp decoded_text(%{"type" => "item.completed", "item" => %{"type" => "agent_message", "text" => text}})
+       when is_binary(text),
+       do: text
+
+  defp decoded_text(data) when is_list(data), do: extract_from_list(data)
+  defp decoded_text(_), do: nil
 
   defp extract_from_list(items) do
     items
@@ -977,6 +1011,47 @@ defmodule Roundtable.Orchestrator do
     %{}
     |> maybe_put(:repo, Keyword.get(opts, :repo))
     |> maybe_put(:repo_root, Keyword.get(opts, :repo_root))
+    |> maybe_put(:archive_repo_root, Keyword.get(opts, :archive_repo_root))
+  end
+
+  defp maybe_put_archive_repo_root(opts, brief_path) do
+    case Keyword.get(opts, :archive_repo_root) do
+      nil ->
+        case locate_archive_repo_root(brief_path) do
+          nil -> opts
+          root -> Keyword.put(opts, :archive_repo_root, root)
+        end
+
+      _ ->
+        opts
+    end
+  end
+
+  defp locate_archive_repo_root(brief_path) do
+    brief_path
+    |> Path.expand()
+    |> Path.dirname()
+    |> ancestor_dirs()
+    |> Enum.find(fn dir -> File.dir?(Path.join([dir, "docs", "design", "rounds"])) end)
+  end
+
+  defp ancestor_dirs(path), do: do_ancestor_dirs(path, [])
+
+  defp do_ancestor_dirs(nil, acc), do: Enum.reverse(acc)
+  defp do_ancestor_dirs("/", acc), do: Enum.reverse(["/" | acc])
+
+  defp do_ancestor_dirs(dir, acc) do
+    parent = Path.dirname(dir)
+    next = if parent == dir, do: nil, else: parent
+    do_ancestor_dirs(next, [dir | acc])
+  end
+
+  defp maybe_mirror_issue(issue_number, gh_config, opts) do
+    case RoundArchive.mirror_issue(issue_number, gh_config, opts) do
+      :ok -> :ok
+      {:error, :archive_repo_root_not_configured} -> :ok
+      {:error, reason} -> notify(opts, {:archive_mirror_error, issue_number, reason})
+    end
   end
 
   defp maybe_put(map, _key, nil), do: map

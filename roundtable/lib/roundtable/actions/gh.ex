@@ -22,6 +22,7 @@ defmodule Roundtable.Actions.Gh do
   @type error_reason ::
           {:command_failed, non_neg_integer(), String.t()}
           | {:invalid_json, term()}
+          | {:tmp_file_write_failed, term()}
 
   @spec view_issue(issue_number(), keyword(), config()) :: {:ok, map()} | {:error, error_reason()}
   def view_issue(issue_number, opts \\ [], config \\ %{}) do
@@ -42,13 +43,19 @@ defmodule Roundtable.Actions.Gh do
 
   @spec comment_issue(issue_number(), String.t(), config()) :: :ok | {:error, error_reason()}
   def comment_issue(issue_number, body, config \\ %{}) when is_binary(body) do
-    args =
-      ["issue", "comment", Integer.to_string(issue_number), "--body-file", "-"]
-      |> maybe_add_repo(config[:repo])
+    with {:ok, body_file} <- write_temp_body_file(body) do
+      args =
+        ["issue", "comment", Integer.to_string(issue_number), "--body-file", body_file]
+        |> maybe_add_repo(config[:repo])
 
-    case run(args, Map.put(config, :input, body)) do
-      {:ok, _stdout} -> :ok
-      {:error, reason} -> {:error, reason}
+      try do
+        case run(args, config) do
+          {:ok, _stdout} -> :ok
+          {:error, reason} -> {:error, reason}
+        end
+      after
+        File.rm(body_file)
+      end
     end
   end
 
@@ -121,10 +128,7 @@ defmodule Roundtable.Actions.Gh do
     runner = Map.get(config, :runner, SystemCmdRunner)
     gh_bin = Map.get(config, :gh_bin, "gh")
 
-    exec_opts =
-      []
-      |> maybe_put_stdin(config[:input])
-      |> Keyword.put(:stderr_to_stdout, true)
+    exec_opts = [stderr_to_stdout: true]
 
     case runner.cmd(gh_bin, args, exec_opts) do
       {stdout, 0} -> {:ok, stdout}
@@ -156,6 +160,16 @@ defmodule Roundtable.Actions.Gh do
   defp maybe_add_option(args, _flag, ""), do: args
   defp maybe_add_option(args, flag, value), do: args ++ [flag, value]
 
-  defp maybe_put_stdin(opts, nil), do: opts
-  defp maybe_put_stdin(opts, input), do: Keyword.put(opts, :input, input)
+  defp write_temp_body_file(body) do
+    path =
+      Path.join(
+        System.tmp_dir!(),
+        "roundtable-gh-comment-#{System.unique_integer([:positive, :monotonic])}.md"
+      )
+
+    case File.write(path, body) do
+      :ok -> {:ok, path}
+      {:error, reason} -> {:error, {:tmp_file_write_failed, reason}}
+    end
+  end
 end

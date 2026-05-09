@@ -259,6 +259,20 @@ defmodule Roundtable.RoundRunTest do
       assert run.completed_speakers == [:codex]
     end
 
+    test "recognizes plain Claude comments as agent output" do
+      issue = %{
+        "state" => "open",
+        "labels" => [],
+        "comments" => [
+          %{"id" => "1", "body" => "## Claude\n\nText.\n\n[satisfied-conditional: benchmark it]"}
+        ]
+      }
+
+      run = RoundRun.build_from_issue(42, [:claude, :codex], issue)
+      assert run.completed_speakers == [:claude]
+      assert run.satisfaction_map == %{claude: :satisfied_conditional}
+    end
+
     test "infers :coordinator_unavailable from label" do
       issue = %{
         "state" => "open",

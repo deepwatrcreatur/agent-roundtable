@@ -406,6 +406,7 @@ defmodule Roundtable.RoundRun do
   # Maps the comment header prefix to the agent atom.
   @agent_headers [
     {"## Claude IC", :claude_ic},
+    {"## Claude", :claude},
     {"## Codex", :codex},
     {"## Gemini", :gemini},
     {"## DeepSeek", :deepseek}

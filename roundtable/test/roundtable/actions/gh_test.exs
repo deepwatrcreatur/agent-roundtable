@@ -33,11 +33,14 @@ defmodule Roundtable.Actions.GhTest do
                      [stderr_to_stdout: true]}
   end
 
-  test "comment_issue sends the comment over stdin" do
+  test "comment_issue writes the comment to a temporary body file" do
     assert :ok = Gh.comment_issue(7, "Signed position", %{runner: FakeRunner})
 
-    assert_received {:cmd, "gh", ["issue", "comment", "7", "--body-file", "-"],
-                     [stderr_to_stdout: true, input: "Signed position"]}
+    assert_received {:cmd, "gh", ["issue", "comment", "7", "--body-file", body_file],
+                     [stderr_to_stdout: true]}
+
+    assert String.starts_with?(body_file, System.tmp_dir!())
+    refute body_file == "-"
   end
 
   test "edit_issue_labels includes add and remove label flags" do
