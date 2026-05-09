@@ -10,7 +10,7 @@ defmodule RoundtableWeb.DiscussionLive do
 
   alias Roundtable.CLI
   alias Roundtable.Actions.DiscussionGit
-  alias Roundtable.{DiscussionRepo, IntegrityMetrics, RobustnessMetrics}
+  alias Roundtable.{DiscussionRepo, IntegrityMetrics, RedTeamHighlights, RobustnessMetrics}
 
   @poll_interval_ms 30_000
 
@@ -40,6 +40,8 @@ defmodule RoundtableWeb.DiscussionLive do
       |> assign(:integrity_scorecard, %{})
       |> assign(:robustness_meters, %{})
       |> assign(:low_robustness_history, [])
+      |> assign(:red_team_only, false)
+      |> assign(:red_team_views, %{})
       |> load_state(repo, local_path, discussion_path)
 
     {:ok, socket}
@@ -190,6 +192,11 @@ defmodule RoundtableWeb.DiscussionLive do
   end
 
   @impl true
+  def handle_event("toggle_red_team", _params, socket) do
+    {:noreply, assign(socket, :red_team_only, not socket.assigns.red_team_only)}
+  end
+
+  @impl true
   def handle_event("resolve_conflict", %{"path" => path, "vcs" => vcs}, socket) do
     local_path = socket.assigns.local_path
     vcs_atom = String.to_existing_atom(vcs)
@@ -301,6 +308,7 @@ defmodule RoundtableWeb.DiscussionLive do
           number={number}
           q={q}
           robustness={Map.get(@robustness_meters, number)}
+          red_team_view={Map.get(@red_team_views, number, %{hard_truth_count: 0, premise_collision_count: 0})}
         />
       </section>
 
@@ -330,6 +338,31 @@ defmodule RoundtableWeb.DiscussionLive do
 
         <.integrity_summary scorecard={@integrity_scorecard} />
         <.integrity_card :for={{number, metrics} <- Enum.sort(@integrity_scorecard)} number={number} metrics={metrics} question={Map.get(@questions, number)} />
+      </section>
+
+      <section :if={map_size(@red_team_views) > 0} style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+          <h2 style="font-size: 1rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em;">
+            Round History
+          </h2>
+
+          <button phx-click="toggle_red_team" style={btn_style(:secondary)}>
+            <%= if @red_team_only, do: "Show full transcript", else: "Red Team Only" %>
+          </button>
+        </div>
+
+        <div :if={Enum.all?(Map.values(@red_team_views), &(visible_turns(&1, @red_team_only) == []))} style="color: #8b949e; font-style: italic;">
+          No red-team turns matched the current filter.
+        </div>
+
+        <.round_history_card
+          :for={{number, view} <- Enum.sort(@red_team_views)}
+          :if={visible_turns(view, @red_team_only) != []}
+          number={number}
+          question={Map.get(@questions, number)}
+          view={view}
+          red_team_only={@red_team_only}
+        />
       </section>
 
       <section :if={length(@conflicts) > 0} style="margin-bottom: 2rem;">
@@ -402,6 +435,15 @@ defmodule RoundtableWeb.DiscussionLive do
       </div>
 
       <.robustness_meter :if={@robustness} meter={@robustness} />
+
+      <div :if={Map.get(@red_team_view, :hard_truth_count, 0) > 0} style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem;">
+        <span style="background: #2d1117; border: 1px solid #f78166; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.75rem; color: #ffdcd7;">
+          Hard Truths: {@red_team_view.hard_truth_count}
+        </span>
+        <span :if={@red_team_view.premise_collision_count > 0} style="background: #3b2300; border: 1px solid #d29922; border-radius: 999px; padding: 0.15rem 0.6rem; font-size: 0.75rem; color: #ffdfb6;">
+          Premise Collisions: {@red_team_view.premise_collision_count}
+        </span>
+      </div>
     </div>
     """
   end
@@ -443,6 +485,55 @@ defmodule RoundtableWeb.DiscussionLive do
         <button phx-click="resolve_conflict" phx-value-path={@c.path} phx-value-vcs={@c.vcs} style={btn_style(:secondary)}>
           Resolve
         </button>
+      </div>
+    </div>
+    """
+  end
+
+  defp round_history_card(assigns) do
+    turns = visible_turns(assigns.view, assigns.red_team_only)
+    assigns = assign(assigns, :turns, turns)
+
+    ~H"""
+    <div style="border: 1px solid #30363d; border-radius: 8px; padding: 1rem; background: #161b22; margin-bottom: 0.75rem;">
+      <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.75rem;">
+        <div>
+          <div style="font-size: 0.82rem; color: #8b949e;">Discussion transcript</div>
+          <div style="font-size: 0.95rem; color: #f0f6fc; font-weight: 600;">Q{@number}: {@question.title}</div>
+        </div>
+
+        <div style="font-size: 0.8rem; color: #8b949e;">
+          {@view.hard_truth_count} hard truth(s) · {@view.premise_collision_count} collision(s)
+        </div>
+      </div>
+
+      <.transcript_turn :for={turn <- @turns} turn={turn} />
+    </div>
+    """
+  end
+
+  defp transcript_turn(assigns) do
+    ~H"""
+    <div style={"border: 1px solid #{transcript_border(@turn)}; border-radius: 8px; padding: 0.9rem 1rem; background: #{transcript_background(@turn)}; margin-bottom: 0.6rem;"}>
+      <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.5rem;">
+        <div style="font-size: 0.92rem; color: #f0f6fc; font-weight: 600;">{@turn.agent_name}</div>
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <span :if={@turn.disconfirmation_pass?} style="background: #2d1117; border: 1px solid #f78166; border-radius: 999px; padding: 0.1rem 0.55rem; font-size: 0.72rem; color: #ffdcd7;">
+            Disconfirmation Pass
+          </span>
+          <span :if={@turn.red_team?} style="background: #2d1117; border: 1px solid #f85149; border-radius: 999px; padding: 0.1rem 0.55rem; font-size: 0.72rem; color: #ffdcd7;">
+            Skeptic
+          </span>
+          <span :if={@turn.premise_collision?} style="background: #3b2300; border: 1px solid #d29922; border-radius: 999px; padding: 0.1rem 0.55rem; font-size: 0.72rem; color: #ffdfb6;">
+            Premise Collision
+          </span>
+        </div>
+      </div>
+
+      <div style="font-size: 0.86rem; color: #c9d1d9; line-height: 1.45; white-space: pre-wrap;">{transcript_text(@turn.body)}</div>
+
+      <div :if={@turn.observed_evidence != []} style="margin-top: 0.55rem; font-size: 0.78rem; color: #ffdfb6;">
+        Observed evidence: {Enum.join(@turn.observed_evidence, " · ")}
       </div>
     </div>
     """
@@ -603,21 +694,23 @@ defmodule RoundtableWeb.DiscussionLive do
     |> assign(:integrity_scorecard, %{})
     |> assign(:robustness_meters, %{})
     |> assign(:low_robustness_history, [])
+    |> assign(:red_team_views, %{})
     |> assign(:conflicts, load_conflicts(local_path))
   end
 
   defp load_state(socket, repo, local_path, discussion_path) do
-    {questions, integrity_scorecard, robustness_meters, low_robustness_history} =
+    {questions, integrity_scorecard, robustness_meters, low_robustness_history, red_team_views} =
       case CLI.get_discussion_state(repo, detailed: true) do
         {:ok, qs} ->
           {brief_text, decision_text} = load_discussion_texts(repo, local_path, discussion_path)
           robustness = RobustnessMetrics.compute(qs, decision_text)
 
           {qs, IntegrityMetrics.compute(qs, brief_text, decision_text), robustness,
-           RobustnessMetrics.low_robustness_history(qs, robustness)}
+           RobustnessMetrics.low_robustness_history(qs, robustness),
+           RedTeamHighlights.build(qs, brief_text)}
 
         {:error, _} ->
-          {%{}, %{}, %{}, []}
+          {%{}, %{}, %{}, [], %{}}
       end
 
     socket
@@ -625,6 +718,7 @@ defmodule RoundtableWeb.DiscussionLive do
     |> assign(:integrity_scorecard, integrity_scorecard)
     |> assign(:robustness_meters, robustness_meters)
     |> assign(:low_robustness_history, low_robustness_history)
+    |> assign(:red_team_views, red_team_views)
     |> assign(:conflicts, load_conflicts(local_path))
   end
 
@@ -737,6 +831,24 @@ defmodule RoundtableWeb.DiscussionLive do
   defp border_color(:no_objection), do: "#1f6feb"
   defp border_color(:needs_more_evidence), do: "#f78166"
   defp border_color(:unknown), do: "#30363d"
+
+  defp transcript_border(%{premise_collision?: true}), do: "#d29922"
+  defp transcript_border(%{red_team?: true}), do: "#f85149"
+  defp transcript_border(_turn), do: "#30363d"
+
+  defp transcript_background(%{red_team?: true}), do: "#190d12"
+  defp transcript_background(_turn), do: "#0d1117"
+
+  defp transcript_text(body) do
+    body
+    |> String.split("\n")
+    |> Enum.drop(1)
+    |> Enum.join("\n")
+    |> String.trim()
+  end
+
+  defp visible_turns(view, true), do: view.red_team_turns
+  defp visible_turns(view, false), do: view.turns
 
   defp score_color(score) when score >= 0.66, do: "#3fb950"
   defp score_color(score) when score >= 0.4, do: "#d29922"

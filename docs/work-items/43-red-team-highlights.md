@@ -1,6 +1,6 @@
 # 43 — Adversarial Turn UI
 
-**Status:** `in-progress` — **GitHub Copilot** — `/tmp/agent-roundtable-item43-135813`
+**Status:** `done` — **GitHub Copilot**
 
 ## Goal
 Promote and highlight "Skeptic" turns to prove the council is actively testing for failure modes.
@@ -13,3 +13,8 @@ Promote and highlight "Skeptic" turns to prove the council is actively testing f
 ## Acceptance Criteria
 - User can toggle "Red Team Only" to see the "Hard Truths" surfaced by the council.
 - The "Disconfirmation Pass" (Protocol Update 9) is explicitly labelled in the transcript.
+
+## Outcome
+- Added `Roundtable.RedTeamHighlights` to parse discussion comments into transcript turns, flag skeptical/disconfirmation passes, and surface premise collisions tied to `[observed: ...]` evidence.
+- Extended `DiscussionLive` with a `Round History` transcript section, a `Red Team Only` toggle, and explicit `Disconfirmation Pass`, `Skeptic`, and `Premise Collision` badges.
+- Added hard-truth and collision summaries on question cards so adversarial turns stand out even before opening the transcript history.
