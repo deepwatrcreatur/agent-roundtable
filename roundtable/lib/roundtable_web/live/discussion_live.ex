@@ -10,7 +10,7 @@ defmodule RoundtableWeb.DiscussionLive do
 
   alias Roundtable.CLI
   alias Roundtable.Actions.DiscussionGit
-  alias Roundtable.{DiscussionRepo, IntegrityMetrics}
+  alias Roundtable.{DiscussionRepo, IntegrityMetrics, RobustnessMetrics}
 
   @poll_interval_ms 30_000
 
@@ -38,6 +38,8 @@ defmodule RoundtableWeb.DiscussionLive do
       |> assign(:flash_msg, nil)
       |> assign(:conflicts, [])
       |> assign(:integrity_scorecard, %{})
+      |> assign(:robustness_meters, %{})
+      |> assign(:low_robustness_history, [])
       |> load_state(repo, local_path, discussion_path)
 
     {:ok, socket}
@@ -58,13 +60,23 @@ defmodule RoundtableWeb.DiscussionLive do
   @impl true
   def handle_info({:roundtable_event, {:round_complete, _n} = event}, socket) do
     msg = format_event(event)
-    {:noreply, assign(socket, running: false, flash_msg: msg)}
+    socket =
+      socket
+      |> assign(running: false, flash_msg: msg)
+      |> load_state(socket.assigns.repo, socket.assigns.local_path, socket.assigns.discussion_path)
+
+    {:noreply, socket}
   end
 
   @impl true
   def handle_info({:roundtable_event, event}, socket) do
     msg = format_event(event)
-    {:noreply, assign(socket, :flash_msg, msg)}
+    socket =
+      socket
+      |> assign(:flash_msg, msg)
+      |> load_state(socket.assigns.repo, socket.assigns.local_path, socket.assigns.discussion_path)
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -284,7 +296,31 @@ defmodule RoundtableWeb.DiscussionLive do
           No roundtable issues found for the selected repo.
         </div>
 
-        <.question_card :for={{number, q} <- Enum.sort(@questions)} number={number} q={q} />
+        <.question_card
+          :for={{number, q} <- Enum.sort(@questions)}
+          number={number}
+          q={q}
+          robustness={Map.get(@robustness_meters, number)}
+        />
+      </section>
+
+      <section :if={map_size(@robustness_meters) > 0} style="margin-bottom: 2rem;">
+        <h2 style="font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+          Robustness History
+        </h2>
+
+        <.robustness_summary meters={@robustness_meters} />
+
+        <div :if={length(@low_robustness_history) == 0} style="color: #8b949e; font-style: italic;">
+          No closed decisions yet.
+        </div>
+
+        <.robustness_history_card
+          :for={{number, question, meter} <- @low_robustness_history}
+          number={number}
+          question={question}
+          meter={meter}
+        />
       </section>
 
       <section :if={map_size(@integrity_scorecard) > 0} style="margin-bottom: 2rem;">
@@ -364,6 +400,8 @@ defmodule RoundtableWeb.DiscussionLive do
           {if @q.state == :open, do: "open", else: "closed"}
         </span>
       </div>
+
+      <.robustness_meter :if={@robustness} meter={@robustness} />
     </div>
     """
   end
@@ -467,6 +505,88 @@ defmodule RoundtableWeb.DiscussionLive do
     """
   end
 
+  defp robustness_summary(assigns) do
+    meters = Map.values(assigns.meters)
+    average = Enum.sum(Enum.map(meters, & &1.robustness_score)) / max(length(meters), 1)
+    low_count = Enum.count(meters, &(&1.state in [:pale_green, :yellow]))
+
+    assigns =
+      assigns
+      |> assign(:average, average)
+      |> assign(:low_count, low_count)
+
+    ~H"""
+    <div style="border: 1px solid #30363d; border-radius: 8px; padding: 1rem; background: #161b22; margin-bottom: 0.75rem;">
+      <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <div>
+          <div style="font-size: 1.2rem; font-weight: 700; color: #f0f6fc;">{percent(@average)}</div>
+          <div style="font-size: 0.8rem; color: #8b949e;">Average consensus robustness across tracked questions</div>
+        </div>
+
+        <div style="font-size: 0.82rem; color: #8b949e;">
+          {@low_count} rubber-stamp candidate(s)
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  defp robustness_history_card(assigns) do
+    ~H"""
+    <div style="border: 1px solid #30363d; border-radius: 8px; padding: 1rem; background: #161b22; margin-bottom: 0.75rem;">
+      <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.6rem;">
+        <div>
+          <div style="font-size: 0.82rem; color: #8b949e;">Lowest-robustness closed decision</div>
+          <div style="font-size: 0.95rem; color: #f0f6fc; font-weight: 600;">Q{@number}: {@question.title}</div>
+        </div>
+
+        <div style={"font-size: 0.85rem; font-weight: 700; color: #{robustness_color(@meter.state)};"}>
+          {@meter.label} · {percent(@meter.robustness_score)}
+        </div>
+      </div>
+
+      <.robustness_meter meter={@meter} />
+    </div>
+    """
+  end
+
+  defp robustness_meter(assigns) do
+    width = meter_width(assigns.meter.robustness_score)
+
+    assigns =
+      assigns
+      |> assign(:width, width)
+      |> assign(:color, robustness_color(assigns.meter.state))
+
+    ~H"""
+    <div style="margin-top: 0.75rem;">
+      <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.35rem;">
+        <div style="font-size: 0.78rem; color: #8b949e; text-transform: uppercase;">
+          Robustness Meter
+        </div>
+
+        <div style={"font-size: 0.8rem; font-weight: 600; color: #{@color};"}>
+          {@meter.label} · {percent(@meter.robustness_score)}
+        </div>
+      </div>
+
+      <svg width="240" height="16" viewBox="0 0 240 16" role="img" aria-label={"Robustness #{@meter.label}"}>
+        <rect x="0" y="2" width="240" height="12" rx="6" fill="#0d1117" stroke="#30363d" />
+        <rect x="0" y="2" width={@width} height="12" rx="6" fill={@color} />
+        <line x1="80" y1="2" x2="80" y2="14" stroke="#30363d" stroke-width="1" />
+        <line x1="160" y1="2" x2="160" y2="14" stroke="#30363d" stroke-width="1" />
+      </svg>
+
+      <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.45rem; font-size: 0.78rem; color: #8b949e;">
+        <span>{@meter.round_count} round(s)</span>
+        <span>{@meter.objection_count} objection(s)</span>
+        <span>{@meter.satisfied_count} satisfied</span>
+        <span>{@meter.no_objection_count} no objection</span>
+      </div>
+    </div>
+    """
+  end
+
   defp metric_stat(assigns) do
     ~H"""
     <div style="background: #0d1117; border: 1px solid #30363d; border-radius: 6px; padding: 0.75rem;">
@@ -481,26 +601,34 @@ defmodule RoundtableWeb.DiscussionLive do
     socket
     |> assign(:questions, %{})
     |> assign(:integrity_scorecard, %{})
+    |> assign(:robustness_meters, %{})
+    |> assign(:low_robustness_history, [])
     |> assign(:conflicts, load_conflicts(local_path))
   end
 
   defp load_state(socket, repo, local_path, discussion_path) do
-    {questions, scorecard} =
+    {questions, integrity_scorecard, robustness_meters, low_robustness_history} =
       case CLI.get_discussion_state(repo, detailed: true) do
         {:ok, qs} ->
-          {qs, load_integrity_scorecard(repo, local_path, discussion_path, qs)}
+          {brief_text, decision_text} = load_discussion_texts(repo, local_path, discussion_path)
+          robustness = RobustnessMetrics.compute(qs, decision_text)
+
+          {qs, IntegrityMetrics.compute(qs, brief_text, decision_text), robustness,
+           RobustnessMetrics.low_robustness_history(qs, robustness)}
 
         {:error, _} ->
-          {%{}, %{}}
+          {%{}, %{}, %{}, []}
       end
 
     socket
     |> assign(:questions, questions)
-    |> assign(:integrity_scorecard, scorecard)
+    |> assign(:integrity_scorecard, integrity_scorecard)
+    |> assign(:robustness_meters, robustness_meters)
+    |> assign(:low_robustness_history, low_robustness_history)
     |> assign(:conflicts, load_conflicts(local_path))
   end
 
-  defp load_integrity_scorecard(repo, local_path, discussion_path, questions) do
+  defp load_discussion_texts(repo, local_path, discussion_path) do
     discussion_repo =
       DiscussionRepo.new(repo,
         local_path: blank_to_nil(local_path),
@@ -519,7 +647,7 @@ defmodule RoundtableWeb.DiscussionLive do
         _ -> ""
       end
 
-    IntegrityMetrics.compute(questions, brief_text, decision_text)
+    {brief_text, decision_text}
   end
 
   defp open_questions(questions) do
@@ -613,6 +741,14 @@ defmodule RoundtableWeb.DiscussionLive do
   defp score_color(score) when score >= 0.66, do: "#3fb950"
   defp score_color(score) when score >= 0.4, do: "#d29922"
   defp score_color(_score), do: "#f78166"
+
+  defp robustness_color(:deep_green), do: "#3fb950"
+  defp robustness_color(:pale_green), do: "#8ddb8c"
+  defp robustness_color(:yellow), do: "#d29922"
+  defp robustness_color(:active), do: "#f78166"
+  defp robustness_color(:warming), do: "#58a6ff"
+
+  defp meter_width(score), do: max(0, min(240, round(score * 240)))
 
   defp percent(value), do: "#{Float.round(value * 100.0, 1)}%"
 

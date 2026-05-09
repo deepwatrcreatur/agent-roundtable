@@ -1,6 +1,6 @@
 # 42 — Consensus Robustness Meter
 
-**Status:** `in-progress` — **GitHub Copilot** — `/tmp/agent-roundtable-item42-132323`
+**Status:** `done` — **GitHub Copilot**
 
 ## Goal
 A visual indicator of the "Heat" of a discussion to distinguish robust consensus from silent agreement.
@@ -16,3 +16,8 @@ A visual indicator of the "Heat" of a discussion to distinguish robust consensus
 ## Acceptance Criteria
 - Meter updates in real-time as rounds progress.
 - Historical view allows users to quickly identify "Rubber-Stamped" decisions.
+
+## Outcome
+- Added `Roundtable.RobustnessMetrics` to score each discussion from existing roundtable signals: round count, objection count, and the balance between `[satisfied]` and `[no objection]`.
+- Extended `DiscussionLive` with inline SVG robustness meters on each question plus a historical low-robustness section for quick rubber-stamp triage.
+- Updated roundtable event handling so dashboard metrics refresh immediately during active rounds instead of waiting for the next poll cycle.
