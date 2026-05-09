@@ -78,12 +78,41 @@ defmodule RoundtableWeb.ForgejoShellLive do
   def render(assigns) do
     ~H"""
     <div style="max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 4rem;">
-      <header style="margin-bottom: 2rem;">
-        <h1 style="font-size: 1.6rem; color: #f0f6fc; margin-bottom: 0.35rem;">Forgejo Code Server Shell</h1>
-        <p style="color: #8b949e; max-width: 760px; line-height: 1.5;">
-          Forgejo owns the Git-facing shell. Vaglio stays `jj`-first behind the gateway and surfaces
-          analysis beside the Forgejo edge instead of forking Forgejo core.
-        </p>
+      <header style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.25rem; align-items: start; margin-bottom: 2rem;">
+        <div>
+          <div style="display: inline-flex; align-items: center; gap: 0.45rem; border: 1px solid #30363d; border-radius: 999px; padding: 0.35rem 0.75rem; color: #58a6ff; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.85rem;">
+            Public demo shell
+          </div>
+          <h1 style="font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1.02; color: #f0f6fc; margin-bottom: 0.6rem;">
+            Forgejo Code Server Shell
+          </h1>
+          <p style="color: #8b949e; max-width: 760px; line-height: 1.6; margin-bottom: 1rem;">
+            This is the fastest way to understand the product: Forgejo keeps the code-hosting surface recognizable,
+            while Vaglio adds analysis, provenance, and investor-readable repository narratives beside it.
+          </p>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href={"#demo-#{@selected_demo}"} style={cta_style(:primary)}>Start with this demo</a>
+            <a :if={@demo} href={@demo.source.url} style={cta_style(:secondary)}>Open public source</a>
+            <a :if={@demo} href={@demo.imported_repo.repo_url} style={cta_style(:secondary)}>Open imported Forgejo target</a>
+          </div>
+        </div>
+
+        <div :if={@demo} style="background: linear-gradient(180deg, rgba(22,27,34,0.96), rgba(13,17,23,0.96)); border: 1px solid #30363d; border-radius: 16px; padding: 1.1rem;">
+          <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.6rem;">
+            Recommended first view
+          </div>
+          <div style="color: #f0f6fc; font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem;">
+            {@demo.name}
+          </div>
+          <p style="color: #8b949e; line-height: 1.55; margin-bottom: 0.8rem;">
+            {@demo.teaser}
+          </p>
+          <ul style="margin: 0; padding-left: 1rem; color: #8b949e; line-height: 1.65;">
+            <li>Shows the Forgejo shell and Vaglio boundary immediately.</li>
+            <li>Highlights a curated dashboard instead of starting with infrastructure controls.</li>
+            <li>Gives an outsider an obvious first click without verbal narration.</li>
+          </ul>
+        </div>
       </header>
 
       <.flash_banner :if={@error} msg={@error} />
@@ -96,59 +125,17 @@ defmodule RoundtableWeb.ForgejoShellLive do
             type="button"
             phx-click="select_demo_repo"
             phx-value-demo={demo.id}
+            id={"demo-#{demo.id}"}
             style={demo_card_style(demo.id == @selected_demo)}
           >
+            <span :if={demo.id == @selected_demo} style="display: inline-flex; margin-bottom: 0.55rem; color: #3fb950; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.08em;">
+              Recommended first click
+            </span>
             <span style="display: block; color: #f0f6fc; font-weight: 600;">{demo.name}</span>
             <span style="display: block; color: #58a6ff; font-size: 0.78rem; margin-top: 0.35rem;">{demo.source_label}</span>
             <span style="display: block; color: #8b949e; font-size: 0.82rem; margin-top: 0.55rem; line-height: 1.45;">{demo.teaser}</span>
           </button>
         </div>
-      </section>
-
-      <section style="margin-bottom: 2rem;">
-        <h2 style={section_heading_style()}>Prototype Source</h2>
-        <form phx-change="preview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; align-items: end;">
-          <input type="hidden" name="selected_demo" value={@selected_demo} />
-
-          <label style={label_style()}>
-            Forgejo base URL
-            <input type="text" name="base_url" value={@inputs.base_url} style={input_style()} />
-          </label>
-
-          <label style={label_style()}>
-            Repository slug
-            <input type="text" name="repo_slug" value={@inputs.repo_slug} style={input_style()} />
-          </label>
-
-          <label style={label_style()}>
-            Default branch
-            <input type="text" name="default_branch" value={@inputs.default_branch} style={input_style()} />
-          </label>
-
-          <label style={label_style()}>
-            PR head ref
-            <input type="text" name="head_ref" value={@inputs.head_ref} style={input_style()} />
-          </label>
-
-          <label style={label_style()}>
-            Commit SHA
-            <input type="text" name="commit_sha" value={@inputs.commit_sha} style={input_style()} />
-          </label>
-
-          <label style={label_style()}>
-            Pull request number
-            <input type="number" name="pull_number" value={@inputs.pull_number} style={input_style()} />
-          </label>
-
-          <label style={label_style()}>
-            Merge strategy
-            <select name="merge_strategy" style={input_style()}>
-              <option value="merge" selected={@inputs.merge_strategy == :merge}>merge</option>
-              <option value="squash" selected={@inputs.merge_strategy == :squash}>squash</option>
-              <option value="rebase" selected={@inputs.merge_strategy == :rebase}>rebase</option>
-            </select>
-          </label>
-        </form>
       </section>
 
       <section :if={@demo} style="margin-bottom: 2rem;">
@@ -251,6 +238,55 @@ defmodule RoundtableWeb.ForgejoShellLive do
         <div style="display: grid; gap: 0.75rem;">
           <.seam_card :for={seam <- @shell.extension_seams} seam={seam} />
         </div>
+      </section>
+
+      <section style="margin-top: 2.5rem;">
+        <h2 style={section_heading_style()}>Advanced Prototype Source Controls</h2>
+        <p style="color: #8b949e; line-height: 1.55; margin-bottom: 0.9rem; max-width: 44rem;">
+          These controls are here for operators and demo preparation. Most visitors should start with the recommended curated demo above instead of changing the shell inputs first.
+        </p>
+        <form phx-change="preview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; align-items: end;">
+          <input type="hidden" name="selected_demo" value={@selected_demo} />
+
+          <label style={label_style()}>
+            Forgejo base URL
+            <input type="text" name="base_url" value={@inputs.base_url} style={input_style()} />
+          </label>
+
+          <label style={label_style()}>
+            Repository slug
+            <input type="text" name="repo_slug" value={@inputs.repo_slug} style={input_style()} />
+          </label>
+
+          <label style={label_style()}>
+            Default branch
+            <input type="text" name="default_branch" value={@inputs.default_branch} style={input_style()} />
+          </label>
+
+          <label style={label_style()}>
+            PR head ref
+            <input type="text" name="head_ref" value={@inputs.head_ref} style={input_style()} />
+          </label>
+
+          <label style={label_style()}>
+            Commit SHA
+            <input type="text" name="commit_sha" value={@inputs.commit_sha} style={input_style()} />
+          </label>
+
+          <label style={label_style()}>
+            Pull request number
+            <input type="number" name="pull_number" value={@inputs.pull_number} style={input_style()} />
+          </label>
+
+          <label style={label_style()}>
+            Merge strategy
+            <select name="merge_strategy" style={input_style()}>
+              <option value="merge" selected={@inputs.merge_strategy == :merge}>merge</option>
+              <option value="squash" selected={@inputs.merge_strategy == :squash}>squash</option>
+              <option value="rebase" selected={@inputs.merge_strategy == :rebase}>rebase</option>
+            </select>
+          </label>
+        </form>
       </section>
     </div>
     """
@@ -482,6 +518,14 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
   defp section_heading_style do
     "font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;"
+  end
+
+  defp cta_style(:primary) do
+    "display: inline-flex; align-items: center; justify-content: center; text-decoration: none; background: #238636; color: #f0f6fc; border-radius: 999px; padding: 0.72rem 1rem; font-weight: 600; border: 1px solid #2ea043;"
+  end
+
+  defp cta_style(:secondary) do
+    "display: inline-flex; align-items: center; justify-content: center; text-decoration: none; background: transparent; color: #c9d1d9; border-radius: 999px; padding: 0.72rem 1rem; font-weight: 600; border: 1px solid #30363d;"
   end
 
   defp label_style do
