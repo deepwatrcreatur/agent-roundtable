@@ -1,6 +1,6 @@
 # 66 — Forgejo-Based Code Server Shell
 
-**Status:** `ready`
+**Status:** `done`
 **Tag:** `[product]`
 
 ## Goal
@@ -20,3 +20,15 @@ Stand up a Vaglio "code server" prototype that reuses Forgejo where it genuinely
 - A clear prototype architecture exists with explicit "reuse vs replace" boundaries.
 - The prototype can present a public repo through a Forgejo-based surface and link into Vaglio analysis views.
 - The chosen boundary does not assume Git must remain the long-term internal source of truth.
+
+## Outcome
+- Added a first deployable shell slice at `GET /forgejo-shell`.
+- Introduced `Roundtable.ForgejoShell` as the shell model that:
+  - builds Forgejo-edge navigation for a public repo
+  - makes Forgejo-owned vs Vaglio-owned boundaries explicit
+  - projects Git-shaped refs / PRs / merges into `jj`-native analysis payloads
+- Added `RoundtableWeb.ForgejoShellLive` so the prototype can:
+  - preview a Forgejo-backed public repo
+  - show Vaglio-native analysis on the same host
+  - keep Git compatibility at the edge instead of in the core model
+- Added focused model and LiveView tests for the shell surface.
