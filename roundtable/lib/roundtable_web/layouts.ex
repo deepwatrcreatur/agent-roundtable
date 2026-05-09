@@ -9,7 +9,7 @@ defmodule RoundtableWeb.Layouts do
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="csrf-token" content={Phoenix.Controller.get_csrf_token()} />
-        <title>Roundtable</title>
+        <title>Vaglio / Roundtable</title>
         <style>
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
           body { font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
@@ -39,10 +39,13 @@ defmodule RoundtableWeb.Layouts do
             <div style="color: #f0f6fc; font-weight: 700; font-size: 0.95rem;">Deepwater Roundtable</div>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
               <a href="/" style="text-decoration: none; color: #c9d1d9; border: 1px solid #30363d; border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 0.82rem;">
-                Roundtable Dashboard · discussion ops
+                Vaglio Demo Home
               </a>
               <a href="/forgejo-shell" style="text-decoration: none; color: #c9d1d9; border: 1px solid #30363d; border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 0.82rem;">
-                Forgejo Demo Shell · investor demo
+                Forgejo Demo Shell
+              </a>
+              <a href="/roundtable" style="text-decoration: none; color: #c9d1d9; border: 1px solid #30363d; border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 0.82rem;">
+                Roundtable Ops
               </a>
             </div>
           </div>

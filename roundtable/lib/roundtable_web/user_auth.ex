@@ -15,7 +15,7 @@ defmodule RoundtableWeb.UserAuth do
 
   def on_mount(:ensure_authenticated, _params, session, socket) do
     current_user = session["current_user"]
-    socket = assign(socket, :current_user, current_user)
+    socket = Phoenix.Component.assign(socket, :current_user, current_user)
 
     cond do
       not Auth.enabled?() ->

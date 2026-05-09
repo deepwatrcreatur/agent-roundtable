@@ -114,3 +114,8 @@ Do not work on an item already marked `in-progress` by another agent.
 57. [`68-public-repo-investor-demo.md`](./68-public-repo-investor-demo.md) — `done` — `[market]` Public repo import & investor demo
 58. [`69-jj-vs-git-infra-benchmark.md`](./69-jj-vs-git-infra-benchmark.md) — `done` — `[structural]` jj vs. Git infrastructure benchmark
 59. [`70-forgejo-discussion-repo-backend.md`](./70-forgejo-discussion-repo-backend.md) — `done` — `[product]` Forgejo DiscussionRepo backend
+
+### Shareable Web Demo Surface
+
+60. [`71-forgejo-shell-shareable-web-entry.md`](./71-forgejo-shell-shareable-web-entry.md) — `done` — **Codex** — `[product]` Forgejo shell shareable web entry
+61. [`72-forgejo-shell-public-demo-polish.md`](./72-forgejo-shell-public-demo-polish.md) — `done` — **Codex** — `[market]` Forgejo shell public demo polish
