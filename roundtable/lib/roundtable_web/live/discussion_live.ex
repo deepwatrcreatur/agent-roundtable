@@ -2,13 +2,8 @@ defmodule RoundtableWeb.DiscussionLive do
   @moduledoc """
   Owner dashboard for the roundtable discussion.
 
-  Reads `ROUNDTABLE_REPO` env var for the GitHub repo slug.
-  Polls GitHub Issues every 30s to show current discussion state.
-
-  Owner actions:
-  - Inject new question → creates a GitHub Issue
-  - Trigger next round → starts the orchestrator for unsatisfied questions
-  - View each question's satisfaction state and comment thread
+  Supports selecting a GitHub discussion repo owned by the authenticated
+  GitHub account, or falling back to a legacy local BRIEF path.
   """
 
   use Phoenix.LiveView
@@ -21,6 +16,10 @@ defmodule RoundtableWeb.DiscussionLive do
   def mount(_params, _session, socket) do
     repo = System.get_env("ROUNDTABLE_REPO", "")
     brief_path = System.get_env("ROUNDTABLE_BRIEF", "docs/design/BRIEF.md")
+    local_path = System.get_env("ROUNDTABLE_LOCAL_PATH", "")
+    discussion_path = System.get_env("ROUNDTABLE_DISCUSSION_PATH", "")
+    source_mode = if repo == "", do: "brief", else: "repo"
+    candidate_repos = load_candidate_repos()
 
     if connected?(socket), do: schedule_poll()
 
@@ -28,11 +27,15 @@ defmodule RoundtableWeb.DiscussionLive do
       socket
       |> assign(:repo, repo)
       |> assign(:brief_path, brief_path)
+      |> assign(:local_path, local_path)
+      |> assign(:discussion_path, discussion_path)
+      |> assign(:source_mode, source_mode)
+      |> assign(:candidate_repos, candidate_repos)
       |> assign(:inject_text, "")
       |> assign(:running, false)
       |> assign(:flash_msg, nil)
       |> assign(:conflicts, [])
-      |> load_state(repo)
+      |> load_state(repo, local_path)
 
     {:ok, socket}
   end
@@ -40,7 +43,7 @@ defmodule RoundtableWeb.DiscussionLive do
   @impl true
   def handle_info(:poll, socket) do
     schedule_poll()
-    {:noreply, load_state(socket, socket.assigns.repo)}
+    {:noreply, load_state(socket, socket.assigns.repo, socket.assigns.local_path)}
   end
 
   @impl true
@@ -57,20 +60,26 @@ defmodule RoundtableWeb.DiscussionLive do
 
   @impl true
   def handle_event("inject_question", %{"text" => text}, socket) when byte_size(text) > 0 do
-    repo = socket.assigns.repo
+    case require_repo(socket) do
+      {:ok, repo} ->
+        case CLI.inject_question(repo, text,
+               discussion_path: blank_to_nil(socket.assigns.discussion_path)
+             ) do
+          {:ok, number} ->
+            socket =
+              socket
+              |> assign(:inject_text, "")
+              |> assign(:flash_msg, "Created issue ##{number}")
+              |> load_state(repo, socket.assigns.local_path)
 
-    case CLI.inject_question(repo, text) do
-      {:ok, number} ->
-        socket =
-          socket
-          |> assign(:inject_text, "")
-          |> assign(:flash_msg, "Created issue ##{number}")
-          |> load_state(repo)
+            {:noreply, socket}
 
-        {:noreply, socket}
+          {:error, reason} ->
+            {:noreply, assign(socket, :flash_msg, "Error: #{inspect(reason)}")}
+        end
 
-      {:error, reason} ->
-        {:noreply, assign(socket, :flash_msg, "Error: #{inspect(reason)}")}
+      {:error, message} ->
+        {:noreply, assign(socket, :flash_msg, message)}
     end
   end
 
@@ -79,28 +88,78 @@ defmodule RoundtableWeb.DiscussionLive do
   end
 
   @impl true
+  def handle_event("set_source", params, socket) do
+    repo = String.trim(Map.get(params, "repo", socket.assigns.repo))
+    brief_path = String.trim(Map.get(params, "brief_path", socket.assigns.brief_path))
+    local_path = String.trim(Map.get(params, "local_path", socket.assigns.local_path))
+
+    discussion_path =
+      String.trim(Map.get(params, "discussion_path", socket.assigns.discussion_path))
+
+    source_mode = Map.get(params, "source_mode", socket.assigns.source_mode)
+
+    socket =
+      socket
+      |> assign(:repo, repo)
+      |> assign(:brief_path, brief_path)
+      |> assign(:local_path, local_path)
+      |> assign(:discussion_path, discussion_path)
+      |> assign(:source_mode, source_mode)
+      |> assign(:flash_msg, "Updated discussion source")
+      |> load_state(repo, local_path)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("select_candidate_repo", %{"repo" => repo}, socket) do
+    discussion_path =
+      socket.assigns.candidate_repos
+      |> Enum.find(&(Map.get(&1, :slug) == repo))
+      |> default_discussion_path()
+
+    socket =
+      socket
+      |> assign(:repo, repo)
+      |> assign(:discussion_path, discussion_path)
+      |> assign(:source_mode, "repo")
+      |> assign(:flash_msg, "Selected #{repo}")
+      |> load_state(repo, socket.assigns.local_path)
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("trigger_round", _params, socket) do
     if socket.assigns.running do
       {:noreply, assign(socket, :flash_msg, "A round is already running.")}
     else
-      repo = socket.assigns.repo
-      brief_path = socket.assigns.brief_path
-      lv_pid = self()
+      with {:ok, repo} <- require_repo(socket),
+           {:ok, source} <- validate_discussion_source(socket) do
+        local_path = blank_to_nil(socket.assigns.local_path)
+        discussion_path = blank_to_nil(socket.assigns.discussion_path)
+        lv_pid = self()
 
-      Task.start(fn ->
-        questions = open_questions(socket.assigns.questions)
+        Task.start(fn ->
+          questions = open_questions(socket.assigns.questions)
 
-        CLI.start_discussion(brief_path,
-          repo: repo,
-          on_event: fn event ->
-            send(lv_pid, {:roundtable_event, event})
-          end
-        )
+          CLI.start_discussion(source,
+            repo: repo,
+            local_path: local_path,
+            discussion_path: discussion_path,
+            on_event: fn event ->
+              send(lv_pid, {:roundtable_event, event})
+            end
+          )
 
-        send(lv_pid, {:roundtable_event, {:round_complete, length(questions)}})
-      end)
+          send(lv_pid, {:roundtable_event, {:round_complete, length(questions)}})
+        end)
 
-      {:noreply, assign(socket, running: true, flash_msg: "Round started…")}
+        {:noreply, assign(socket, running: true, flash_msg: "Round started…")}
+      else
+        {:error, message} ->
+          {:noreply, assign(socket, :flash_msg, message)}
+      end
     end
   end
 
@@ -111,7 +170,7 @@ defmodule RoundtableWeb.DiscussionLive do
 
   @impl true
   def handle_event("resolve_conflict", %{"path" => path, "vcs" => vcs}, socket) do
-    local_path = System.get_env("ROUNDTABLE_LOCAL_PATH")
+    local_path = socket.assigns.local_path
     vcs_atom = String.to_existing_atom(vcs)
 
     case CLI.resolve_conflict(local_path, path, vcs_atom) do
@@ -119,7 +178,7 @@ defmodule RoundtableWeb.DiscussionLive do
         socket =
           socket
           |> assign(:flash_msg, "Resolved #{path} in #{vcs}")
-          |> load_state(socket.assigns.repo)
+          |> load_state(socket.assigns.repo, socket.assigns.local_path)
 
         {:noreply, socket}
 
@@ -128,18 +187,16 @@ defmodule RoundtableWeb.DiscussionLive do
     end
   end
 
-  # ----- render -----
-
   @impl true
   def render(assigns) do
     ~H"""
-    <div style="max-width: 900px; margin: 0 auto; padding: 2rem 1rem;">
+    <div style="max-width: 960px; margin: 0 auto; padding: 2rem 1rem;">
       <header style="margin-bottom: 2rem;">
         <h1 style="font-size: 1.4rem; color: #f0f6fc; margin-bottom: 0.25rem;">
           Roundtable
         </h1>
         <p style="color: #8b949e; font-size: 0.85rem;">
-          {@repo}
+          {current_source_label(assigns)}
           <span :if={@running} style="color: #d29922; margin-left: 1rem;">● running</span>
         </p>
       </header>
@@ -148,11 +205,70 @@ defmodule RoundtableWeb.DiscussionLive do
 
       <section style="margin-bottom: 2rem;">
         <h2 style="font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+          Discussion Source
+        </h2>
+
+        <div :if={length(@candidate_repos) > 0} style="display: grid; gap: 0.75rem; margin-bottom: 1rem;">
+          <button
+            :for={candidate <- @candidate_repos}
+            type="button"
+            phx-click="select_candidate_repo"
+            phx-value-repo={candidate.slug}
+            style={candidate_card_style(candidate.slug == @repo)}
+            title={candidate.description || candidate.slug}
+          >
+            <span style="display: block; font-size: 0.95rem; font-weight: 600; color: #f0f6fc;">
+              {candidate.slug}
+            </span>
+            <span :if={candidate.description} style="display: block; margin-top: 0.35rem; color: #8b949e; font-size: 0.82rem;">
+              {candidate.description}
+            </span>
+            <span style="display: block; margin-top: 0.45rem; color: #58a6ff; font-size: 0.75rem;">
+              {candidate_topic_line(candidate)}
+            </span>
+          </button>
+        </div>
+
+        <form phx-submit="set_source" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; align-items: end; margin-bottom: 0.5rem;">
+          <label style="display: flex; flex-direction: column; gap: 0.35rem; color: #8b949e; font-size: 0.8rem;">
+            Source mode
+            <select name="source_mode" style={input_style()}>
+              <option value="repo" selected={@source_mode == "repo"}>GitHub discussion repo</option>
+              <option value="brief" selected={@source_mode == "brief"}>Legacy BRIEF path</option>
+            </select>
+          </label>
+
+          <label style="display: flex; flex-direction: column; gap: 0.35rem; color: #8b949e; font-size: 0.8rem;">
+            GitHub repo
+            <input type="text" name="repo" value={@repo} placeholder="owner/repo" style={input_style()} />
+          </label>
+
+          <label style="display: flex; flex-direction: column; gap: 0.35rem; color: #8b949e; font-size: 0.8rem;">
+            Discussion path
+            <input type="text" name="discussion_path" value={@discussion_path} placeholder="repo root or embedded folder" style={input_style()} />
+          </label>
+
+          <label style="display: flex; flex-direction: column; gap: 0.35rem; color: #8b949e; font-size: 0.8rem;">
+            Legacy BRIEF path
+            <input type="text" name="brief_path" value={@brief_path} placeholder="docs/design/BRIEF.md" style={input_style()} />
+          </label>
+
+          <label style="display: flex; flex-direction: column; gap: 0.35rem; color: #8b949e; font-size: 0.8rem;">
+            Local checkout
+            <input type="text" name="local_path" value={@local_path} placeholder="/path/to/repo" style={input_style()} />
+          </label>
+
+          <button type="submit" style={btn_style(:primary)}>Apply</button>
+        </form>
+      </section>
+
+      <section style="margin-bottom: 2rem;">
+        <h2 style="font-size: 1rem; color: #8b949e; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">
           Questions
         </h2>
 
         <div :if={map_size(@questions) == 0} style="color: #8b949e; font-style: italic;">
-          No roundtable issues found. Create one below or push a BRIEF.md.
+          No roundtable issues found for the selected repo.
         </div>
 
         <.question_card :for={{number, q} <- Enum.sort(@questions)} number={number} q={q} />
@@ -173,7 +289,7 @@ defmodule RoundtableWeb.DiscussionLive do
           <textarea
             name="text"
             placeholder="New question text…"
-            rows="3"
+            rows="4"
             style="flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 6px;
                    color: #c9d1d9; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.9rem; resize: vertical;"
           >{@inject_text}</textarea>
@@ -194,8 +310,6 @@ defmodule RoundtableWeb.DiscussionLive do
     </div>
     """
   end
-
-  # ----- components -----
 
   defp flash_banner(assigns) do
     ~H"""
@@ -260,99 +374,152 @@ defmodule RoundtableWeb.DiscussionLive do
 
   defp conflict_card(assigns) do
     ~H"""
-    <div style="border: 1px solid #da3633; border-radius: 6px; padding: 1rem;
-                margin-bottom: 0.75rem; background: #161b22; display: flex;
-                justify-content: space-between; align-items: center;">
-      <div>
-        <div style="color: #f0f6fc; font-weight: 600; font-size: 0.9rem;">
-          {@c.path}
+    <div style="border: 1px solid #f78166; border-radius: 6px; padding: 1rem; margin-bottom: 0.75rem; background: #161b22;">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+        <div>
+          <div style="font-weight: 600; color: #f0f6fc;">{@c.path}</div>
+          <div style="font-size: 0.8rem; color: #8b949e;">{String.upcase(to_string(@c.vcs))} conflict</div>
         </div>
-        <div style="color: #8b949e; font-size: 0.75rem; margin-top: 0.25rem;">
-          Unresolved evolution in {@c.vcs |> Atom.to_string() |> String.upcase()}
-        </div>
-      </div>
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
-        <button phx-click="resolve_conflict" phx-value-path={@c.path} phx-value-vcs={@c.vcs}
-                style={btn_style(:action)}>
+        <button phx-click="resolve_conflict" phx-value-path={@c.path} phx-value-vcs={@c.vcs} style={btn_style(:secondary)}>
           Resolve
         </button>
-        <.vcs_badge vcs={@c.vcs} />
       </div>
     </div>
     """
   end
 
-  defp vcs_badge(assigns) do
-    {text, color} =
-      case assigns.vcs do
-        :jj -> {"jj", "#58a6ff"}
-        :dolt -> {"dolt", "#3fb950"}
-        _ -> {"vcs", "#8b949e"}
-      end
-
-    assigns = assign(assigns, text: text, color: color)
-
-    ~H"""
-    <span style={"border: 1px solid #{@color}; color: #{@color}; font-size: 0.65rem;
-                  padding: 0.1rem 0.4rem; border-radius: 4px; text-transform: uppercase;
-                  font-weight: bold;"}>{@text}</span>
-    """
-  end
-
-  # ----- helpers -----
-
-  defp load_state(socket, "") do
+  defp load_state(socket, "", local_path) do
     socket
     |> assign(:questions, %{})
-    |> assign(:conflicts, [])
+    |> assign(:conflicts, load_conflicts(local_path))
   end
 
-  defp load_state(socket, repo) do
-    # Fetch GitHub issues
+  defp load_state(socket, repo, local_path) do
     socket =
       case CLI.get_discussion_state(repo) do
-        {:ok, state} -> assign(socket, :questions, state)
+        {:ok, qs} -> assign(socket, :questions, qs)
         {:error, _} -> assign(socket, :questions, %{})
       end
 
-    # Fetch logical conflicts if a local path is configured
-    # (In v1 we use ROUNDTABLE_LOCAL_PATH env var)
-    local_path = System.get_env("ROUNDTABLE_LOCAL_PATH")
-
-    case CLI.get_conflicts(local_path) do
-      {:ok, conflicts} -> assign(socket, :conflicts, conflicts)
-      {:error, _} -> assign(socket, :conflicts, [])
-    end
+    assign(socket, :conflicts, load_conflicts(local_path))
   end
 
   defp open_questions(questions) do
     questions
-    |> Enum.filter(fn {_, q} -> q.state == :open end)
-    |> Enum.map(fn {number, q} -> %{id: q.title, issue_number: number, state: :open} end)
+    |> Enum.filter(fn {_number, q} -> q.satisfaction in [:unknown, :needs_more_evidence] end)
+    |> Enum.map(&elem(&1, 1))
   end
 
   defp schedule_poll, do: Process.send_after(self(), :poll, @poll_interval_ms)
 
+  defp load_candidate_repos do
+    case CLI.list_candidate_repos(["discussion", "vaglio", "roundtable-discussion"]) do
+      {:ok, repos} -> repos
+      {:error, _} -> []
+    end
+  end
+
+  defp load_conflicts(local_path) do
+    {:ok, conflicts} = CLI.get_conflicts(blank_to_nil(local_path))
+    conflicts
+  end
+
+  defp require_repo(socket) do
+    case blank_to_nil(socket.assigns.repo) do
+      nil -> {:error, "Configure a GitHub repo before injecting questions or running rounds."}
+      repo -> {:ok, repo}
+    end
+  end
+
+  defp validate_discussion_source(socket) do
+    case socket.assigns.source_mode do
+      "repo" ->
+        require_repo(socket)
+
+      _ ->
+        case blank_to_nil(socket.assigns.brief_path) do
+          nil -> {:error, "Configure a BRIEF path before triggering a legacy round."}
+          brief_path -> {:ok, brief_path}
+        end
+    end
+  end
+
+  defp blank_to_nil(value) when value in [nil, ""], do: nil
+  defp blank_to_nil(value), do: value
+
+  defp current_source_label(assigns) do
+    case assigns.source_mode do
+      "repo" ->
+        path_suffix =
+          case blank_to_nil(assigns.discussion_path) do
+            nil -> ""
+            discussion_path -> " · #{discussion_path}"
+          end
+
+        assigns.repo <> path_suffix
+
+      _ ->
+        assigns.brief_path
+    end
+  end
+
+  defp default_discussion_path(nil), do: ""
+
+  defp default_discussion_path(repo) do
+    if Enum.any?(repo.topics, &String.contains?(&1, "embedded")) do
+      "docs/design"
+    else
+      ""
+    end
+  end
+
+  defp candidate_topic_line(candidate) do
+    candidate.topics
+    |> Enum.join(" · ")
+    |> case do
+      "" -> if(candidate.private, do: "private repo", else: "public repo")
+      topics -> topics
+    end
+  end
+
+  defp input_style do
+    "background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; padding: 0.5rem 0.75rem; font-family: inherit; font-size: 0.9rem;"
+  end
+
   defp border_color(:satisfied), do: "#238636"
   defp border_color(:satisfied_conditional), do: "#9e6a03"
   defp border_color(:no_objection), do: "#1f6feb"
-  defp border_color(:needs_more_evidence), do: "#da3633"
-  defp border_color(_), do: "#30363d"
+  defp border_color(:needs_more_evidence), do: "#f78166"
+  defp border_color(:unknown), do: "#30363d"
 
   defp btn_style(:primary) do
-    "background: #238636; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1rem;
+    "background: #238636; color: #f0f6fc; border: none; border-radius: 6px; padding: 0.6rem 1rem;
      cursor: pointer; font-family: inherit; font-size: 0.9rem;"
   end
 
   defp btn_style(:action) do
-    "background: #1f6feb; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1rem;
+    "background: #1f6feb; color: #f0f6fc; border: none; border-radius: 6px; padding: 0.7rem 1rem;
      cursor: pointer; font-family: inherit; font-size: 0.9rem;"
+  end
+
+  defp btn_style(:secondary) do
+    "background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; padding: 0.4rem 0.8rem;
+     cursor: pointer; font-family: inherit; font-size: 0.8rem;"
+  end
+
+  defp candidate_card_style(true) do
+    "text-align: left; width: 100%; background: #161b22; border: 1px solid #58a6ff; border-radius: 8px; padding: 0.9rem 1rem; cursor: pointer;"
+  end
+
+  defp candidate_card_style(false) do
+    "text-align: left; width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 0.9rem 1rem; cursor: pointer;"
   end
 
   defp format_event({:round_start, id, n}), do: "#{id}: round #{n} started"
   defp format_event({:agent_done, agent, _issue}), do: "#{agent} posted"
   defp format_event({:question_satisfied, id, n}), do: "#{id} satisfied after #{n} round(s)"
-  defp format_event({:question_max_rounds, id}), do: "#{id} needs human review"
-  defp format_event({:round_complete, n}), do: "Round complete — #{n} question(s) processed"
-  defp format_event(_), do: nil
+  defp format_event({:question_done, id, state}), do: "#{id} finished with #{state}"
+  defp format_event({:question_injected, number, title}), do: "Created issue ##{number}: #{title}"
+  defp format_event({:round_complete, n}), do: "Round complete for #{n} question(s)"
+  defp format_event(other), do: inspect(other)
 end

@@ -25,6 +25,7 @@ defmodule Roundtable.DiscussionRepo do
   @type t :: %__MODULE__{
           gh_slug: String.t(),
           local_path: String.t() | nil,
+          base_path: String.t() | nil,
           token: String.t() | nil,
           issues_enabled: boolean(),
           head_sha: String.t() | nil,
@@ -35,6 +36,7 @@ defmodule Roundtable.DiscussionRepo do
   defstruct [
     :gh_slug,
     :local_path,
+    :base_path,
     :token,
     :head_sha,
     issues_enabled: false,
@@ -49,6 +51,7 @@ defmodule Roundtable.DiscussionRepo do
 
   - `:token`          — GitHub PAT; when nil the `gh` CLI's ambient auth is used
   - `:local_path`     — local working-copy path (optional; used for git operations)
+  - `:base_path`      — optional discussion root inside the repo (e.g. `docs/design`)
   - `:issues_enabled` — whether the GitHub Issues overlay is active (default `false`)
   - `:backend`        — the `Backend` module to use (default `Adapters.GitHub`)
   """
@@ -58,6 +61,7 @@ defmodule Roundtable.DiscussionRepo do
       gh_slug: gh_slug,
       token: Keyword.get(opts, :token),
       local_path: Keyword.get(opts, :local_path),
+      base_path: normalize_base_path(Keyword.get(opts, :base_path)),
       issues_enabled: Keyword.get(opts, :issues_enabled, false),
       head_sha: nil,
       backend: Keyword.get(opts, :backend, Roundtable.Adapters.GitHub),
@@ -85,4 +89,17 @@ defmodule Roundtable.DiscussionRepo do
   @spec valid?(t()) :: boolean()
   def valid?(%__MODULE__{backend: backend} = repo),
     do: backend.discussion_repo?(repo)
+
+  defp normalize_base_path(nil), do: nil
+  defp normalize_base_path(""), do: nil
+
+  defp normalize_base_path(path) do
+    path
+    |> String.trim()
+    |> String.trim("/")
+    |> case do
+      "" -> nil
+      normalized -> normalized
+    end
+  end
 end

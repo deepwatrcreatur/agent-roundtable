@@ -24,6 +24,8 @@ defmodule Roundtable.Adapters.GitHub do
 
   @impl true
   def read_file(%DiscussionRepo{gh_slug: slug} = repo, path) do
+    path = repo_path(repo, path)
+
     with {:ok, json} <- gh_api(repo, :get, "/repos/#{slug}/contents/#{path}"),
          {:ok, decoded} <- JSON.decode(json),
          {:ok, content} <- extract_content(decoded) do
@@ -33,6 +35,8 @@ defmodule Roundtable.Adapters.GitHub do
 
   @impl true
   def write_file(%DiscussionRepo{gh_slug: slug} = repo, path, content, message) do
+    path = repo_path(repo, path)
+
     blob_sha =
       case get_blob_sha(repo, path) do
         {:ok, sha} -> sha
@@ -51,6 +55,8 @@ defmodule Roundtable.Adapters.GitHub do
 
   @impl true
   def list_files(%DiscussionRepo{gh_slug: slug} = repo, path) do
+    path = repo_path(repo, path)
+
     case gh_api(repo, :get, "/repos/#{slug}/contents/#{path}") do
       {:ok, json} ->
         with {:ok, entries} <- JSON.decode(json) do
@@ -86,9 +92,9 @@ defmodule Roundtable.Adapters.GitHub do
 
   defp gh_api(repo, method, endpoint, body \\ nil) do
     runner = get_in(repo.config, [:runner]) || SystemCmdRunner
-    auth  = auth_args(repo.token)
-    args  = build_args(method, endpoint)
-    opts  = build_opts(body)
+    auth = auth_args(repo.token)
+    args = build_args(method, endpoint)
+    opts = build_opts(body)
 
     case runner.cmd("gh", auth ++ ["api"] ++ args, opts) do
       {stdout, 0} -> {:ok, stdout}
@@ -120,4 +126,7 @@ defmodule Roundtable.Adapters.GitHub do
 
   defp maybe_put_sha(payload, nil), do: payload
   defp maybe_put_sha(payload, sha), do: Map.put(payload, "sha", sha)
+
+  defp repo_path(%DiscussionRepo{base_path: nil}, path), do: path
+  defp repo_path(%DiscussionRepo{base_path: base_path}, path), do: "#{base_path}/#{path}"
 end
