@@ -241,3 +241,20 @@ than a standalone open Alyx repository.
  was therefore not to normalize a universal developer reputation system, but to
  prefer much narrower, contextual workflow intelligence with hard constraints on
  visibility, contestability, retention, and use.
+
+## Round 70: Borrowing from Multica and Conductor Without Reopening the Architecture
+**Consensus:** The round treated both tools as useful validators of the existing
+ Round 62 split rather than as replacements for it. Multica is most useful as a
+ reference for board-centric execution UX: agents as visible assignees, local
+ daemons for subscription-backed CLIs, real-time status surfaces, and
+ capability-style agent presentation. Conductor is most useful as a reference
+ for durable execution semantics: persisted attempt lineage, retries, timeouts,
+ replay / resume behavior, human-in-the-loop checkpoints, and a lightweight
+ workflow-as-data discipline. The round rejected adopting either tool wholesale,
+ rejected Multica as a code-reuse source due to license and stack mismatch, and
+ treated Conductor as legally safer but still primarily a design-pattern source
+ rather than an implementation dependency. The near-term implication is to
+ encode these borrowings into the bulletin-board work-item schema, local daemon
+ contract, and lightweight declarative task / round definitions while keeping
+ `agent-roundtable` discussion-focused and leaving capability registry and
+ longer-term governance memory to Vaglio.
