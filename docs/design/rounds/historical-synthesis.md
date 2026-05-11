@@ -197,3 +197,18 @@ strong git baseline, and then run a reuse-oriented follow-up on public Arize
 repos, noting that adjacent code appears split between MIT-licensed repos such
 as `arize-skills` / `arize-harness-tracing` and `phoenix` under ELv2 rather
 than a standalone open Alyx repository.
+
+## Round 67: Moats for an Agent-First Forge
+**Consensus:** The round rejected any claim that the project already has a
+ meaningful moat: raw code hosting, repo portability, and agent-first workflow
+ features are not durable defensibility by themselves. The only plausible moat
+ category identified was a delayed learning / decision moat built from the
+ correction cycle itself: cross-repo records of agent proposals, human
+ rejection/approval reasons, repair patterns, trust allocation, and downstream
+ outcomes. That data is more defensible than code alone because much of it is
+ not recoverable from exported repositories, but the round also stressed that it
+ is narrow, slow to build, and replicable in principle by rivals with enough
+ usage. The credible investor story is therefore not "better hosting," but
+ decision intelligence and trust signals for agent-mediated software
+ production — and only if the project starts capturing the full proposal /
+ deliberation / decision / outcome lifecycle now.
