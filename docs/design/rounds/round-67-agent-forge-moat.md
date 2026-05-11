@@ -230,6 +230,80 @@ So the stronger amended conclusion is:
 This does not kill the moat story, but it makes it narrower and more demanding
 than the round's first-pass formulation.
 
+### Addendum — actual `opencode` participant follow-up
+
+After the maintainer clarified that the free `opencode` models should
+participate as real voices rather than being mentioned only as market context, a
+short addendum panel was run against the same pressure-test question.
+
+#### Requested roster
+
+- `opencode/big-pickle`
+- `opencode/nemotron-3-super-free`
+- `opencode/ring-2.6-1t-free`
+- `opencode/minimax-m2.5-free`
+
+#### What actually happened
+
+- **Big Pickle:** returned a substantive answer
+- **Nemotron 3 Super free:** returned a substantive answer
+- **Ring 2.6 1T free:** configured in `opencode models`, but unavailable from the
+  allowed providers in this environment at run time
+- **MiniMax M2.5 free:** invocation started but never produced a usable response
+  body before the run was closed
+
+So the addendum below reflects **two real additional voices**, not four
+simulated ones.
+
+#### What the actual `opencode` voices added
+
+The two successful responses tightened the argument further.
+
+**Big Pickle** argued that the original correction-cycle moat claim was too
+broad. Its strongest points were:
+
+- `jj` exportability reveals much of the *form* of the correction cycle
+- what remains plausibly exclusive is the *metadata layer*:
+  - rejection rationale
+  - trust allocation
+  - cross-repo aggregates
+  - downstream outcome links
+- cheap model interchangeability does not create a moat by itself; if anything,
+  it shifts value upward toward routing intelligence and cross-repo evaluation
+- this introduces a new erosion vector:
+  if `opencode` or another local routing client becomes the primary place where
+  routing intelligence accumulates, the forge may lose the highest-value layer
+
+**Nemotron 3 Super free** was even harsher. Its strongest points were:
+
+- exportable reasoning trails undermine most of the correction-cycle moat
+- interchangeable models make the model layer itself poor defensibility
+- what remains may be only:
+  - non-exported trust / reputation signals
+  - deep workflow integration
+  - weak brand / hub effects
+- even those may be insufficient for a strong durable moat on their own
+
+#### Amended conclusion after the real `opencode` follow-up
+
+The strongest honest conclusion after including these actual participants is:
+
+- the original correction-cycle moat thesis survives only in a narrower form
+- `jj` exportability likely destroys any claim that the raw correction trail
+  itself is proprietary enough
+- cheap / free `opencode`-routed models further commoditize the raw agent layer
+- the remaining plausible moat is therefore higher-level and thinner:
+  - cross-repo evaluation aggregates
+  - non-exported trust / legitimacy signals
+  - routing and decision intelligence that is server-side rather than purely
+    local-client-side
+  - workflow embedding at the moment maintainers make real decisions
+
+This makes the moat story more demanding than the first addendum suggested:
+it is not enough to say "the forge sees the correction cycle." The forge must
+see something that **does not fully collapse into exportable `jj` history or a
+local `opencode` client's own accumulated routing knowledge**.
+
 ### Closure
 
 The round closes with the following design rules.
