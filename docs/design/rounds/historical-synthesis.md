@@ -127,6 +127,18 @@ integrations, while Vaglio's real product value appears above transport as
 forkable governance, inspectable alternatives, durable project memory, and
 explicit legitimacy around accepted history.
 
+## Round 61: Preserving Breakthrough Fixes Across Independent Agents
+**Consensus:** Router regressions showed that the project loses validated repairs
+ not because deliberation failed, but because durable operational knowledge is
+ still too weakly embedded. The panel converged that the current roundtable
+ artifact set is necessary but insufficient; the repo needs stronger fix cards,
+ incident records, and a discovery index keyed by surface so future agents can
+ find what is known-good, what pin/dependency state it relied on, and how to
+ validate it. Structured provenance, explicit status fields, typed links such as
+ `introduced-by` / `repaired-by` / `validated-by`, and a real
+ `known-good-fix-recovered` workflow marker were all treated as first-class
+ requirements rather than optional documentation polish.
+
 ## Round 62: Bulletin Board, Product Boundaries, and Reducing Supervision Burden
 **Consensus:** The project should move now toward a Symphony-style bulletin
 board rather than continuing to center the workflow on many supervised terminal
