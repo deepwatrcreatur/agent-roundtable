@@ -126,3 +126,15 @@ can keep `git clone` / `fetch` / `push`, familiar review entry points, and CI
 integrations, while Vaglio's real product value appears above transport as
 forkable governance, inspectable alternatives, durable project memory, and
 explicit legitimacy around accepted history.
+
+## Round 62: Bulletin Board, Product Boundaries, and Reducing Supervision Burden
+**Consensus:** The project should move now toward a Symphony-style bulletin
+board rather than continuing to center the workflow on many supervised terminal
+tabs. `dmux` should remain as an operator console, but not as the canonical
+orchestration surface. The right state model is hybrid: issue-like and socially
+legible on top, Dolt-backed and structurally queryable underneath. The cleanest
+conceptual separation is: `agent-roundtable` for design discussion, a bulletin
+board for execution dispatch, and Vaglio for forge / governance / long-term
+memory. The practical implementation path is to build the board first as a
+bounded context inside the existing Elixir / Jido stack, preserving flexibility
+to keep it embedded or split it later.
