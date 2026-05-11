@@ -183,3 +183,17 @@ review, CI, and ordinary task execution. The right next move is to amplify
 subtree-local retrieval, supersession, and edit-time surfacing of rationale, and
 to benchmark against a competent git-agent baseline rather than overclaim from
 theory.
+
+## Round 66: Alyx, Planning Discipline, and What We Should Copy
+**Consensus:** The project is plausibly ahead of Alyx in some architecture
+ideas, especially code-local durable rationale, explicit supersession, and the
+clean separation between deliberation, execution dispatch, and durable memory.
+But the round rejected any claim of overall frontier product leadership today:
+public Alyx material suggests stronger shipped planning discipline, explicit
+task-state semantics, harder completion gating, and better context-hygiene
+mechanics than the local system currently demonstrates. The right next move is
+to copy those runtime controls now, benchmark against Alyx's free tier and a
+strong git baseline, and then run a reuse-oriented follow-up on public Arize
+repos, noting that adjacent code appears split between MIT-licensed repos such
+as `arize-skills` / `arize-harness-tracing` and `phoenix` under ELv2 rather
+than a standalone open Alyx repository.
