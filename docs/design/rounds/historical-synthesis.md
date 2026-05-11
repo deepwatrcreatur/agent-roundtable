@@ -138,3 +138,24 @@ board for execution dispatch, and Vaglio for forge / governance / long-term
 memory. The practical implementation path is to build the board first as a
 bounded context inside the existing Elixir / Jido stack, preserving flexibility
 to keep it embedded or split it later.
+
+## Round 63: Embedded Design Memory in `jj` / Code Context
+**Consensus:** The project should move from archive-only design memory toward a
+hybrid embedded model that keeps round artifacts as the full deliberative
+archive while adding local, bounded retrieval near code. The converged answer is
+not to pick one representation, but to combine a single canonical structured
+design-memory record with `jj`-visible intent pointers, subtree sidecars, and
+selective local annotations. The task board should link to this memory but not
+become its canonical home. The key guardrail is explicit lifecycle /
+supersession so embedded context does not become stale cargo-cult noise.
+
+## Round 64: Generic Execution VM / Agent Tooling Substrate
+**Consensus:** The execution substrate should be layered: a generic NixOS VM
+output as the primary reproducible artifact, plus a reusable Home Manager
+agent-toolchain profile as a secondary layer for user-scoped reuse. The system
+must publish an explicit baseline tool inventory, especially for OCR, image
+processing, scripting, debugging, repo operations, and Nix tooling. Secrets and
+subscription credentials should be modular and operator-swappable rather than
+embedded in personal host config. The execution VM should integrate directly
+with the task board and future `pve-strix` deployment rather than remaining a
+mere convenience shell.
