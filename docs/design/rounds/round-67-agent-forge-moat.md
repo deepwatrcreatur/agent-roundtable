@@ -168,6 +168,68 @@ The round also converged clearly on the weaknesses.
 
 The round therefore rejected any grand claim of a permanent or automatic moat.
 
+### Addendum — pressure-testing the "proprietary correction-cycle" claim
+
+The maintainer wanted a follow-up challenge added immediately after the round:
+
+if the project succeeds at making branching, deliberation, and local reasoning
+legible inside exportable `jj` history, then some of the supposed
+"correction-cycle" asset may stop being meaningfully proprietary.
+
+That weakens the easiest version of the moat story.
+
+If a rival or migrating user can download:
+
+- the branching structure
+- the associated reasoning
+- the repair trail
+- the accepted versus rejected alternatives
+
+then the host may no longer own enough exclusive signal to justify a strong
+data-moat claim.
+
+This means the moat thesis must survive a harder test:
+
+the uniquely valuable layer may need to be not merely the presence of reasoning
+history, but:
+
+- cross-repo aggregation at scale
+- normalization across many projects and maintainers
+- model tuning based on that aggregate corpus
+- trust / legitimacy / risk signals updated continuously from live platform use
+
+rather than just "we have the branches and the explanations."
+
+The addendum also raises a second pressure:
+
+cheap and free model supply keeps improving, and may be routable through the
+same operator surface. In particular, the maintainer wanted this note recorded:
+
+- Big Pickle
+- Nemotron 3 Super free
+- Ring 2.6 1T free
+- MiniMax M2.5 free
+- all available via `opencode`
+
+That matters because the cheaper and more interchangeable the model layer
+becomes, the less credible it is to claim a moat from agent access alone. If
+many competent models are cheaply available through one routing interface, then
+model procurement itself is not defensibility.
+
+So the stronger amended conclusion is:
+
+- exportable `jj` reasoning may erode the exclusivity of correction-cycle data
+- cheap `opencode`-routed models further commoditize the raw agent layer
+- therefore the moat, if any, must live higher up in:
+  - aggregate normalization
+  - live decision support
+  - maintainer trust products
+  - continuously refreshed cross-repo signals
+  - workflow embedding at the moment real decisions are made
+
+This does not kill the moat story, but it makes it narrower and more demanding
+than the round's first-pass formulation.
+
 ### Closure
 
 The round closes with the following design rules.
