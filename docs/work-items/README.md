@@ -85,16 +85,22 @@ Do not work on an item already marked `in-progress` by another agent.
 48. [`56-embedded-design-merge.md`](./56-embedded-design-merge.md) — `ready` — `[structural]` Design History Integration (Embedded Model)
 49. [`57-agent-task-queue.md`](./57-agent-task-queue.md) — `ready` — `[structural]` Autonomous Agent Task Delegation System
 
+### Board Execution Contracts (Round 70)
+
+50. [`73-board-work-item-schema.md`](./73-board-work-item-schema.md) — `ready` — `[structural]` Bulletin Board Work-Item Schema & Dolt Tables
+51. [`74-local-daemon-lease-contract.md`](./74-local-daemon-lease-contract.md) — `ready` — `[tools]` Local Daemon Lease, Heartbeat, and Event Contract
+52. [`75-lightweight-workflow-definitions.md`](./75-lightweight-workflow-definitions.md) — `ready` — `[structural]` Lightweight Workflow Definitions for Board Tasks
+
 ### Distribution, Testing & PoC (Round 55-57)
 
-50. [`58-standalone-nix-modules.md`](./58-standalone-nix-modules.md) — `done` — `[structural]` Portable LXC & NixOS Modules
-51. [`59-test-sandbox-repo.md`](./59-test-sandbox-repo.md) — `in-progress` — **Gemini** — Isolated Testing Sandbox
-52. [`60-sna-poc-reports.md`](./60-sna-poc-reports.md) — `ready` — `[market]` Public Repo SNA Reports (PoC)
+53. [`58-standalone-nix-modules.md`](./58-standalone-nix-modules.md) — `done` — `[structural]` Portable LXC & NixOS Modules
+54. [`59-test-sandbox-repo.md`](./59-test-sandbox-repo.md) — `in-progress` — **Gemini** — Isolated Testing Sandbox
+55. [`60-sna-poc-reports.md`](./60-sna-poc-reports.md) — `ready` — `[market]` Public Repo SNA Reports (PoC)
 
 ### Integrity & Scaling (Round 58-59)
 
-53. [`61-slsa-attestation-hooks.md`](./61-slsa-attestation-hooks.md) — `ready` — `[integrity]` SLSA-Signed Integrity Hooks
-54. [`62-jj-high-velocity-ingest.md`](./62-jj-high-velocity-ingest.md) — `ready` — `[structural]` Scalable jj Ingestion Layer
+56. [`61-slsa-attestation-hooks.md`](./61-slsa-attestation-hooks.md) — `ready` — `[integrity]` SLSA-Signed Integrity Hooks
+57. [`62-jj-high-velocity-ingest.md`](./62-jj-high-velocity-ingest.md) — `ready` — `[structural]` Scalable jj Ingestion Layer
 
 ### Platform Evolution (JJ + Dolt + Provenance)
 
@@ -109,13 +115,13 @@ Do not work on an item already marked `in-progress` by another agent.
 
 ### Code Server Prototype (Forgejo + jj)
 
-55. [`66-forgejo-code-server-shell.md`](./66-forgejo-code-server-shell.md) — `done` — `[product]` Forgejo-based code server shell
-56. [`67-git-jj-translation-gateway.md`](./67-git-jj-translation-gateway.md) — `done` — `[structural]` Git ↔ jj translation gateway
-57. [`68-public-repo-investor-demo.md`](./68-public-repo-investor-demo.md) — `done` — `[market]` Public repo import & investor demo
-58. [`69-jj-vs-git-infra-benchmark.md`](./69-jj-vs-git-infra-benchmark.md) — `done` — `[structural]` jj vs. Git infrastructure benchmark
-59. [`70-forgejo-discussion-repo-backend.md`](./70-forgejo-discussion-repo-backend.md) — `done` — `[product]` Forgejo DiscussionRepo backend
+58. [`66-forgejo-code-server-shell.md`](./66-forgejo-code-server-shell.md) — `done` — `[product]` Forgejo-based code server shell
+59. [`67-git-jj-translation-gateway.md`](./67-git-jj-translation-gateway.md) — `done` — `[structural]` Git ↔ jj translation gateway
+60. [`68-public-repo-investor-demo.md`](./68-public-repo-investor-demo.md) — `done` — `[market]` Public repo import & investor demo
+61. [`69-jj-vs-git-infra-benchmark.md`](./69-jj-vs-git-infra-benchmark.md) — `done` — `[structural]` jj vs. Git infrastructure benchmark
+62. [`70-forgejo-discussion-repo-backend.md`](./70-forgejo-discussion-repo-backend.md) — `done` — `[product]` Forgejo DiscussionRepo backend
 
 ### Shareable Web Demo Surface
 
-60. [`71-forgejo-shell-shareable-web-entry.md`](./71-forgejo-shell-shareable-web-entry.md) — `done` — **Codex** — `[product]` Forgejo shell shareable web entry
-61. [`72-forgejo-shell-public-demo-polish.md`](./72-forgejo-shell-public-demo-polish.md) — `done` — **Codex** — `[market]` Forgejo shell public demo polish
+63. [`71-forgejo-shell-shareable-web-entry.md`](./71-forgejo-shell-shareable-web-entry.md) — `done` — **Codex** — `[product]` Forgejo shell shareable web entry
+64. [`72-forgejo-shell-public-demo-polish.md`](./72-forgejo-shell-public-demo-polish.md) — `done` — **Codex** — `[market]` Forgejo shell public demo polish
