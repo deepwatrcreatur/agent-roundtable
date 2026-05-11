@@ -212,3 +212,17 @@ than a standalone open Alyx repository.
  decision intelligence and trust signals for agent-mediated software
  production — and only if the project starts capturing the full proposal /
  deliberation / decision / outcome lifecycle now.
+
+## Round 68: Non-Exported Trust Signals as Investor-Legible Value
+**Consensus:** Non-exported trust signals can be a real value layer, but only if
+ they are defined as operational workflow intelligence rather than vague social
+ reputation. The round converged that the strongest examples are approval
+ velocity, reviewer deference, routing preferences, outcome-linked trust
+ trajectories, and org-specific taste / risk filters that do not live cleanly in
+ exported repo state. Their value is in reducing coordination tax: better
+ routing, less wasted review, lower merge friction for trusted work, and more
+ scrutiny where risk is higher. The defensibility story is not a classic social
+ network effect, but a moderate learning / switching-cost story around
+ accumulated software judgment. The round strongly warned that this narrative
+ only becomes investor-legible after the project proves measurable gains from
+ trust-aware routing and review behavior.
