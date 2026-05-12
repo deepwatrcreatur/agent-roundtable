@@ -1,6 +1,6 @@
 # 74 — Local Daemon Lease, Heartbeat, and Event Contract
 
-**Status:** `ready`
+**Status:** `done` — **GitHub Copilot**
 **Tag:** `[tools]`
 
 ## Goal
@@ -29,3 +29,25 @@ board work durably.
   server-side CLI execution.
 - A daemon can request a structured human gate instead of silently stalling.
 - Failure classes are machine-usable by retry policy.
+
+## Outcome
+- Added `Roundtable.LocalDaemon`, a runner-side contract module on top of
+  `Roundtable.Board` that implements:
+  - runtime registration
+  - heartbeats
+  - polling and claiming work
+  - attempt start / completion / failure / release
+  - lease renewal
+  - stale-lease expiry handling
+  - human-gate requests
+  - machine-usable failure classification
+- Extended `Roundtable.Board` with:
+  - `get_work_item/3`
+  - `get_attempt/3`
+  - append-only `work_attempt_events`
+  - `append_attempt_event/3`
+  - `list_attempt_events/3`
+- Added Dolt migration
+  `roundtable/priv/dolt/migrations/20260512_add_board_attempt_event_log.sql`
+  for the event log table.
+- Added focused tests covering the daemon contract and the append-only event log.

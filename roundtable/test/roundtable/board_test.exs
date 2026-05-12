@@ -102,6 +102,20 @@ defmodule Roundtable.BoardTest do
              }
            ]}
 
+        String.contains?(sql, "SELECT id, attempt_id, work_item_id, event_type") ->
+          {:ok,
+           [
+             %{
+               "id" => "evt-1",
+               "attempt_id" => "att-2",
+               "work_item_id" => "wk-1",
+               "event_type" => "progress",
+               "summary" => "running tests",
+               "metadata_json" => ~s({"phase":"validation"}),
+               "created_at" => "2026-05-12T00:11:00Z"
+             }
+           ]}
+
         true ->
           {:ok, []}
       end
@@ -120,6 +134,7 @@ defmodule Roundtable.BoardTest do
     assert sql =~ "CREATE TABLE IF NOT EXISTS work_attempts"
     assert sql =~ "CREATE TABLE IF NOT EXISTS human_gates"
     assert sql =~ "CREATE TABLE IF NOT EXISTS runtime_heartbeats"
+    assert sql =~ "CREATE TABLE IF NOT EXISTS work_attempt_events"
   end
 
   test "create_work_item persists board rows with commit metadata" do
@@ -254,5 +269,57 @@ defmodule Roundtable.BoardTest do
     assert {:ok, [runtime]} = Board.list_runtime_heartbeats("/tmp/repo", dolt: FakeDolt)
     assert runtime.runtime_id == "rtk-1"
     assert runtime.capabilities == %{"profiles" => ["codex-gpt54"]}
+  end
+
+  test "gets individual rows and stores append-only attempt events" do
+    assert {:ok, item} = Board.get_work_item("/tmp/repo", "wk-1", dolt: FakeDolt)
+    assert item.id == "wk-1"
+    assert_received {:query, get_item_schema_sql}
+    assert get_item_schema_sql =~ "CREATE TABLE IF NOT EXISTS work_items"
+    assert_received {:query, get_item_sql}
+    assert get_item_sql =~ "FROM work_items"
+
+    assert {:ok, attempt} = Board.get_attempt("/tmp/repo", "att-2", dolt: FakeDolt)
+    assert attempt.id == "att-1"
+    assert_received {:query, get_attempt_schema_sql}
+    assert get_attempt_schema_sql =~ "CREATE TABLE IF NOT EXISTS work_attempts"
+    assert_received {:query, get_attempt_sql}
+    assert get_attempt_sql =~ "FROM work_attempts"
+
+    assert :ok =
+             Board.append_attempt_event(
+               "/tmp/repo",
+               %{
+                 id: "evt-2",
+                 attempt_id: "att-2",
+                 work_item_id: "wk-1",
+                 event_type: "progress",
+                 summary: "running tests",
+                 metadata: %{phase: "validation"}
+               },
+               dolt: FakeDolt
+             )
+
+    assert_received {:query, schema_sql}
+    assert schema_sql =~ "CREATE TABLE IF NOT EXISTS work_attempt_events"
+
+    assert_received {:query, event_sql}
+
+    assert event_sql =~ "REPLACE INTO work_attempt_events" or
+             event_sql =~ "SELECT id, attempt_id, work_item_id, event_type"
+
+    if String.contains?(event_sql, "SELECT id, attempt_id, work_item_id, event_type") do
+      assert_received {:query, insert_event_sql}
+      assert insert_event_sql =~ "REPLACE INTO work_attempt_events"
+      assert insert_event_sql =~ "'evt-2'"
+      assert insert_event_sql =~ "'progress'"
+    else
+      assert event_sql =~ "'evt-2'"
+      assert event_sql =~ "'progress'"
+    end
+
+    assert {:ok, [event]} = Board.list_attempt_events("/tmp/repo", "att-2", dolt: FakeDolt)
+    assert event.event_type == "progress"
+    assert event.metadata == %{"phase" => "validation"}
   end
 end

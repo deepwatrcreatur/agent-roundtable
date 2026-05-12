@@ -75,7 +75,7 @@ The board is a hybrid surface:
 - socially legible on top (issue / card / assignment view)
 - structurally queryable underneath (Dolt-backed tables)
 
-The minimum persistent model is four tables.
+The minimum persistent model is five tables.
 
 ### 3.1 `work_items`
 
@@ -155,6 +155,20 @@ Board visibility for local or remote runtimes.
 | `last_seen_at` | timestamp | Last heartbeat |
 | `active_attempt_id` | text nullable | Attempt currently running |
 | `metadata` | json | Platform / version / labels |
+
+### 3.5 `work_attempt_events`
+
+Append-only event log for daemon-reported progress and terminal state.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | text | Event ID |
+| `attempt_id` | text | Related attempt |
+| `work_item_id` | text | Parent work item |
+| `event_type` | text | `claimed`, `started`, `progress`, `warning`, `needs_human_gate`, `completed`, `failed`, `cancelled` |
+| `summary` | text nullable | Compact human-readable event summary |
+| `metadata_json` | json | Structured event detail |
+| `created_at` | timestamp | Event timestamp |
 
 ---
 
@@ -332,8 +346,8 @@ observable work.
 
 This model should drive:
 
-1. a Dolt schema for `work_items`, `work_attempts`, `human_gates`, and
-   `runtime_heartbeats`
+1. a Dolt schema for `work_items`, `work_attempts`, `human_gates`,
+   `runtime_heartbeats`, and `work_attempt_events`
 2. a TUI / board view that surfaces assignment, status, and gate state
 3. a daemon contract for local CLI runners
 4. a lightweight workflow-definition layer that attaches retry / timeout / gate

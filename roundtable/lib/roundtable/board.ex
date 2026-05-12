@@ -16,17 +16,24 @@ defmodule Roundtable.Board do
 
   alias Roundtable.Vcs.Dolt
 
-  @schema_file Application.app_dir(
-                 :roundtable,
-                 "priv/dolt/migrations/20260512_add_board_execution_schema.sql"
-               )
-  @external_resource @schema_file
-  @schema_sql File.read!(@schema_file)
+  @schema_files [
+    Application.app_dir(
+      :roundtable,
+      "priv/dolt/migrations/20260512_add_board_execution_schema.sql"
+    ),
+    Application.app_dir(
+      :roundtable,
+      "priv/dolt/migrations/20260512_add_board_attempt_event_log.sql"
+    )
+  ]
+  Enum.each(@schema_files, &Module.put_attribute(__MODULE__, :external_resource, &1))
+  @schema_sql Enum.map_join(@schema_files, "\n\n", &File.read!/1)
 
   @type work_item :: map()
   @type attempt :: map()
   @type human_gate :: map()
   @type runtime_heartbeat :: map()
+  @type attempt_event :: map()
 
   @spec schema_sql() :: String.t()
   def schema_sql, do: @schema_sql
@@ -119,6 +126,19 @@ defmodule Roundtable.Board do
     end
   end
 
+  @spec get_work_item(String.t() | nil, String.t(), keyword()) ::
+          {:ok, work_item() | nil} | {:error, term()}
+  def get_work_item(repo_path, work_item_id, opts \\ []) when is_binary(work_item_id) do
+    dolt = Keyword.get(opts, :dolt, Dolt)
+    query_opts = Keyword.drop(opts, [:dolt])
+
+    with {:ok, _} <- ensure_schema(repo_path, opts),
+         {:ok, rows} <-
+           dolt.query(get_work_item_sql(work_item_id), [repo_path: repo_path] ++ query_opts) do
+      {:ok, rows |> List.first() |> decode_nullable(&decode_work_item_row/1)}
+    end
+  end
+
   @spec list_attempts(String.t() | nil, String.t(), keyword()) ::
           {:ok, [attempt()]} | {:error, term()}
   def list_attempts(repo_path, work_item_id, opts \\ []) when is_binary(work_item_id) do
@@ -129,6 +149,19 @@ defmodule Roundtable.Board do
          {:ok, rows} <-
            dolt.query(list_attempts_sql(work_item_id), [repo_path: repo_path] ++ query_opts) do
       {:ok, Enum.map(rows, &decode_attempt_row/1)}
+    end
+  end
+
+  @spec get_attempt(String.t() | nil, String.t(), keyword()) ::
+          {:ok, attempt() | nil} | {:error, term()}
+  def get_attempt(repo_path, attempt_id, opts \\ []) when is_binary(attempt_id) do
+    dolt = Keyword.get(opts, :dolt, Dolt)
+    query_opts = Keyword.drop(opts, [:dolt])
+
+    with {:ok, _} <- ensure_schema(repo_path, opts),
+         {:ok, rows} <-
+           dolt.query(get_attempt_sql(attempt_id), [repo_path: repo_path] ++ query_opts) do
+      {:ok, rows |> List.first() |> decode_nullable(&decode_attempt_row/1)}
     end
   end
 
@@ -155,6 +188,36 @@ defmodule Roundtable.Board do
          {:ok, rows} <-
            dolt.query(list_runtime_heartbeats_sql(), [repo_path: repo_path] ++ query_opts) do
       {:ok, Enum.map(rows, &decode_runtime_heartbeat_row/1)}
+    end
+  end
+
+  @spec append_attempt_event(String.t() | nil, map(), keyword()) :: :ok | {:error, term()}
+  def append_attempt_event(repo_path, attrs, opts \\ []) do
+    with {:ok, _} <- ensure_schema(repo_path, opts),
+         {:ok, sql} <- attempt_event_insert_sql(attrs),
+         :ok <-
+           mutate(
+             repo_path,
+             sql,
+             commit_message(
+               "feat(board): append event #{attrs[:event_type] || attrs["event_type"]} for #{attrs[:attempt_id] || attrs["attempt_id"]}"
+             ),
+             opts
+           ) do
+      :ok
+    end
+  end
+
+  @spec list_attempt_events(String.t() | nil, String.t(), keyword()) ::
+          {:ok, [attempt_event()]} | {:error, term()}
+  def list_attempt_events(repo_path, attempt_id, opts \\ []) when is_binary(attempt_id) do
+    dolt = Keyword.get(opts, :dolt, Dolt)
+    query_opts = Keyword.drop(opts, [:dolt])
+
+    with {:ok, _} <- ensure_schema(repo_path, opts),
+         {:ok, rows} <-
+           dolt.query(list_attempt_events_sql(attempt_id), [repo_path: repo_path] ++ query_opts) do
+      {:ok, Enum.map(rows, &decode_attempt_event_row/1)}
     end
   end
 
@@ -312,6 +375,18 @@ defmodule Roundtable.Board do
     """
   end
 
+  defp get_work_item_sql(work_item_id) do
+    """
+    SELECT id, repo_ref, branch_ref, source_ref, title, task_type, input_payload,
+           desired_outcome, status, priority, assignee_type, assignee_ref,
+           workflow_ref, retry_policy, timeout_policy, hitl_policy,
+           created_at, updated_at, closed_at
+    FROM work_items
+    WHERE id = '#{escape_sql(work_item_id)}'
+    LIMIT 1;
+    """
+  end
+
   defp list_attempts_sql(work_item_id) do
     """
     SELECT id, work_item_id, attempt_number, runtime_id, agent_id, status,
@@ -320,6 +395,17 @@ defmodule Roundtable.Board do
     FROM work_attempts
     WHERE work_item_id = '#{escape_sql(work_item_id)}'
     ORDER BY attempt_number ASC;
+    """
+  end
+
+  defp get_attempt_sql(attempt_id) do
+    """
+    SELECT id, work_item_id, attempt_number, runtime_id, agent_id, status,
+           lease_expires_at, started_at, finished_at, exit_class, summary,
+           error_excerpt, artifact_ref
+    FROM work_attempts
+    WHERE id = '#{escape_sql(attempt_id)}'
+    LIMIT 1;
     """
   end
 
@@ -339,6 +425,36 @@ defmodule Roundtable.Board do
            active_attempt_id, metadata_json
     FROM runtime_heartbeats
     ORDER BY runtime_id ASC;
+    """
+  end
+
+  defp attempt_event_insert_sql(attrs) do
+    with {:ok, id} <- fetch_required(attrs, :id),
+         {:ok, attempt_id} <- fetch_required(attrs, :attempt_id),
+         {:ok, work_item_id} <- fetch_required(attrs, :work_item_id),
+         {:ok, event_type} <- fetch_required(attrs, :event_type) do
+      now = now_iso8601()
+
+      {:ok,
+       """
+       REPLACE INTO work_attempt_events (
+         id, attempt_id, work_item_id, event_type, summary, metadata_json, created_at
+       ) VALUES (
+         '#{escape_sql(id)}', '#{escape_sql(attempt_id)}', '#{escape_sql(work_item_id)}',
+         '#{escape_sql(event_type)}', #{sql_text(fetch_optional(attrs, :summary, nil))},
+         '#{escape_sql(json_text(fetch_optional(attrs, :metadata, %{})))}',
+         '#{fetch_optional(attrs, :created_at, now)}'
+       );
+       """}
+    end
+  end
+
+  defp list_attempt_events_sql(attempt_id) do
+    """
+    SELECT id, attempt_id, work_item_id, event_type, summary, metadata_json, created_at
+    FROM work_attempt_events
+    WHERE attempt_id = '#{escape_sql(attempt_id)}'
+    ORDER BY created_at ASC;
     """
   end
 
@@ -412,6 +528,21 @@ defmodule Roundtable.Board do
       metadata: decode_json(row["metadata_json"], %{})
     }
   end
+
+  defp decode_attempt_event_row(row) do
+    %{
+      id: row["id"],
+      attempt_id: row["attempt_id"],
+      work_item_id: row["work_item_id"],
+      event_type: row["event_type"],
+      summary: row["summary"],
+      metadata: decode_json(row["metadata_json"], %{}),
+      created_at: row["created_at"]
+    }
+  end
+
+  defp decode_nullable(nil, _fun), do: nil
+  defp decode_nullable(row, fun), do: fun.(row)
 
   defp fetch_required(attrs, key) do
     case fetch_optional(attrs, key, nil) do

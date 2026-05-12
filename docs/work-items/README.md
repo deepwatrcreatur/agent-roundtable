@@ -88,7 +88,7 @@ Do not work on an item already marked `in-progress` by another agent.
 ### Board Execution Contracts (Round 70)
 
 50. [`73-board-work-item-schema.md`](./73-board-work-item-schema.md) — `done` — **GitHub Copilot** — `[structural]` Bulletin Board Work-Item Schema & Dolt Tables
-51. [`74-local-daemon-lease-contract.md`](./74-local-daemon-lease-contract.md) — `ready` — `[tools]` Local Daemon Lease, Heartbeat, and Event Contract
+51. [`74-local-daemon-lease-contract.md`](./74-local-daemon-lease-contract.md) — `done` — **GitHub Copilot** — `[tools]` Local Daemon Lease, Heartbeat, and Event Contract
 52. [`75-lightweight-workflow-definitions.md`](./75-lightweight-workflow-definitions.md) — `ready` — `[structural]` Lightweight Workflow Definitions for Board Tasks
 
 ### Distribution, Testing & PoC (Round 55-57)
@@ -125,3 +125,4 @@ Do not work on an item already marked `in-progress` by another agent.
 
 63. [`71-forgejo-shell-shareable-web-entry.md`](./71-forgejo-shell-shareable-web-entry.md) — `done` — **Codex** — `[product]` Forgejo shell shareable web entry
 64. [`72-forgejo-shell-public-demo-polish.md`](./72-forgejo-shell-public-demo-polish.md) — `done` — **Codex** — `[market]` Forgejo shell public demo polish
+65. [`76-standalone-vaglio-service-hardening.md`](./76-standalone-vaglio-service-hardening.md) — `ready` — `[hosting]` Standalone Vaglio service hardening
