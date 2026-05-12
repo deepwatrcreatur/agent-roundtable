@@ -87,7 +87,7 @@ Do not work on an item already marked `in-progress` by another agent.
 
 ### Board Execution Contracts (Round 70)
 
-50. [`73-board-work-item-schema.md`](./73-board-work-item-schema.md) — `ready` — `[structural]` Bulletin Board Work-Item Schema & Dolt Tables
+50. [`73-board-work-item-schema.md`](./73-board-work-item-schema.md) — `done` — **GitHub Copilot** — `[structural]` Bulletin Board Work-Item Schema & Dolt Tables
 51. [`74-local-daemon-lease-contract.md`](./74-local-daemon-lease-contract.md) — `ready` — `[tools]` Local Daemon Lease, Heartbeat, and Event Contract
 52. [`75-lightweight-workflow-definitions.md`](./75-lightweight-workflow-definitions.md) — `ready` — `[structural]` Lightweight Workflow Definitions for Board Tasks
 

@@ -1,6 +1,6 @@
 # 73 — Bulletin Board Work-Item Schema & Dolt Tables
 
-**Status:** `ready`
+**Status:** `done` — **GitHub Copilot**
 **Tag:** `[structural]`
 
 ## Goal
@@ -28,3 +28,20 @@ Implement the concrete bulletin-board persistence model described in
   code can consume directly.
 - Documentation or migration notes make the boundary between board state and
   Vaglio memory explicit.
+
+## Outcome
+- Added Dolt migration `roundtable/priv/dolt/migrations/20260512_add_board_execution_schema.sql`
+  defining:
+  - `work_items`
+  - `work_attempts`
+  - `human_gates`
+  - `runtime_heartbeats`
+- Added `Roundtable.Board`, a focused Dolt-backed persistence module that:
+  - ensures schema presence
+  - creates work items
+  - appends attempts
+  - records human gates
+  - upserts runtime heartbeats
+  - lists and decodes board rows back into Elixir maps
+- Added focused tests covering schema creation, machine-readable policy fields,
+  retry lineage, and structured human-gate / heartbeat views.
