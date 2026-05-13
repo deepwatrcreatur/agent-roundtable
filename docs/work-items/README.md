@@ -125,4 +125,4 @@ Do not work on an item already marked `in-progress` by another agent.
 
 63. [`71-forgejo-shell-shareable-web-entry.md`](./71-forgejo-shell-shareable-web-entry.md) — `done` — **Codex** — `[product]` Forgejo shell shareable web entry
 64. [`72-forgejo-shell-public-demo-polish.md`](./72-forgejo-shell-public-demo-polish.md) — `done` — **Codex** — `[market]` Forgejo shell public demo polish
-65. [`76-standalone-vaglio-service-hardening.md`](./76-standalone-vaglio-service-hardening.md) — `ready` — `[hosting]` Standalone Vaglio service hardening
+65. [`76-standalone-vaglio-service-hardening.md`](./76-standalone-vaglio-service-hardening.md) — `in-progress` — `[hosting]` Standalone Vaglio service hardening

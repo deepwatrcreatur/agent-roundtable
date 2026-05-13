@@ -44,8 +44,19 @@
                 mix_home="$state_home/mix"
                 deps_path="$state_home/deps"
                 build_root="$state_home/build"
+                runtime_src="$state_home/src"
+                source_rev='${self.rev or self.dirtyRev or "dirty"}'
+                source_marker="$runtime_src/.roundtable-source-rev"
 
                 mkdir -p "$state_home" "$mix_home" "$deps_path" "$build_root"
+
+                if [ ! -d "$runtime_src" ] || [ ! -f "$source_marker" ] || [ "$(cat "$source_marker")" != "$source_rev" ]; then
+                  rm -rf "$runtime_src"
+                  mkdir -p "$runtime_src"
+                  cp -R ${roundtableSrc}/. "$runtime_src"/
+                  chmod -R u+w "$runtime_src"
+                  printf '%s\n' "$source_rev" > "$source_marker"
+                fi
 
                 export MIX_ENV="''${MIX_ENV:-prod}"
                 export MIX_HOME="$mix_home"
@@ -54,7 +65,7 @@
                 export MIX_DEPS_PATH="$deps_path"
                 export MIX_BUILD_ROOT="$build_root"
 
-                cd ${roundtableSrc}
+                cd "$runtime_src"
 
                 mix local.hex --force >/dev/null 2>&1 || true
                 mix local.rebar --force >/dev/null 2>&1 || true
