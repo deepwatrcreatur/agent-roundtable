@@ -39,6 +39,17 @@ defmodule Roundtable.PublicRepoDemo do
     end
   end
 
+  @spec snapshot_with_timeout(String.t(), options()) :: {:ok, map()} | {:error, term()}
+  def snapshot_with_timeout(id, opts \\ []) do
+    timeout_ms = Keyword.get(opts, :timeout_ms, 5_000)
+    task = Task.async(fn -> snapshot(id, Keyword.delete(opts, :timeout_ms)) end)
+
+    case Task.yield(task, timeout_ms) || Task.shutdown(task, :brutal_kill) do
+      {:ok, result} -> result
+      nil -> {:error, :timeout}
+    end
+  end
+
   @spec export_snapshot(String.t(), options()) :: {:ok, Path.t()} | {:error, term()}
   def export_snapshot(id, opts \\ []) do
     output_root = Keyword.get(opts, :output_root, "reports/public-repo-demos")

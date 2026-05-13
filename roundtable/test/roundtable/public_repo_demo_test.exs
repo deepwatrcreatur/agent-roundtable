@@ -13,6 +13,16 @@ defmodule Roundtable.PublicRepoDemoTest do
     end
   end
 
+  defmodule SlowCommandRunner do
+    @behaviour Roundtable.CommandRunner
+
+    @impl true
+    def cmd(_command, _args, _opts) do
+      Process.sleep(50)
+      {"", 0}
+    end
+  end
+
   setup do
     Process.put({FakeCommandRunner, :handler}, fn
       "git", ["ls-remote", clone_url, "HEAD", tracked_ref], _opts ->
@@ -97,5 +107,13 @@ defmodule Roundtable.PublicRepoDemoTest do
     assert get_in(payload, ["source", "history_summary", "sampled_commit_count"]) == 40
     assert get_in(payload, ["source", "history_summary", "path_hotspots"]) != []
     assert get_in(payload, ["dashboard", "stress", "headline"]) =~ "Prediction error"
+  end
+
+  test "times out slow snapshots for interactive surfaces" do
+    assert {:error, :timeout} =
+             PublicRepoDemo.snapshot_with_timeout("nixpkgs",
+               runner: SlowCommandRunner,
+               timeout_ms: 1
+             )
   end
 end
