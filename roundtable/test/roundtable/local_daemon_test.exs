@@ -106,6 +106,40 @@ defmodule Roundtable.LocalDaemonTest do
     defp store(opts), do: Keyword.fetch!(opts, :store)
   end
 
+  defmodule FakeWorkflow do
+    def resolve_work_item(_repo_path, work_item, _opts) do
+      case work_item.workflow_ref do
+        "wf-codex" ->
+          {:ok,
+           work_item
+           |> Map.put(:allowed_task_types, ["code_change"])
+           |> Map.put(:runtime_requirements, %{
+             "profiles" => ["codex-gpt54"],
+             "labels" => ["linux"]
+           })
+           |> Map.put(
+             :retry_policy,
+             Map.merge(%{"max_attempts" => 4}, work_item.retry_policy || %{})
+           )}
+
+        _ ->
+          {:ok, Map.put_new(work_item, :runtime_requirements, %{})}
+      end
+    end
+
+    def runtime_allowed?(work_item, opts) do
+      requirements = Map.get(work_item, :runtime_requirements, %{})
+      profiles = Keyword.get(opts, :runtime_profile_ids, [])
+      labels = Keyword.get(opts, :runtime_labels, [])
+
+      required_profiles = Map.get(requirements, "profiles", [])
+      required_labels = Map.get(requirements, "labels", [])
+
+      Enum.any?(required_profiles, &(&1 in profiles)) and
+        Enum.all?(required_labels, &(&1 in labels))
+    end
+  end
+
   setup do
     {:ok, store} =
       Agent.start_link(fn ->
@@ -166,6 +200,60 @@ defmodule Roundtable.LocalDaemonTest do
              )
 
     assert item.id == "wk-1"
+  end
+
+  test "workflow definitions gate runtime matching and supply retry defaults", %{store: store} do
+    assert :ok =
+             FakeBoard.create_work_item(
+               "/tmp/repo",
+               %{
+                 id: "wk-1",
+                 repo_ref: "deepwatrcreatur/agent-roundtable",
+                 branch_ref: nil,
+                 source_ref: nil,
+                 title: "Workflow gated task",
+                 task_type: "code_change",
+                 input_payload: %{},
+                 desired_outcome: %{},
+                 status: "queued",
+                 priority: 10,
+                 assignee_type: nil,
+                 assignee_ref: nil,
+                 workflow_ref: "wf-codex",
+                 retry_policy: nil,
+                 timeout_policy: nil,
+                 hitl_policy: nil,
+                 created_at: "2026-05-12T09:00:00Z",
+                 updated_at: "2026-05-12T09:00:00Z",
+                 closed_at: nil
+               },
+               store: store
+             )
+
+    assert {:ok, nil} =
+             LocalDaemon.poll_work(
+               "/tmp/repo",
+               board: FakeBoard,
+               workflow: FakeWorkflow,
+               store: store,
+               runtime_id: "rtk-1",
+               runtime_profile_ids: ["gemini-cli"],
+               runtime_labels: ["linux"]
+             )
+
+    assert {:ok, item} =
+             LocalDaemon.poll_work(
+               "/tmp/repo",
+               board: FakeBoard,
+               workflow: FakeWorkflow,
+               store: store,
+               runtime_id: "rtk-1",
+               runtime_profile_ids: ["codex-gpt54"],
+               runtime_labels: ["linux"]
+             )
+
+    assert item.workflow_ref == "wf-codex"
+    assert item.retry_policy == %{"max_attempts" => 4}
   end
 
   test "claims work, starts attempt, emits progress, and renews leases", %{store: store} do

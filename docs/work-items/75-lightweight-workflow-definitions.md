@@ -1,6 +1,6 @@
 # 75 — Lightweight Workflow Definitions for Board Tasks
 
-**Status:** `ready`
+**Status:** `done`
 **Tag:** `[structural]`
 
 ## Goal
@@ -28,3 +28,14 @@ project into a generic Conductor clone.
   does not require adopting an external workflow runtime.
 - The result clearly complements items 57, 73, and 74 instead of duplicating
   them.
+
+## Outcome
+- Added Dolt migration `20260512_add_workflow_definitions.sql` for reusable
+  workflow policy bundles.
+- Added `Roundtable.WorkflowDefinitions` with schema setup, CRUD-style
+  persistence, work-item policy resolution, and runtime requirement checks.
+- Integrated workflow resolution into `Roundtable.LocalDaemon` polling and
+  failure handling so runtime/profile matching and retry defaults can come from
+  `workflow_ref`.
+- Added focused tests for workflow-definition persistence, overlay behavior, and
+  daemon workflow gating.

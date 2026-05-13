@@ -75,7 +75,8 @@ The board is a hybrid surface:
 - socially legible on top (issue / card / assignment view)
 - structurally queryable underneath (Dolt-backed tables)
 
-The minimum persistent model is five tables.
+The minimum persistent execution model is five tables plus one reusable
+workflow-definition table.
 
 ### 3.1 `work_items`
 
@@ -169,6 +170,24 @@ Append-only event log for daemon-reported progress and terminal state.
 | `summary` | text nullable | Compact human-readable event summary |
 | `metadata_json` | json | Structured event detail |
 | `created_at` | timestamp | Event timestamp |
+
+### 3.6 `workflow_definitions`
+
+Reusable policy bundles referenced by `work_items.workflow_ref`.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | text | Stable workflow definition ID |
+| `title` | text | Short operator-visible name |
+| `description` | text nullable | Human-readable purpose |
+| `task_types_json` | json | Allowed task types |
+| `runtime_requirements_json` | json | Explicit runtime / profile / label / transport constraints |
+| `retry_policy_json` | json nullable | Reusable retry policy defaults |
+| `timeout_policy_json` | json nullable | Reusable timeout policy defaults |
+| `hitl_policy_json` | json nullable | Reusable human-gate defaults |
+| `resume_policy_json` | json nullable | Reusable post-approval resume defaults |
+| `created_at` | timestamp | Creation time |
+| `updated_at` | timestamp | Last mutation |
 
 ---
 

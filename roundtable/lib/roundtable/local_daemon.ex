@@ -12,7 +12,7 @@ defmodule Roundtable.LocalDaemon do
   - machine-usable failure classes
   """
 
-  alias Roundtable.Board
+  alias Roundtable.{Board, WorkflowDefinitions}
 
   @default_lease_seconds 300
   @claimable_statuses ["queued", "retry_scheduled", "resumable"]
@@ -56,14 +56,31 @@ defmodule Roundtable.LocalDaemon do
       runtime_id = Keyword.get(opts, :runtime_id)
       task_types = Keyword.get(opts, :task_types)
       repo_refs = Keyword.get(opts, :repo_refs)
+      runtime_profile_ids = Keyword.get(opts, :runtime_profile_ids, [])
+      runtime_labels = Keyword.get(opts, :runtime_labels, [])
+      transport = Keyword.get(opts, :transport)
 
-      {:ok,
-       Enum.find(items, fn item ->
-         item.status in statuses and
-           matches_filter?(item.task_type, task_types) and
-           matches_filter?(item.repo_ref, repo_refs) and
-           runtime_assignable?(item, runtime_id)
-       end)}
+      resolved =
+        Enum.find_value(items, fn item ->
+          with {:ok, resolved_item} <- resolve_work_item(repo_path, item, opts),
+               true <-
+                 resolved_item.status in statuses and
+                   matches_filter?(resolved_item.task_type, task_types) and
+                   matches_filter?(resolved_item.repo_ref, repo_refs) and
+                   runtime_assignable?(resolved_item, runtime_id) and
+                   workflow_module(opts).runtime_allowed?(resolved_item,
+                     runtime_id: runtime_id,
+                     runtime_profile_ids: runtime_profile_ids,
+                     runtime_labels: runtime_labels,
+                     transport: transport
+                   ) do
+            resolved_item
+          else
+            _ -> nil
+          end
+        end)
+
+      {:ok, resolved}
     end
   end
 
@@ -78,6 +95,7 @@ defmodule Roundtable.LocalDaemon do
     with :ok <- expire_stale_claims(repo_path, opts),
          {:ok, work_item} <- board.get_work_item(repo_path, work_item_id, board_opts(opts)),
          {:ok, work_item} <- ensure_claimable(work_item),
+         {:ok, work_item} <- resolve_work_item(repo_path, work_item, opts),
          {:ok, attempts} <- board.list_attempts(repo_path, work_item_id, board_opts(opts)) do
       now = now_iso8601()
 
@@ -213,9 +231,8 @@ defmodule Roundtable.LocalDaemon do
         |> Map.put(:summary, event.summary || attempt.summary)
 
       with :ok <- board.append_attempt_event(repo_path, event, board_opts(opts)),
-           :ok <- board.append_attempt(repo_path, updated_attempt, board_opts(opts)),
-           {:ok, [latest | _]} <- list_latest_event(repo_path, attempt.id, board, opts) do
-        {:ok, latest}
+           :ok <- board.append_attempt(repo_path, updated_attempt, board_opts(opts)) do
+        {:ok, event}
       end
     end
   end
@@ -374,6 +391,7 @@ defmodule Roundtable.LocalDaemon do
          {:ok, work_item} <-
            board.get_work_item(repo_path, attempt.work_item_id, board_opts(opts)),
          {:ok, work_item} <- ensure_work_item_exists(work_item),
+         {:ok, work_item} <- resolve_work_item(repo_path, work_item, opts),
          {:ok, attempts} <- board.list_attempts(repo_path, work_item.id, board_opts(opts)) do
       now = now_iso8601()
       retryable? = retryable_failure?(failure_class) and can_retry?(work_item, attempts)
@@ -519,6 +537,7 @@ defmodule Roundtable.LocalDaemon do
   end
 
   defp board_module(opts), do: Keyword.get(opts, :board, Board)
+  defp workflow_module(opts), do: Keyword.get(opts, :workflow, WorkflowDefinitions)
 
   defp board_opts(opts),
     do:
@@ -530,6 +549,9 @@ defmodule Roundtable.LocalDaemon do
         :statuses,
         :task_types,
         :repo_refs,
+        :workflow,
+        :runtime_profile_ids,
+        :runtime_labels,
         :now,
         :host_label,
         :transport,
@@ -595,6 +617,10 @@ defmodule Roundtable.LocalDaemon do
     board.create_work_item(repo_path, work_item, board_opts(opts))
   end
 
+  defp resolve_work_item(repo_path, work_item, opts) do
+    workflow_module(opts).resolve_work_item(repo_path, work_item, workflow_opts(opts))
+  end
+
   defp next_attempt_number([]), do: 1
 
   defp next_attempt_number(attempts),
@@ -613,17 +639,13 @@ defmodule Roundtable.LocalDaemon do
     length(attempts) < max_attempts
   end
 
-  defp list_latest_event(repo_path, attempt_id, board, opts) do
-    with {:ok, events} <- board.list_attempt_events(repo_path, attempt_id, board_opts(opts)) do
-      {:ok, Enum.reverse(events)}
-    end
-  end
-
   defp list_latest_gate(repo_path, work_item_id, board, opts) do
     with {:ok, gates} <- board.list_human_gates(repo_path, work_item_id, board_opts(opts)) do
       {:ok, Enum.reverse(gates)}
     end
   end
+
+  defp workflow_opts(opts), do: Keyword.drop(opts, [:board, :workflow])
 
   defp lease_expired?(lease_iso8601, now_iso8601) do
     with {:ok, lease, _} <- DateTime.from_iso8601(lease_iso8601),
