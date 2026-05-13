@@ -40,7 +40,7 @@
   services.roundtable = {
     enable = true;
     enableTuiTooling = true;
-    phoenixHost = "localhost";
+    phoenixHost = "roundtable.deepwatercreature.com";
   };
 
   system.stateVersion = lib.mkDefault "25.11";
