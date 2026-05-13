@@ -50,6 +50,41 @@ defmodule Roundtable.PublicRepoDemo do
     end
   end
 
+  @spec cached_snapshot(String.t(), options()) :: {:ok, map()} | {:error, term()}
+  def cached_snapshot(id, opts \\ []) do
+    ttl_ms = Keyword.get(opts, :ttl_ms, 15 * 60_000)
+    timeout_ms = Keyword.get(opts, :timeout_ms, 5_000)
+    cache_root = Keyword.get(opts, :cache_root, default_cache_root())
+    snapshot_opts = Keyword.drop(opts, [:ttl_ms, :timeout_ms, :cache_root])
+
+    with :ok <- File.mkdir_p(cache_root) do
+      case read_cached_snapshot(cache_path(cache_root, id), ttl_ms) do
+        {:ok, snapshot} ->
+          {:ok, snapshot}
+
+        {:stale, snapshot} ->
+          case snapshot_with_timeout(id, Keyword.merge(snapshot_opts, timeout_ms: timeout_ms)) do
+            {:ok, fresh_snapshot} ->
+              write_cached_snapshot(cache_path(cache_root, id), fresh_snapshot)
+              {:ok, fresh_snapshot}
+
+            {:error, _reason} ->
+              {:ok, snapshot}
+          end
+
+        :miss ->
+          case snapshot_with_timeout(id, Keyword.merge(snapshot_opts, timeout_ms: timeout_ms)) do
+            {:ok, fresh_snapshot} ->
+              write_cached_snapshot(cache_path(cache_root, id), fresh_snapshot)
+              {:ok, fresh_snapshot}
+
+            {:error, _reason} = error ->
+              error
+          end
+      end
+    end
+  end
+
   @spec export_snapshot(String.t(), options()) :: {:ok, Path.t()} | {:error, term()}
   def export_snapshot(id, opts \\ []) do
     output_root = Keyword.get(opts, :output_root, "reports/public-repo-demos")
@@ -166,6 +201,34 @@ defmodule Roundtable.PublicRepoDemo do
 
   defp clone_url(url) do
     if String.ends_with?(url, ".git"), do: url, else: url <> ".git"
+  end
+
+  defp default_cache_root do
+    System.get_env("ROUNDTABLE_CACHE_DIR", Path.join(System.tmp_dir!(), "roundtable-public-repo-cache"))
+  end
+
+  defp cache_path(cache_root, id), do: Path.join(cache_root, "#{id}.term")
+
+  defp read_cached_snapshot(path, ttl_ms) do
+    with true <- File.exists?(path),
+         {:ok, binary} <- File.read(path),
+         %{generated_at: generated_at} = snapshot <- :erlang.binary_to_term(binary),
+         {:ok, generated_at_dt, _offset} <- DateTime.from_iso8601(generated_at) do
+      age_ms = DateTime.diff(DateTime.utc_now(), generated_at_dt, :millisecond)
+
+      if age_ms <= ttl_ms do
+        {:ok, snapshot}
+      else
+        {:stale, snapshot}
+      end
+    else
+      false -> :miss
+      _ -> :miss
+    end
+  end
+
+  defp write_cached_snapshot(path, snapshot) do
+    File.write!(path, :erlang.term_to_binary(snapshot))
   end
 
   defp parse_integer(output) do

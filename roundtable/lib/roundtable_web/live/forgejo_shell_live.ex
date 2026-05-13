@@ -366,8 +366,9 @@ defmodule RoundtableWeb.ForgejoShellLive do
   end
 
   defp assign_demo_from_payload(socket, selected_demo, demo, inputs) do
-    case PublicRepoDemo.snapshot_with_timeout(selected_demo,
+    case PublicRepoDemo.cached_snapshot(selected_demo,
            base_url: inputs.base_url,
+           ttl_ms: 15 * 60_000,
            timeout_ms: 4_000
          ) do
       {:ok, snapshot} ->

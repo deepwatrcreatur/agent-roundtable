@@ -5,10 +5,11 @@ defmodule Roundtable.PublicRepoDemoTest do
 
   defmodule FakeCommandRunner do
     @behaviour Roundtable.CommandRunner
+    @handler_key {__MODULE__, :handler}
 
     @impl true
     def cmd(command, args, opts) do
-      handler = Process.get({__MODULE__, :handler}) || raise "missing fake command handler"
+      handler = :persistent_term.get(@handler_key, nil) || raise "missing fake command handler"
       handler.(command, args, opts)
     end
   end
@@ -24,7 +25,7 @@ defmodule Roundtable.PublicRepoDemoTest do
   end
 
   setup do
-    Process.put({FakeCommandRunner, :handler}, fn
+    :persistent_term.put({FakeCommandRunner, :handler}, fn
       "git", ["ls-remote", clone_url, "HEAD", tracked_ref], _opts ->
         assert clone_url == "https://github.com/NixOS/nixpkgs.git"
         assert tracked_ref == "refs/heads/master"
@@ -115,5 +116,61 @@ defmodule Roundtable.PublicRepoDemoTest do
                runner: SlowCommandRunner,
                timeout_ms: 1
              )
+  end
+
+  test "reuses a fresh cached snapshot without running git again" do
+    cache_root = Path.join(System.tmp_dir!(), "roundtable-public-cache-#{System.unique_integer()}")
+
+    assert {:ok, first_snapshot} =
+             PublicRepoDemo.cached_snapshot("nixpkgs",
+               runner: FakeCommandRunner,
+               cache_root: cache_root,
+               ttl_ms: 60_000,
+               timeout_ms: 100
+             )
+
+    :persistent_term.put({FakeCommandRunner, :handler}, fn command, args, _opts ->
+      flunk("cache should have avoided command execution: #{inspect({command, args})}")
+    end)
+
+    assert {:ok, second_snapshot} =
+             PublicRepoDemo.cached_snapshot("nixpkgs",
+               runner: FakeCommandRunner,
+               cache_root: cache_root,
+               ttl_ms: 60_000,
+               timeout_ms: 100
+             )
+
+    assert second_snapshot.source == first_snapshot.source
+  end
+
+  test "falls back to stale cache when refresh times out" do
+    cache_root = Path.join(System.tmp_dir!(), "roundtable-public-cache-#{System.unique_integer()}")
+    cache_file = Path.join(cache_root, "nixpkgs.term")
+
+    File.mkdir_p!(cache_root)
+
+    stale_snapshot = %{
+      generated_at: "2026-05-12T16:00:00Z",
+      demo: %{id: "nixpkgs", name: "Nixpkgs", teaser: "cached"},
+      source: %{slug: "cached/source", history_summary: %{sampled_commit_count: 9}},
+      imported_repo: %{},
+      shell_inputs: %{},
+      import_steps: [],
+      dashboard: %{stress: %{headline: "cached"}}
+    }
+
+    File.write!(cache_file, :erlang.term_to_binary(stale_snapshot))
+
+    assert {:ok, snapshot} =
+             PublicRepoDemo.cached_snapshot("nixpkgs",
+               runner: SlowCommandRunner,
+               cache_root: cache_root,
+               ttl_ms: 1,
+               timeout_ms: 1
+             )
+
+    assert snapshot.source.slug == "cached/source"
+    assert snapshot.source.history_summary.sampled_commit_count == 9
   end
 end
