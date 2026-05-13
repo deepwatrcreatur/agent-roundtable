@@ -204,7 +204,13 @@ defmodule Roundtable.PublicRepoDemo do
   end
 
   defp default_cache_root do
-    System.get_env("ROUNDTABLE_CACHE_DIR", Path.join(System.tmp_dir!(), "roundtable-public-repo-cache"))
+    System.get_env(
+      "ROUNDTABLE_PUBLIC_REPO_CACHE_DIR",
+      Path.join(
+        System.get_env("ROUNDTABLE_STATE_DIR", Path.join(System.tmp_dir!(), "roundtable-state")),
+        "public-repo-cache"
+      )
+    )
   end
 
   defp cache_path(cache_root, id), do: Path.join(cache_root, "#{id}.term")

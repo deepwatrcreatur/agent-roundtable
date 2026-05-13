@@ -173,4 +173,30 @@ defmodule Roundtable.PublicRepoDemoTest do
     assert snapshot.source.slug == "cached/source"
     assert snapshot.source.history_summary.sampled_commit_count == 9
   end
+
+  test "defaults cache root under roundtable state dir" do
+    previous_state_dir = System.get_env("ROUNDTABLE_STATE_DIR")
+    previous_cache_dir = System.get_env("ROUNDTABLE_PUBLIC_REPO_CACHE_DIR")
+    state_dir = Path.join(System.tmp_dir!(), "roundtable-state-#{System.unique_integer()}")
+
+    try do
+      System.put_env("ROUNDTABLE_STATE_DIR", state_dir)
+      System.delete_env("ROUNDTABLE_PUBLIC_REPO_CACHE_DIR")
+
+      assert {:ok, _snapshot} =
+               PublicRepoDemo.cached_snapshot("nixpkgs",
+                 runner: FakeCommandRunner,
+                 ttl_ms: 60_000,
+                 timeout_ms: 100
+               )
+
+      assert File.exists?(Path.join(state_dir, "public-repo-cache/nixpkgs.term"))
+    after
+      restore_env("ROUNDTABLE_STATE_DIR", previous_state_dir)
+      restore_env("ROUNDTABLE_PUBLIC_REPO_CACHE_DIR", previous_cache_dir)
+    end
+  end
+
+  defp restore_env(name, nil), do: System.delete_env(name)
+  defp restore_env(name, value), do: System.put_env(name, value)
 end
