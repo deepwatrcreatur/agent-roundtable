@@ -226,12 +226,14 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
           <.stress_hotspot_card :for={hotspot <- @demo.dashboard.stress.hotspots} hotspot={hotspot} />
+          <.stress_hotspot_card :if={derived_hotspot(@demo)} hotspot={derived_hotspot(@demo)} />
         </div>
 
         <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;">
           <h3 style="margin: 0 0 0.75rem; color: #f0f6fc; font-size: 0.95rem;">History heat timeline</h3>
           <div style="display: grid; gap: 0.6rem;">
             <.history_heat_row :for={entry <- @demo.dashboard.stress.history} entry={entry} />
+            <.history_heat_row :if={derived_history_entry(@demo)} entry={derived_history_entry(@demo)} />
           </div>
         </div>
       </section>
@@ -566,6 +568,33 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
   defp derived_percentage(value) when is_float(value), do: "#{Float.round(value * 100, 0)}%"
   defp derived_percentage(value), do: to_string(value)
+
+  defp derived_hotspot(%{source: %{history_summary: history_summary}})
+       when is_map(history_summary) do
+    signals = history_summary.derived_signals
+
+    %{
+      title: "sampled branch concentration",
+      detail:
+        "The sampled branch history shows #{history_summary.contributor_count} contributors with #{derived_percentage(signals.top_author_share)} of commits concentrated in the top three authors, indicating #{signals.contributor_concentration} coordination concentration.",
+      stress: signals.contributor_concentration,
+      heat: Float.to_string(signals.top_author_share)
+    }
+  end
+
+  defp derived_hotspot(_), do: nil
+
+  defp derived_history_entry(%{source: %{history_summary: history_summary}})
+       when is_map(history_summary) do
+    %{
+      window: "sampled",
+      pressure: "#{history_summary.derived_signals.commits_per_day_window}/day cadence",
+      note:
+        "Derived from #{history_summary.sampled_commit_count} sampled commits on the tracked branch, using shallow history rather than curated-only narrative."
+    }
+  end
+
+  defp derived_history_entry(_), do: nil
 
   defp demo_card_style(true) do
     "text-align: left; background: #1f2937; border: 1px solid #58a6ff; border-radius: 8px; padding: 1rem;"

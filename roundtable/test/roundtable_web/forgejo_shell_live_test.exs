@@ -35,6 +35,8 @@ defmodule RoundtableWeb.ForgejoShellLiveTest do
     assert html =~ "Stress &amp; Change Heat"
     assert html =~ "Derived from sampled branch history"
     assert html =~ "Sampled commits"
+    assert html =~ "sampled branch concentration"
+    assert html =~ "sampled"
     assert html =~ "Branch stress"
     assert html =~ "History heat timeline"
     assert html =~ "JJ vs Git Infrastructure Benchmark"
