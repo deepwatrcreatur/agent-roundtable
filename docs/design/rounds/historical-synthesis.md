@@ -244,9 +244,9 @@ than a standalone open Alyx repository.
 
 ## Round 70: Borrowing from Multica and Conductor Without Reopening the Architecture
 **Consensus:** The round treated both tools as useful validators of the existing
- Round 62 split rather than as replacements for it. Multica is most useful as a
- reference for board-centric execution UX: agents as visible assignees, local
- daemons for subscription-backed CLIs, real-time status surfaces, and
+Round 62 split rather than as replacements for it. Multica is most useful as a
+reference for board-centric execution UX: agents as visible assignees, local
+daemons for subscription-backed CLIs, real-time status surfaces, and
  capability-style agent presentation. Conductor is most useful as a reference
  for durable execution semantics: persisted attempt lineage, retries, timeouts,
  replay / resume behavior, human-in-the-loop checkpoints, and a lightweight
@@ -257,4 +257,214 @@ than a standalone open Alyx repository.
  encode these borrowings into the bulletin-board work-item schema, local daemon
  contract, and lightweight declarative task / round definitions while keeping
  `agent-roundtable` discussion-focused and leaving capability registry and
- longer-term governance memory to Vaglio.
+longer-term governance memory to Vaglio.
+
+## Round 71: Repo-Embedded Skills as Deliberative Artifacts
+**Consensus:** Repo-embedded skills are worth adding, but only as a narrow,
+explicit artifact type for reusable execution knowledge rather than as a vague
+prompt pile or new plugin system. The converged split was: roundtable proposes
+and ratifies, board/orchestrator resolves and attaches exact versions at task
+time, and Vaglio owns cross-repo lineage and shared governance. Skills must stay
+vendor-neutral, explicitly versioned, transparently activated, logged in task
+history, and supersession-aware. The biggest risks are hidden behavior, stale
+repo-local assumptions, and scope creep into covert capability grants or ambient
+agent-local behavior.
+
+## Round 72: Obsidian as Interface, Not Canonical Memory
+**Consensus:** Obsidian is valuable as an optional downstream interface for
+human browsing and some local agent workflows, but it must not become the
+canonical memory or governance layer. Canonical truth should remain in
+repo-managed markdown, explicit structured records, and related repo-native
+metadata rather than vault-local state, plugins, or `.obsidian` conventions.
+The strongest recommended pattern is one-way export from canonical memory into a
+derived Obsidian view. The round supported borrowing formatting/export
+conventions and treating `obsidian-cli` as a local optional bridge, while
+rejecting making the Vaglio appliance depend on a running Obsidian/Electron app.
+
+## Round 73: A Deliberation Graph Index, Not a Canonical Graph
+**Consensus:** The project should add a graph layer only as a derived index over
+canonical records, not as the source of truth. Chronological prose remains the
+legitimacy and audit surface, while the missing canonical layer is explicit
+structured records for decisions, incidents, fixes, invariants, and work-item
+lineage. The graph's job is bounded retrieval and navigation: helping agents
+find the right active records and supersession chains without replaying the full
+archive. Graphify is useful mainly as a design-pattern source for extraction /
+build / report / export, not as the right canonical deliberation substrate.
+
+## Round 74: The Natural Repo-Native Knowledge Base
+**Consensus:** There is a real repo-native knowledge base here, but it is the
+explicit, versioned, supersession-aware record set in the repo rather than "the
+graph" or whatever an agent reconstructs from context. The natural canonical
+units are rounds, decisions, invariants, incidents, fixes, work items, and
+concrete `jj` changes, linked by explicit traceability and replacement
+relationships. `jj`-native supersession materially strengthens this model by
+making "what replaced what, and why" first-class rather than accidental.
+Graphify-like tools should remain derived viewers / study aids / query surfaces
+over that explicit record layer, not a hidden inferred authority that recreates
+implicit state in a new form.
+
+## Round 75: DBOS, Temporal, and the Durable Execution Boundary
+**Consensus:** The project should stay mostly BEAM-native for now, but only if
+ it stops confusing OTP supervision with durable execution and explicitly proves
+ Temporal-like guarantees in its own persistence layer. Temporal was treated as
+ the clearest reference model for what "real" durable execution means
+ (persisted history, replay/resume, visibility, workflow/activity boundaries),
+ but as too architecture-shaping to adopt as a core dependency in the current
+ BEAM/Jido board-daemon design. DBOS was treated as the more relevant comparator
+ because its in-process library plus persistence-substrate model is closer to
+ the local direction, though still a poor direct dependency fit due to the
+ TypeScript/Postgres versus Elixir/Dolt mismatch. The strongest next step is not
+ more theory but hard validation: crash-recovery drills, replay semantics,
+ idempotency/duplicate-delivery tests, durable timer tests, and operator-grade
+ history inspection that prove the local model is truly durable rather than only
+ well supervised.
+
+## Round 76: Open Agent Skills Standard and Project Alignment
+**Consensus:** The project has not actually adopted the open Agent Skills
+standard yet; it has only reached a very similar concept independently through
+Round 71. The round concluded that this is a strong argument for adopting the
+external `SKILL.md` directory/file format at the artifact layer rather than
+inventing a private near-clone, because the standard is simple, portable, and
+already broadly supported across agent clients. However, the project's local
+requirements remain stricter than the base format: activation must still be
+resolved explicitly by the board/orchestrator, logged in attempt history, and
+governed by local policy rather than by anything embedded in the skill file.
+MCP was treated as a separate connectivity protocol for tools/data/workflows,
+not a skill format; Swarm / Agents SDK and Microsoft Agent Framework were
+treated as orchestration/runtime references rather than the project's governing
+abstraction. The strongest next step is a narrow adapter: repo-local `SKILL.md`
+ingestion plus explicit board fields such as `required_skills`,
+`recommended_skills`, and `resolved_skills`, with `allowed-tools` treated as
+advisory rather than authoritative.
+
+## Round 77: Skill Candidates for `unified-nix-configuration` and `nix-router-optimized`
+**Consensus:** Both repos justify skills, but not the same kind. The shared
+overlap is real, but narrow: low-authority Nix workflow loops such as flake
+validation, targeted eval/test selection, queue/onboarding conventions, and
+  docs/examples synchronization. The more dangerous or environment-specific areas
+  should stay repo-local: rebuild discipline, secret/identity lifecycle, host and
+  remote execution context, router management-plane smoke checks, router
+  diagnostics interpretation, and source-of-truth boundary awareness. The round
+  strongly rejected treating raw commands like `nix flake check`,
+  `nixos-rebuild`, or generic "network diagnostics" as skills by themselves;
+  they only become skills when wrapped in explicit entry criteria, boundaries,
+  expected outputs, and stop conditions. The strongest practical next step is to
+  start with one or two shared low-risk skills and one or two repo-local skills,
+  prove reuse, and avoid jumping straight to a large dedicated shared-skills
+  repo.
+
+## Round 78: `gstack` Retention and Standards Fit
+**Consensus:** `gstack` should not remain as active local tooling. The local
+environment no longer depends on it, and its continued presence mainly creates
+confusion about whether it is part of the supported workflow. The round treated
+it as only superficially adjacent to the open Agent Skills standard: it shares
+`SKILL.md` naming and directory packaging, but diverges materially through
+host-specific runtime assumptions, executable preambles, and product-specific
+metadata and activation behavior. The strongest keep-case is not "keep it
+installed," but "keep it only as archive/reference material" so the project can
+mine a few useful ritual ideas around planning, review, and QA. The strongest
+next step is to either archive or remove the `gstack` tree from the active skill
+path, audit for lingering config hooks, and rewrite any genuinely useful rituals
+from scratch as narrow, standards-aligned local `SKILL.md` artifacts.
+
+## Round 79: Fit, Productive Friction, and the Ethics of Behavioral Matching
+**Consensus:** The round accepted the strongest positive case: bad
+ programmer-project and programmer-company matching causes real economic and
+ human harm, and some projects genuinely need contributors who tolerate or even
+ generate high technical friction in productive ways. But it also converged that
+ this does **not** justify durable person-level fit or friction profiling. The
+ only ethically defensible version is a narrow local workflow assistant: recent,
+ contestable, object-scoped signals about work contexts, team appetite for
+ challenge, and project-local routing needs. "Productive friction" may be
+ represented only as a property of a lane, subsystem, redesign track, or recent
+ contribution interaction inside one org/project — not as a portable trait of a
+ human. Cross-employer durable identity/profile products remained firmly out of
+ bounds as blacklist and labor-surveillance infrastructure. The strongest next
+ step is to frame any future work here as workflow assistance and self-declared
+ project-local preference/routing, while explicitly ruling out person scores,
+ culture-fit inference, and any exportable behavioral dossier.
+
+## Round 80: Credit Scoring as Comparison, Precedent, or Warning Sign
+**Consensus:** The round treated credit scoring as a useful comparison mainly
+ because it shows how opportunity-gating metrics become normalized, regulated,
+ and still ethically troubling. It did **not** treat credit scoring as moral
+ legitimation for programmer-fit or behavioral scoring. The analogy is valid at
+ the structural level: both systems compress history into signals that can gate
+ access to important opportunities, create opacity and power asymmetry, and
+ drift from narrow use into broader gatekeeping. But the analogy also breaks in a
+ way that makes programmer scoring worse: repayment history is already imperfect
+ and unequal, yet still more discrete and partially verifiable than highly
+ contextual collaboration, dissent, review tone, escalation, and "fit"
+ judgments. FCRA-like safeguards such as disclosure, dispute rights,
+ adverse-action notice, and purpose limitation were treated as helpful but far
+ from sufficient, because the core problem is not only due process but the
+ subjectivity of the underlying data. The strongest implication is unchanged
+ from Round 79: stay with project-local or org-local workflow assistance using
+ recent, contestable, expiring process signals, and keep person-level or
+ portable scoring/reporting out of bounds.
+
+## Round 81: Ecosystem Pragmatism and Queryable Behavioral Data
+**Consensus:** The round accepted the maintainer's pushback that "ability to
+ build effectively on existing ecosystems and useful external assets" is more
+ concrete and professionally relevant than vague culture-fit or personality
+ scoring. Reuse judgment, interoperability, incrementalism, and avoiding
+ needless reinvention were all treated as real engineering strengths that
+ hiring managers and open source maintainers may legitimately care about. But
+ the round also converged that this does **not** justify passive accumulation
+ and query answering over cross-context behavioral data. The key distinction is
+ evidence form: public code artifacts, explicit references/endorsements,
+ candidate-curated architectural portfolios, and project-local trust records
+ can all represent this trait in inspectable, contextual ways. What remains out
+ of bounds is a platform that infers or aggregates person-level "ecosystem
+ judgment" across employers or projects and answers hiring or committer queries
+ from that dossier. Hiring remained the hardest red-line case; open-source
+ maintainer trust was treated as somewhat narrower but still properly grounded
+ in local project evidence rather than portable behavioral reputation.
+
+## Round 82: Private Code, Better Matching, and Privacy-Preserving Attestations
+**Consensus:** The round accepted that proprietary hosted code creates a real
+ evidence problem: public artifacts are often unavailable, so evaluators are
+ pushed toward proxies. But it rejected the idea that this makes portable
+ worker scoring or behavioral dossiers ethically acceptable. Instead, the most
+ promising middle ground was a candidate-controlled attestation layer:
+ selective disclosure, verifiable credentials, scoped endorsements, and
+ employer-issued factual claims that let a worker prove bounded facts without
+ exposing underlying confidential code. The round emphasized that such
+ attestations help with verification, not with resolving the deeper
+ subjectivity problem, and therefore still do **not** justify scores. The
+ practical line became: candidate-controlled, claim-specific, time-bounded,
+ non-aggregatable evidence may be defensible; cross-employer portable scores,
+ queryable behavioral profiles, hidden telemetry aggregation, and any
+ worker-credit-style reputation layer remain out of bounds.
+
+## Round 83: OpenTUI as Optional UX, Not Core Architecture
+**Consensus:** OpenTUI is a useful reference point for a richer terminal
+operator surface, but it is not the project's missing architectural layer. The
+real core remains the board/API/memory split already established in earlier
+rounds. OpenTUI's component-oriented terminal model is attractive mainly as an
+optional local client for board visibility, not as a canonical UI or a new core
+runtime commitment. Its Bun/TypeScript/Zig assumptions were treated as too
+opinionated for the main platform path today. The practical recommendation is to
+keep any future TUI optional and subordinate to the board service.
+
+## Round 84: DSPy Patterns Without DSPy Runtime Adoption
+**Consensus:** The project should not adopt DSPy itself as a core dependency,
+but it should borrow the best part of DSPy's design: explicit
+signature-and-validation discipline for bounded agent operations. The strongest
+local application is a repo-native layer of research-operation artifacts for
+tasks like retrieval, evidence evaluation, synthesis, and contradiction
+checking, each with explicit inputs, outputs, provenance, validation examples,
+and supersession. Automatic prompt optimization and opaque tuned behavior were
+treated as misaligned with the project's emphasis on inspectability and governed
+memory.
+
+## Round 85: `jj` Ergonomics Plus Stronger Agent Discipline
+**Consensus:** The Ellie Huxtable `jj` note validated the project's practical
+change-centric instincts: start new work explicitly, treat changes as the
+durable unit, return to old work via `jj edit`, and use `jj undo` as a real
+recovery path. But the round also stressed that those human ergonomics are not
+enough by themselves for agent work. The local practice must add explicit
+supersession markers, path-scoped metadata, conflict visibility, delta-based
+resume patterns, and more intentional bookmark discipline. The immediate result
+was to update `docs/JJ_GUIDE.md` so these habits become concrete repo practice
+rather than informal preference.

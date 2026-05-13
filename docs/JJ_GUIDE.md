@@ -44,6 +44,101 @@ jj log -r "bookmarks('main')..@"          # Changes since main
 jj log -r "all() & description('bug')"    # Full graph search
 ```
 
+### Advanced Revsets for Agent Workflows
+```bash
+jj log -r "successors(CHANGE_ID)"         # What replaced this change?
+jj log -r "conflicts()"                   # List active conflict states
+jj log -r "description('Path: router')"   # Find path-scoped local intent
+jj log -r "description('Supersedes:')"    # Find intentional rewrites
+jj log -r "author('agent-name')"          # Bound work by actor
+```
+
+## Agent Mutation Workflows
+
+### Start a new change explicitly
+
+For new work, prefer starting from the intended parent rather than accumulating
+ambient edits:
+
+```bash
+jj new main
+jj describe -m "feat: short intent"
+```
+
+This keeps the active change legible for both humans and agents.
+
+### Change supersession
+
+When rewriting or replacing an earlier approach, mark that explicitly in the
+change description:
+
+```bash
+jj describe -m "fix: improve router failover handling
+
+Supersedes: abcdefghijkl
+Reason: fix-regression
+Path: router/failover
+"
+```
+
+This makes stale guidance easier to detect and reduces reintroduction of old
+repairs.
+
+### Path-scoped metadata for bounded retrieval
+
+When a change is specific to one subsystem, include local retrieval hints in the
+description rather than forcing later agents to replay whole discussions:
+
+```text
+Path: router/snmp
+Related-Round: round-83
+Active-Constraints: keep runtime secrets out of the Nix store
+Supersedes: abcdefghijkl
+```
+
+### Conflict as durable state
+
+If a conflict reflects genuine design disagreement rather than a simple merge
+mistake, preserve that fact in the description and route it for review instead
+of hiding it in ad hoc chat:
+
+```bash
+jj describe -m "conflict: alternate HA ownership model
+
+Reason: deliberative disagreement
+Decision-Needed: yes
+Related-Round: round-85
+"
+```
+
+### Delta extraction for iterative agent work
+
+When resuming a previously known change, prefer the compact delta over replaying
+the whole transcript:
+
+```bash
+jj log -r "CHANGE_ID" --no-graph -T "commit_id"
+jj diff -r REV_OLD -r REV_NEW
+```
+
+This is the preferred way to recover context for long-running agent work.
+
+### Undo is a first-class safety valve
+
+`jj undo` should be part of the normal recovery path for mistaken local
+operations. Prefer it over improvised stash/reset habits when the intent is to
+back out the last repository operation cleanly.
+
+## Bookmark Naming
+
+- Prefer scoped names such as `alice/router-snmp`, `ops/failover-drill`, or
+  `team/knowledge-index`.
+- Treat unscoped shared names as special protocol surfaces only.
+- Avoid prestige or legitimacy-implying names unless there is an explicit policy
+  for earning them.
+- Remember that bookmarks do not automatically move to a newly created child
+  change; create or move them intentionally.
+
 ## Agent Safety Constraints
 
 1. **Non-Interactive:** Always use `--color never`.
