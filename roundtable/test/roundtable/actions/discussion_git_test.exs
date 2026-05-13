@@ -102,11 +102,13 @@ defmodule Roundtable.Actions.DiscussionGitTest do
 
   describe "list_rounds/1" do
     test "returns sorted round filenames" do
-      r = repo(%{
-        "rounds/round-03-q7.md" => "c",
-        "rounds/round-01-q1.md" => "a",
-        "rounds/round-02-q2.md" => "b"
-      })
+      r =
+        repo(%{
+          "rounds/round-03-q7.md" => "c",
+          "rounds/round-01-q1.md" => "a",
+          "rounds/round-02-q2.md" => "b"
+        })
+
       assert {:ok, names} = DiscussionGit.list_rounds(r)
       assert names == ["round-01-q1.md", "round-02-q2.md", "round-03-q7.md"]
     end

@@ -19,14 +19,16 @@ defmodule Roundtable.Vcs.Jujutsu do
   @impl true
   def current_head(revision, opts) when is_binary(revision) do
     with {:ok, repo_path} <- fetch_repo_path(opts),
-         {:ok, head} <- jj(["log", "-r", revision, "--no-graph", "-T", "commit_id"], repo_path, opts) do
+         {:ok, head} <-
+           jj(["log", "-r", revision, "--no-graph", "-T", "commit_id"], repo_path, opts) do
       {:ok, String.trim(head)}
     end
   end
 
   def current_change_id(revision, opts) when is_binary(revision) do
     with {:ok, repo_path} <- fetch_repo_path(opts),
-         {:ok, change_id} <- jj(["log", "-r", revision, "--no-graph", "-T", "change_id"], repo_path, opts) do
+         {:ok, change_id} <-
+           jj(["log", "-r", revision, "--no-graph", "-T", "change_id"], repo_path, opts) do
       {:ok, String.trim(change_id)}
     end
   end
@@ -47,7 +49,12 @@ defmodule Roundtable.Vcs.Jujutsu do
   @impl true
   def conflicts(opts) do
     with {:ok, repo_path} <- fetch_repo_path(opts),
-         {:ok, output} <- jj(["log", "-r", "conflicts()", "--no-graph", "-T", "separate(\"\\n\", commit_id)"], repo_path, opts) do
+         {:ok, output} <-
+           jj(
+             ["log", "-r", "conflicts()", "--no-graph", "-T", "separate(\"\\n\", commit_id)"],
+             repo_path,
+             opts
+           ) do
       ids =
         output
         |> String.split("\n", trim: true)
@@ -62,7 +69,8 @@ defmodule Roundtable.Vcs.Jujutsu do
     with {:ok, repo_path} <- fetch_repo_path(opts) do
       # Use separate() for reliable template formatting.
       # We append a newline to ensure each revision is on a new line.
-      template = "separate('|', commit_id, change_id, author.email(), description.first_line()) ++ '\n'"
+      template =
+        "separate('|', commit_id, change_id, author.email(), description.first_line()) ++ '\n'"
 
       cmd_args = ["log", "-r", revset, "--no-graph", "--color", "never", "-T", template]
 
@@ -73,13 +81,31 @@ defmodule Roundtable.Vcs.Jujutsu do
             |> String.split("\n", trim: true)
             |> Enum.map(fn line ->
               parts = String.split(line, "|")
+
               case parts do
                 [commit_id, change_id, author, description] ->
-                  %{commit_id: commit_id, change_id: change_id, author: author, description: description}
+                  %{
+                    commit_id: commit_id,
+                    change_id: change_id,
+                    author: author,
+                    description: description
+                  }
+
                 [commit_id, change_id, description] ->
-                  %{commit_id: commit_id, change_id: change_id, author: "unknown", description: description}
+                  %{
+                    commit_id: commit_id,
+                    change_id: change_id,
+                    author: "unknown",
+                    description: description
+                  }
+
                 _ ->
-                  %{commit_id: "unknown", change_id: "unknown", author: "unknown", description: line}
+                  %{
+                    commit_id: "unknown",
+                    change_id: "unknown",
+                    author: "unknown",
+                    description: line
+                  }
               end
             end)
 

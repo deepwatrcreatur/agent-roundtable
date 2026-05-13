@@ -165,9 +165,9 @@ defmodule Roundtable.Orchestrator do
   def run_with_repo(%DiscussionRepo{} = repo, opts \\ []) do
     with {:ok, brief} <- DiscussionGit.read_brief(repo),
          {:ok, config} <- DiscussionGit.read_config(repo) do
-      agents     = Keyword.get(opts, :agents, config.agents)
+      agents = Keyword.get(opts, :agents, config.agents)
       max_rounds = Keyword.get(opts, :max_rounds, config.max_rounds)
-      questions  = parse_questions_from_brief(brief)
+      questions = parse_questions_from_brief(brief)
 
       results =
         questions
@@ -188,7 +188,9 @@ defmodule Roundtable.Orchestrator do
 
     run =
       case RoundRun.load(q_idx) do
-        {:ok, existing} -> existing
+        {:ok, existing} ->
+          existing
+
         {:error, :not_found} ->
           RoundRun.new(q_idx, agents, discussion_repo_path: repo_path)
       end
@@ -227,15 +229,18 @@ defmodule Roundtable.Orchestrator do
   # Apply one effect in the file-based model.
   # Returns {updated_run, updated_buffer, updated_repo}.
   defp apply_repo_effect({:run_agent, agent, _q_idx}, run, buffer, repo, context) do
-    opts     = context.opts
+    opts = context.opts
     repo_root = Keyword.get(opts, :repo_root, File.cwd!())
-    round_n  = run.retry_count
-    q_idx    = run.issue_number
+    round_n = run.retry_count
+    q_idx = run.issue_number
     Telemetry.agent_turn(agent, q_idx, round_n)
 
     prompt = build_file_prompt(context.brief, buffer, agent)
 
-    case RunCliAgent.run(%{agent: cli_agent_atom(agent), prompt: prompt, repo_root: repo_root}, %{}) do
+    case RunCliAgent.run(
+           %{agent: cli_agent_atom(agent), prompt: prompt, repo_root: repo_root},
+           %{}
+         ) do
       {:ok, %{stdout: raw}} ->
         text = extract_text(raw, agent)
         contribution = "\n## #{agent_name(agent)}\n\n#{text}\n"
@@ -266,10 +271,10 @@ defmodule Roundtable.Orchestrator do
   end
 
   defp apply_repo_effect({:triage_agent, agent, q_idx, comment_text}, run, buffer, repo, context) do
-    opts      = context.opts
+    opts = context.opts
     repo_root = Keyword.get(opts, :repo_root, File.cwd!())
-    label     = triage_with_ic(q_idx, comment_text, agent, %{repo_root: repo_root}, opts)
-    sat       = label_string_to_atom(label)
+    label = triage_with_ic(q_idx, comment_text, agent, %{repo_root: repo_root}, opts)
+    sat = label_string_to_atom(label)
     Telemetry.satisfaction_parse(agent, label || "nil", :triage)
 
     updated_run = RoundRun.mark_speaker_done(run, agent, sat)
@@ -282,9 +287,9 @@ defmodule Roundtable.Orchestrator do
   end
 
   defp apply_repo_effect({:notify, {:round_complete, _q_idx}}, run, buffer, repo, context) do
-    opts  = context.opts
+    opts = context.opts
     round = run.retry_count - 1
-    slug  = String.downcase(String.replace(context.question.id, ~r/[^a-z0-9]+/i, "-"))
+    slug = String.downcase(String.replace(context.question.id, ~r/[^a-z0-9]+/i, "-"))
 
     case DiscussionGit.commit_round(repo, round, slug, buffer) do
       {:ok, updated_repo} ->
@@ -323,6 +328,7 @@ defmodule Roundtable.Orchestrator do
     if repo.issues_enabled do
       Gh.comment_issue(q_idx, body, build_gh_config(context.opts))
     end
+
     {run, buffer, repo}
   end
 
@@ -330,6 +336,7 @@ defmodule Roundtable.Orchestrator do
     if repo.issues_enabled do
       Gh.edit_issue_labels(q_idx, add, remove, build_gh_config(context.opts))
     end
+
     {run, buffer, repo}
   end
 
@@ -419,10 +426,12 @@ defmodule Roundtable.Orchestrator do
     ~r/###\s+(Q\d+[^\n]*)/
     |> Regex.scan(brief)
     |> Enum.map(fn [_, title] ->
-      id = case Regex.run(~r/Q\d+/, title) do
-        [match | _] -> match
-        _ -> title
-      end
+      id =
+        case Regex.run(~r/Q\d+/, title) do
+          [match | _] -> match
+          _ -> title
+        end
+
       %{id: id, title: String.trim(title)}
     end)
   end
@@ -438,6 +447,7 @@ defmodule Roundtable.Orchestrator do
       nil ->
         label = triage_with_ic(q_idx, text, agent, %{repo_root: repo_root}, opts)
         {label, :triage}
+
       label ->
         {label, :marker}
     end
@@ -468,9 +478,15 @@ defmodule Roundtable.Orchestrator do
 
         result =
           cond do
-            String.contains?(triage_text, "needs-more-evidence") -> "needs-more-evidence"
-            String.contains?(triage_text, "satisfied-conditional") -> "satisfied-conditional"
-            String.contains?(triage_text, "satisfied") -> "satisfied"
+            String.contains?(triage_text, "needs-more-evidence") ->
+              "needs-more-evidence"
+
+            String.contains?(triage_text, "satisfied-conditional") ->
+              "satisfied-conditional"
+
+            String.contains?(triage_text, "satisfied") ->
+              "satisfied"
+
             true ->
               notify(opts, {:triage_unclear, triage_text})
               nil
@@ -515,6 +531,7 @@ defmodule Roundtable.Orchestrator do
 
       run.retry_count >= max_rounds ->
         next_run = RoundRun.put_phase(run, :needs_human_review)
+
         comment =
           "**Roundtable:** Max rounds (#{max_rounds}) reached without consensus. " <>
             "Flagging for human review."
@@ -582,6 +599,7 @@ defmodule Roundtable.Orchestrator do
       run.retry_count >= max_rounds ->
         Telemetry.issue_close(run.issue_number, run.retry_count, :max_rounds)
         next_run = RoundRun.put_phase(run, :needs_human_review)
+
         comment =
           "**Roundtable:** Max rounds (#{max_rounds}) reached without consensus. " <>
             "Flagging for human review."
@@ -614,6 +632,7 @@ defmodule Roundtable.Orchestrator do
       run.takeover_count >= max_takeovers ->
         Telemetry.issue_close(run.issue_number, run.retry_count, :max_rounds)
         next_run = RoundRun.put_phase(run, :needs_human_review)
+
         comment =
           "**Roundtable:** Coordinator unavailable and max takeovers (#{max_takeovers}) reached. " <>
             "Flagging for human review."
@@ -632,6 +651,7 @@ defmodule Roundtable.Orchestrator do
         case RoundRun.takeover(run, standby) do
           {:ok, resumed_run} ->
             Telemetry.coordinator_takeover(run.issue_number, prev, standby)
+
             note =
               "**Roundtable:** Coordinator #{inspect(prev)} timed out. " <>
                 "#{inspect(standby)} taking over from phase `#{run.suspended_phase}`."
@@ -743,7 +763,9 @@ defmodule Roundtable.Orchestrator do
     brief = context.brief
     repo_root = Map.get(gh_config, :repo_root, File.cwd!())
     round = Keyword.get(opts, :_current_round, 1)
-    lease_seconds = Keyword.get(opts, :coordinator_lease_seconds, @default_coordinator_lease_seconds)
+
+    lease_seconds =
+      Keyword.get(opts, :coordinator_lease_seconds, @default_coordinator_lease_seconds)
 
     # IC claims coordinator lease; any other agent triggers a heartbeat.
     update_coordinator_lease(agent, issue_number, lease_seconds)
@@ -808,7 +830,9 @@ defmodule Roundtable.Orchestrator do
       :ok ->
         maybe_mirror_issue(issue_number, context.gh_config, context.opts)
         :ok
-      {:error, reason} -> notify(context.opts, {:gh_error, :comment_issue, reason})
+
+      {:error, reason} ->
+        notify(context.opts, {:gh_error, :comment_issue, reason})
     end
   end
 
@@ -824,7 +848,9 @@ defmodule Roundtable.Orchestrator do
       :ok ->
         maybe_mirror_issue(issue_number, context.gh_config, context.opts)
         :ok
-      {:error, reason} -> notify(context.opts, {:gh_error, :close_issue, reason})
+
+      {:error, reason} ->
+        notify(context.opts, {:gh_error, :close_issue, reason})
     end
   end
 
@@ -982,7 +1008,10 @@ defmodule Roundtable.Orchestrator do
   defp decoded_text(%{"text" => text}) when is_binary(text), do: text
   defp decoded_text(%{"type" => "result", "result" => text}) when is_binary(text), do: text
 
-  defp decoded_text(%{"type" => "item.completed", "item" => %{"type" => "agent_message", "text" => text}})
+  defp decoded_text(%{
+         "type" => "item.completed",
+         "item" => %{"type" => "agent_message", "text" => text}
+       })
        when is_binary(text),
        do: text
 

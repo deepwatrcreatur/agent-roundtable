@@ -164,7 +164,8 @@ defmodule Roundtable.RobustnessMetrics do
     :active
   end
 
-  defp classify_state(:open, _rounds, _objections, _satisfied, _no_objection, _score), do: :warming
+  defp classify_state(:open, _rounds, _objections, _satisfied, _no_objection, _score),
+    do: :warming
 
   defp classify_state(_status, _rounds, _objections, _satisfied, _no_objection, score)
        when score >= 0.66 do

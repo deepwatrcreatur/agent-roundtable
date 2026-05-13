@@ -65,10 +65,11 @@ defmodule Roundtable.OrchestratorTest do
 
   describe "step/3 :triage_missing_markers" do
     test "transitions to :consensus_check when all agents have satisfaction markers" do
-      r = run(
-        phase: :triage_missing_markers,
-        satisfaction_map: %{codex: :satisfied, gemini: :satisfied, claude_ic: :satisfied}
-      )
+      r =
+        run(
+          phase: :triage_missing_markers,
+          satisfaction_map: %{codex: :satisfied, gemini: :satisfied, claude_ic: :satisfied}
+        )
 
       {next_run, effects} = Orchestrator.step(r, issue(), [])
 
@@ -80,11 +81,12 @@ defmodule Roundtable.OrchestratorTest do
       codex_comment = comment("## Codex", "I think this is fine.")
       i = issue([{"comments", [codex_comment]}])
 
-      r = run(
-        phase: :triage_missing_markers,
-        expected_speakers: [:codex, :gemini],
-        satisfaction_map: %{gemini: :satisfied}
-      )
+      r =
+        run(
+          phase: :triage_missing_markers,
+          expected_speakers: [:codex, :gemini],
+          satisfaction_map: %{gemini: :satisfied}
+        )
 
       {next_run, effects} = Orchestrator.step(r, i, [])
 
@@ -94,11 +96,12 @@ defmodule Roundtable.OrchestratorTest do
     end
 
     test "transitions to :consensus_check when missing agents have no comments to triage" do
-      r = run(
-        phase: :triage_missing_markers,
-        expected_speakers: [:codex, :gemini],
-        satisfaction_map: %{gemini: :satisfied}
-      )
+      r =
+        run(
+          phase: :triage_missing_markers,
+          expected_speakers: [:codex, :gemini],
+          satisfaction_map: %{gemini: :satisfied}
+        )
 
       {next_run, effects} = Orchestrator.step(r, issue(), [])
 
@@ -113,11 +116,12 @@ defmodule Roundtable.OrchestratorTest do
 
   describe "step/3 :consensus_check" do
     test "closes when all agents are :satisfied" do
-      r = run(
-        phase: :consensus_check,
-        retry_count: 1,
-        satisfaction_map: %{codex: :satisfied, gemini: :satisfied, claude_ic: :satisfied}
-      )
+      r =
+        run(
+          phase: :consensus_check,
+          retry_count: 1,
+          satisfaction_map: %{codex: :satisfied, gemini: :satisfied, claude_ic: :satisfied}
+        )
 
       {next_run, effects} = Orchestrator.step(r, issue(), [])
 
@@ -127,15 +131,16 @@ defmodule Roundtable.OrchestratorTest do
     end
 
     test "closes when mixed :satisfied and :satisfied_conditional" do
-      r = run(
-        phase: :consensus_check,
-        retry_count: 2,
-        satisfaction_map: %{
-          codex: :satisfied,
-          gemini: :satisfied_conditional,
-          claude_ic: :satisfied
-        }
-      )
+      r =
+        run(
+          phase: :consensus_check,
+          retry_count: 2,
+          satisfaction_map: %{
+            codex: :satisfied,
+            gemini: :satisfied_conditional,
+            claude_ic: :satisfied
+          }
+        )
 
       {next_run, _effects} = Orchestrator.step(r, issue(), [])
 
@@ -143,16 +148,17 @@ defmodule Roundtable.OrchestratorTest do
     end
 
     test "resets and returns to :awaiting_turns when any agent needs-more-evidence" do
-      r = run(
-        phase: :consensus_check,
-        retry_count: 1,
-        completed_speakers: [:codex, :gemini, :claude_ic],
-        satisfaction_map: %{
-          codex: :satisfied,
-          gemini: :needs_more_evidence,
-          claude_ic: :satisfied
-        }
-      )
+      r =
+        run(
+          phase: :consensus_check,
+          retry_count: 1,
+          completed_speakers: [:codex, :gemini, :claude_ic],
+          satisfaction_map: %{
+            codex: :satisfied,
+            gemini: :needs_more_evidence,
+            claude_ic: :satisfied
+          }
+        )
 
       {next_run, effects} = Orchestrator.step(r, issue(), max_rounds: 5)
 
@@ -163,11 +169,12 @@ defmodule Roundtable.OrchestratorTest do
     end
 
     test "flags :needs_human_review when max_rounds reached without consensus" do
-      r = run(
-        phase: :consensus_check,
-        retry_count: 5,
-        satisfaction_map: %{codex: :needs_more_evidence, gemini: :satisfied}
-      )
+      r =
+        run(
+          phase: :consensus_check,
+          retry_count: 5,
+          satisfaction_map: %{codex: :needs_more_evidence, gemini: :satisfied}
+        )
 
       {next_run, effects} = Orchestrator.step(r, issue(), max_rounds: 5)
 
@@ -234,12 +241,17 @@ defmodule Roundtable.OrchestratorTest do
     end
 
     test "disagreement path resets speakers and loops back to :awaiting_turns" do
-      r0 = run(
-        phase: :consensus_check,
-        retry_count: 1,
-        completed_speakers: [:codex, :gemini, :claude_ic],
-        satisfaction_map: %{codex: :needs_more_evidence, gemini: :satisfied, claude_ic: :satisfied}
-      )
+      r0 =
+        run(
+          phase: :consensus_check,
+          retry_count: 1,
+          completed_speakers: [:codex, :gemini, :claude_ic],
+          satisfaction_map: %{
+            codex: :needs_more_evidence,
+            gemini: :satisfied,
+            claude_ic: :satisfied
+          }
+        )
 
       {r1, effects} = Orchestrator.step(r0, issue(), max_rounds: 5)
 
@@ -256,12 +268,13 @@ defmodule Roundtable.OrchestratorTest do
 
   describe "step/3 :coordinator_unavailable" do
     test "standby takeover resumes suspended phase with continuity note" do
-      r = run(
-        phase: :coordinator_unavailable,
-        suspended_phase: :consensus_check,
-        coordinator: :claude_ic,
-        takeover_count: 0
-      )
+      r =
+        run(
+          phase: :coordinator_unavailable,
+          suspended_phase: :consensus_check,
+          coordinator: :claude_ic,
+          takeover_count: 0
+        )
 
       {next_run, effects} =
         Orchestrator.step(r, issue(), standby_coordinators: [:codex, :gemini], max_takeovers: 2)
@@ -275,11 +288,12 @@ defmodule Roundtable.OrchestratorTest do
     end
 
     test "escalates to :needs_human_input when no standbys configured" do
-      r = run(
-        phase: :coordinator_unavailable,
-        suspended_phase: :awaiting_turns,
-        takeover_count: 0
-      )
+      r =
+        run(
+          phase: :coordinator_unavailable,
+          suspended_phase: :awaiting_turns,
+          takeover_count: 0
+        )
 
       {next_run, effects} =
         Orchestrator.step(r, issue(), standby_coordinators: [], max_takeovers: 2)
@@ -289,11 +303,12 @@ defmodule Roundtable.OrchestratorTest do
     end
 
     test "escalates to :needs_human_review when max takeovers exceeded" do
-      r = run(
-        phase: :coordinator_unavailable,
-        suspended_phase: :awaiting_turns,
-        takeover_count: 2
-      )
+      r =
+        run(
+          phase: :coordinator_unavailable,
+          suspended_phase: :awaiting_turns,
+          takeover_count: 2
+        )
 
       {next_run, effects} =
         Orchestrator.step(r, issue(), standby_coordinators: [:codex], max_takeovers: 2)
@@ -304,12 +319,13 @@ defmodule Roundtable.OrchestratorTest do
 
     test "standby excludes the timed-out coordinator from candidates" do
       # claude_ic timed out; codex is standby but claude_ic should not re-claim
-      r = run(
-        phase: :coordinator_unavailable,
-        suspended_phase: :awaiting_turns,
-        coordinator: :claude_ic,
-        takeover_count: 0
-      )
+      r =
+        run(
+          phase: :coordinator_unavailable,
+          suspended_phase: :awaiting_turns,
+          coordinator: :claude_ic,
+          takeover_count: 0
+        )
 
       {next_run, _effects} =
         Orchestrator.step(r, issue(),

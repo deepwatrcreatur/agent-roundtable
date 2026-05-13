@@ -193,7 +193,8 @@ defmodule Roundtable.IntegrityMetrics do
     end
   end
 
-  defp innovation_score(response_terms, novel_terms), do: ratio(MapSet.size(novel_terms), MapSet.size(response_terms))
+  defp innovation_score(response_terms, novel_terms),
+    do: ratio(MapSet.size(novel_terms), MapSet.size(response_terms))
 
   defp ratio(_num, 0), do: 0.0
   defp ratio(num, den), do: num / den

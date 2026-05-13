@@ -80,8 +80,7 @@ defmodule Roundtable.Actions.Gh do
     label = Keyword.get(opts, :label)
 
     args =
-      ["issue", "list", "--state", state, "--json",
-       "number,title,state,labels,url,comments"]
+      ["issue", "list", "--state", state, "--json", "number,title,state,labels,url,comments"]
       |> maybe_add_repo(config[:repo])
       |> maybe_add_option("--label", label)
 

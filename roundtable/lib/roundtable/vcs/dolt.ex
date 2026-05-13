@@ -32,7 +32,11 @@ defmodule Roundtable.Vcs.Dolt do
     with {:ok, repo_path} <- fetch_repo_path(opts) do
       revision = Keyword.get(opts, :revision, "HEAD")
       # Example: dolt sql -q "SELECT * FROM <table>"
-      case dolt(["sql", "-r", revision, "-q", "SELECT * FROM `#{path}`", "-r", "json"], repo_path, opts) do
+      case dolt(
+             ["sql", "-r", revision, "-q", "SELECT * FROM `#{path}`", "-r", "json"],
+             repo_path,
+             opts
+           ) do
         {:ok, content} -> {:ok, content}
         {:error, _} -> {:error, :not_found}
       end
@@ -56,6 +60,7 @@ defmodule Roundtable.Vcs.Dolt do
   def query(sql, opts) when is_binary(sql) do
     with {:ok, repo_path} <- fetch_repo_path(opts) do
       revision = Keyword.get(opts, :revision, "HEAD")
+
       case dolt(["sql", "-r", revision, "-q", sql, "-r", "json"], repo_path, opts) do
         {:ok, content} ->
           case Jason.decode(content) do
@@ -64,7 +69,9 @@ defmodule Roundtable.Vcs.Dolt do
             {:ok, _} -> {:ok, []}
             {:error, _} = err -> err
           end
-        {:error, _} = err -> err
+
+        {:error, _} = err ->
+          err
       end
     end
   end
@@ -89,7 +96,9 @@ defmodule Roundtable.Vcs.Dolt do
     ["commit"] ++ signing_args(params) ++ ["-m", message]
   end
 
-  defp signing_args(%{sign?: true, signing_key: key}) when is_binary(key) and key != "", do: ["-S", key]
+  defp signing_args(%{sign?: true, signing_key: key}) when is_binary(key) and key != "",
+    do: ["-S", key]
+
   defp signing_args(%{sign?: true}), do: ["-S"]
   defp signing_args(_params), do: []
 

@@ -20,8 +20,14 @@ defmodule Roundtable.HumanAnchor do
   @spec maintainer_options(keyword()) :: [String.t()]
   def maintainer_options(opts \\ []) do
     case Keyword.get(opts, :maintainers_env, System.get_env("ROUNDTABLE_SENIOR_MAINTAINERS", "")) do
-      "" -> @default_maintainers
-      env -> env |> String.split(",", trim: true) |> Enum.map(&String.trim/1) |> Enum.reject(&(&1 == ""))
+      "" ->
+        @default_maintainers
+
+      env ->
+        env
+        |> String.split(",", trim: true)
+        |> Enum.map(&String.trim/1)
+        |> Enum.reject(&(&1 == ""))
     end
   end
 
@@ -29,6 +35,7 @@ defmodule Roundtable.HumanAnchor do
   def list_vouches(repo_path, opts \\ [])
   def list_vouches(nil, _opts), do: {:ok, []}
   def list_vouches("", _opts), do: {:ok, []}
+
   def list_vouches(repo_path, opts) do
     dolt = Keyword.get(opts, :dolt, Dolt)
     query_opts = Keyword.drop(opts, [:dolt])
@@ -74,7 +81,9 @@ defmodule Roundtable.HumanAnchor do
         |> Enum.reject(&(&1.claim_key == "finding"))
         |> Enum.frequencies_by(& &1.claim_key)
 
-      ai_consensus? = question[:satisfaction] in [:satisfied, :satisfied_conditional, :no_objection]
+      ai_consensus? =
+        question[:satisfaction] in [:satisfied, :satisfied_conditional, :no_objection]
+
       anchored? = finding_vouches != []
 
       delta_label =
@@ -113,7 +122,11 @@ defmodule Roundtable.HumanAnchor do
     signing_key = Keyword.get(opts, :signing_key, System.get_env("ROUNDTABLE_VOUCH_SIGNING_KEY"))
 
     with {:ok, _} <- ensure_schema(repo_path, dolt, query_opts),
-         {:ok, _} <- dolt.query(insert_vouch_sql(issue_number, claim_key, maintainer_id, ai_state, note), [repo_path: repo_path] ++ query_opts),
+         {:ok, _} <-
+           dolt.query(
+             insert_vouch_sql(issue_number, claim_key, maintainer_id, ai_state, note),
+             [repo_path: repo_path] ++ query_opts
+           ),
          {:ok, _} <-
            dolt.write_files(
              %{

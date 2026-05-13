@@ -114,8 +114,8 @@ defmodule RoundtableWeb.LandingLive do
     """
   end
 
-  attr :title, :string, required: true
-  attr :detail, :string, required: true
+  attr(:title, :string, required: true)
+  attr(:detail, :string, required: true)
 
   defp ownership_card(assigns) do
     ~H"""

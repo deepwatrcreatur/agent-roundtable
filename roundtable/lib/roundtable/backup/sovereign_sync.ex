@@ -46,7 +46,9 @@ defmodule Roundtable.Backup.SovereignSync do
   defp rclone_sync(repo_path) do
     # rclone sync <repo_path> mega:roundtable/backups/
     # We assume rclone is configured with a 'mega' remote.
-    case System.cmd("rclone", ["sync", repo_path, "mega:roundtable/backups/"], stderr_to_stdout: true) do
+    case System.cmd("rclone", ["sync", repo_path, "mega:roundtable/backups/"],
+           stderr_to_stdout: true
+         ) do
       {_, 0} -> :ok
       {out, status} -> {:error, {:rclone_sync_failed, status, out}}
     end

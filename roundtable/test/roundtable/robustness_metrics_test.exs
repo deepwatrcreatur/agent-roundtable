@@ -9,8 +9,14 @@ defmodule Roundtable.RobustnessMetricsTest do
         title: "Q42 — Debate the rollout",
         state: :closed,
         comments: [
-          %{"body" => "## Codex\n\nThis assumption is weak.\n\n[needs more evidence: rollout data]"},
-          %{"body" => "## Gemini\n\nWe can support it with guardrails.\n\n[satisfied-conditional: after a canary]"},
+          %{
+            "body" =>
+              "## Codex\n\nThis assumption is weak.\n\n[needs more evidence: rollout data]"
+          },
+          %{
+            "body" =>
+              "## Gemini\n\nWe can support it with guardrails.\n\n[satisfied-conditional: after a canary]"
+          },
           %{"body" => "## Claude IC\n\nThe revised shape works.\n\n[satisfied]"}
         ]
       }
@@ -75,7 +81,9 @@ defmodule Roundtable.RobustnessMetricsTest do
         state: :open,
         comments: [
           %{"body" => "## Codex\n\nInitial push.\n\n[needs more evidence: benchmark]"},
-          %{"body" => "## Gemini\n\nCounterproposal.\n\n[satisfied-conditional: after benchmark]"},
+          %{
+            "body" => "## Gemini\n\nCounterproposal.\n\n[satisfied-conditional: after benchmark]"
+          },
           %{"body" => "## Codex\n\nFollow-up.\n\n[satisfied]"},
           %{"body" => "## Gemini\n\nAccepted.\n\n[satisfied]"}
         ]

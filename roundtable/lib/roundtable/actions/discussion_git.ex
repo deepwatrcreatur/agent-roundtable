@@ -23,10 +23,10 @@ defmodule Roundtable.Actions.DiscussionGit do
 
   alias Roundtable.DiscussionRepo
 
-  @brief_path    "BRIEF.md"
+  @brief_path "BRIEF.md"
   @decision_path "DECISION.md"
-  @config_path   "roundtable.toml"
-  @rounds_dir    "rounds"
+  @config_path "roundtable.toml"
+  @rounds_dir "rounds"
 
   # ----------------------------------------------------------------
   # Reads
@@ -96,7 +96,7 @@ defmodule Roundtable.Actions.DiscussionGit do
           {:ok, DiscussionRepo.t()} | {:error, term()}
   def commit_round(%DiscussionRepo{} = repo, round_number, slug, content) do
     filename = round_filename(round_number, slug)
-    message  = "discussion: close round #{round_number} (#{slug})"
+    message = "discussion: close round #{round_number} (#{slug})"
     DiscussionRepo.write_file(repo, "#{@rounds_dir}/#{filename}", content, message)
   end
 

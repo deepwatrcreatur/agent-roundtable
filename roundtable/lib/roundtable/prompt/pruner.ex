@@ -27,6 +27,7 @@ defmodule Roundtable.Prompt.Pruner do
     case Jujutsu.read_file(".", repo_path: repo_path, revision: id) do
       {:ok, content} ->
         "Revision: #{id}\nDescription: #{desc}\n\n#{content}"
+
       _ ->
         "Revision: #{id}\nDescription: #{desc}\n(Content unavailable)"
     end

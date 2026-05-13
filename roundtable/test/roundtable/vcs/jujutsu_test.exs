@@ -10,7 +10,7 @@ defmodule Roundtable.Vcs.JujutsuTest do
 
     # Initialize jj repo.
     jj!(repo_path, ["git", "init"])
-    
+
     on_exit(fn -> File.rm_rf!(repo_path) end)
 
     {:ok, repo_path: repo_path}
@@ -45,7 +45,7 @@ defmodule Roundtable.Vcs.JujutsuTest do
                Jujutsu.write_files(request, repo_path: repo_path)
 
       assert File.read!(Path.join(repo_path, "logic.txt")) == "pure reason\n"
-      
+
       # Verify the message was applied
       log = jj!(repo_path, ["log", "-r", commit_id, "--no-graph", "-T", "description"])
       assert log =~ "add logic"
@@ -56,7 +56,7 @@ defmodule Roundtable.Vcs.JujutsuTest do
     test "reads file content from a revision", %{repo_path: repo_path} do
       File.write!(Path.join(repo_path, "context.txt"), "shared mind\n")
       jj!(repo_path, ["describe", "-m", "add context"])
-      
+
       assert {:ok, content} = Jujutsu.read_file("context.txt", repo_path: repo_path)
       assert content == "shared mind\n"
     end
@@ -67,10 +67,10 @@ defmodule Roundtable.Vcs.JujutsuTest do
       # Set up a conflict: create two revisions with different content for same file
       jj!(repo_path, ["new", "root()", "-m", "v1"])
       File.write!(Path.join(repo_path, "conflict.txt"), "A\n")
-      
+
       jj!(repo_path, ["new", "root()", "-m", "v2"])
       File.write!(Path.join(repo_path, "conflict.txt"), "B\n")
-      
+
       assert {:ok, []} = Jujutsu.conflicts(repo_path: repo_path)
     end
   end
@@ -81,16 +81,16 @@ defmodule Roundtable.Vcs.JujutsuTest do
       File.write!(Path.join(repo_path, "logic.txt"), "reason\n")
       jj!(repo_path, ["describe", "-m", "logic layer"])
       jj!(repo_path, ["bookmark", "create", "b1"])
-      
+
       jj!(repo_path, ["new", "root()"])
       File.write!(Path.join(repo_path, "vcs.txt"), "vcs\n")
       jj!(repo_path, ["describe", "-m", "vcs layer"])
       jj!(repo_path, ["bookmark", "create", "b2"])
-      
+
       # Query for "logic" via bookmark
       assert {:ok, [%{description: desc}]} = Jujutsu.query("bookmarks(b1)", repo_path: repo_path)
       assert desc =~ "logic layer"
-      
+
       # Query for both via union
       assert {:ok, results} = Jujutsu.query("bookmarks(b1) | bookmarks(b2)", repo_path: repo_path)
       assert length(results) == 2
@@ -101,10 +101,10 @@ defmodule Roundtable.Vcs.JujutsuTest do
     test "returns unified diff for a revision", %{repo_path: repo_path} do
       File.write!(Path.join(repo_path, "delta.txt"), "v1\n")
       jj!(repo_path, ["describe", "-m", "v1"])
-      
+
       jj!(repo_path, ["new", "-m", "v2"])
       File.write!(Path.join(repo_path, "delta.txt"), "v2\n")
-      
+
       assert {:ok, content} = Jujutsu.diff("@", repo_path: repo_path)
       assert content =~ "-v1"
       assert content =~ "+v2"

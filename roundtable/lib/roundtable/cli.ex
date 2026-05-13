@@ -249,7 +249,11 @@ defmodule Roundtable.CLI do
         issues =
           if detailed? do
             Enum.map(issues, fn issue ->
-              case Gh.view_issue(issue["number"], [fields: ["number", "title", "body", "labels", "state", "comments", "url"]], gh_config) do
+              case Gh.view_issue(
+                     issue["number"],
+                     [fields: ["number", "title", "body", "labels", "state", "comments", "url"]],
+                     gh_config
+                   ) do
                 {:ok, detailed_issue} -> detailed_issue
                 {:error, _} -> issue
               end

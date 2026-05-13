@@ -9,8 +9,14 @@ defmodule Roundtable.IntegrityMetricsTest do
         title: "Q41 — Should we trust the initial plan?",
         state: :closed,
         comments: [
-          %{"body" => "## Codex\n\nThis assumption looks weak.\n\n[needs more evidence: deployment data]"},
-          %{"body" => "## Gemini\n\nWe should rename the design around provenance and integrity.\n\n[satisfied]"}
+          %{
+            "body" =>
+              "## Codex\n\nThis assumption looks weak.\n\n[needs more evidence: deployment data]"
+          },
+          %{
+            "body" =>
+              "## Gemini\n\nWe should rename the design around provenance and integrity.\n\n[satisfied]"
+          }
         ]
       }
     }
@@ -62,7 +68,10 @@ defmodule Roundtable.IntegrityMetricsTest do
         title: "Q7 — Network defaults",
         state: :closed,
         comments: [
-          %{"body" => "## Claude IC\n\nWe should challenge the assumption that the fallback is safe."}
+          %{
+            "body" =>
+              "## Claude IC\n\nWe should challenge the assumption that the fallback is safe."
+          }
         ]
       }
     }

@@ -23,7 +23,9 @@ defmodule Roundtable.AuthTest do
 
   test "repo_readable_by?/2 accepts readable permissions" do
     Application.put_env(:roundtable, Roundtable.Auth,
-      http_client: fn :get, "https://api.github.com/repos/owner/repo/collaborators/deep/permission", opts ->
+      http_client: fn :get,
+                      "https://api.github.com/repos/owner/repo/collaborators/deep/permission",
+                      opts ->
         assert {"authorization", "Bearer ghp_test"} in Keyword.fetch!(opts, :headers)
         {:ok, %{status: 200, body: %{"permission" => "read"}}}
       end
@@ -36,7 +38,9 @@ defmodule Roundtable.AuthTest do
 
   test "repo_readable_by?/2 returns false for missing collaborator access" do
     Application.put_env(:roundtable, Roundtable.Auth,
-      http_client: fn :get, "https://api.github.com/repos/owner/repo/collaborators/deep/permission", _opts ->
+      http_client: fn :get,
+                      "https://api.github.com/repos/owner/repo/collaborators/deep/permission",
+                      _opts ->
         {:ok, %{status: 404, body: %{}}}
       end
     )

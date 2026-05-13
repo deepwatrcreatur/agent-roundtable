@@ -238,7 +238,12 @@ defmodule Roundtable.RoundRun do
         do: Map.put(run.satisfaction_map, agent, satisfaction),
         else: run.satisfaction_map
 
-    %{run | completed_speakers: completed, satisfaction_map: sat_map, updated_at: DateTime.utc_now()}
+    %{
+      run
+      | completed_speakers: completed,
+        satisfaction_map: sat_map,
+        updated_at: DateTime.utc_now()
+    }
   end
 
   @doc "Persist to ETS and flush a JSON snapshot to the state directory."
@@ -354,7 +359,11 @@ defmodule Roundtable.RoundRun do
   end
 
   defp load_from_json(issue_number) do
-    path = Path.join(state_dir(%__MODULE__{issue_number: issue_number}), "round_run_#{issue_number}.json")
+    path =
+      Path.join(
+        state_dir(%__MODULE__{issue_number: issue_number}),
+        "round_run_#{issue_number}.json"
+      )
 
     with {:ok, json} <- File.read(path),
          {:ok, data} <- Jason.decode(json) do
@@ -372,7 +381,8 @@ defmodule Roundtable.RoundRun do
         updated_at: parse_datetime(data["updated_at"]),
         coordinator:
           if(data["coordinator"], do: String.to_existing_atom(data["coordinator"]), else: nil),
-        coordinator_lease_expires_at: parse_datetime_nullable(data["coordinator_lease_expires_at"]),
+        coordinator_lease_expires_at:
+          parse_datetime_nullable(data["coordinator_lease_expires_at"]),
         last_progress_at: parse_datetime_nullable(data["last_progress_at"]),
         suspended_phase:
           if(data["suspended_phase"],

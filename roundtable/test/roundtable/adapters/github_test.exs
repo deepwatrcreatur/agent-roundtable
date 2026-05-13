@@ -8,6 +8,7 @@ defmodule Roundtable.Adapters.GitHubTest do
   defp repo(opts \\ []) do
     Process.put(:test_pid, self())
     slug = Keyword.get(opts, :slug, "owner/test-repo")
+
     DiscussionRepo.new(slug,
       backend: GitHub,
       config: %{runner: FakeRunner},
@@ -41,8 +42,7 @@ defmodule Roundtable.Adapters.GitHubTest do
 
       assert {:ok, "hello world"} = GitHub.read_file(repo(), "BRIEF.md")
 
-      assert_received {:cmd, "gh",
-                       ["api", "/repos/owner/test-repo/contents/BRIEF.md"],
+      assert_received {:cmd, "gh", ["api", "/repos/owner/test-repo/contents/BRIEF.md"],
                        [stderr_to_stdout: true]}
     end
 
@@ -67,9 +67,12 @@ defmodule Roundtable.Adapters.GitHubTest do
       GitHub.read_file(repo(token: "mytoken"), "BRIEF.md")
 
       assert_received {:cmd, "gh",
-                       ["-H", "Authorization: Bearer mytoken", "api",
-                        "/repos/owner/test-repo/contents/BRIEF.md"],
-                       _}
+                       [
+                         "-H",
+                         "Authorization: Bearer mytoken",
+                         "api",
+                         "/repos/owner/test-repo/contents/BRIEF.md"
+                       ], _}
     end
   end
 
@@ -107,9 +110,14 @@ defmodule Roundtable.Adapters.GitHubTest do
 
       # Verify the PUT was issued with --input -
       assert_received {:cmd, "gh",
-                       ["api", "--method", "PUT", "--input", "-",
-                        "/repos/owner/test-repo/contents/rounds/round-01.md"],
-                       [stderr_to_stdout: true, input: json_input]}
+                       [
+                         "api",
+                         "--method",
+                         "PUT",
+                         "--input",
+                         "-",
+                         "/repos/owner/test-repo/contents/rounds/round-01.md"
+                       ], [stderr_to_stdout: true, input: json_input]}
 
       {:ok, body} = Jason.decode(json_input)
       assert body["message"] == "close round 1"
@@ -130,9 +138,14 @@ defmodule Roundtable.Adapters.GitHubTest do
       assert {:ok, _} = GitHub.write_file(repo(), "new.md", "brand new", "add new.md")
 
       assert_received {:cmd, "gh",
-                       ["api", "--method", "PUT", "--input", "-",
-                        "/repos/owner/test-repo/contents/new.md"],
-                       [stderr_to_stdout: true, input: json_input]}
+                       [
+                         "api",
+                         "--method",
+                         "PUT",
+                         "--input",
+                         "-",
+                         "/repos/owner/test-repo/contents/new.md"
+                       ], [stderr_to_stdout: true, input: json_input]}
 
       {:ok, body} = Jason.decode(json_input)
       refute Map.has_key?(body, "sha")

@@ -21,7 +21,9 @@ defmodule Roundtable.Provenance.Gpg do
   def verify(content, signature, opts \\ []) do
     # gpg --verify <sig_file> <content_file>
     # We use temp files for standard gpg verification flow
-    tmp_content = Path.join(System.tmp_dir!(), "rt_verify_content_#{System.unique_integer([:positive])}")
+    tmp_content =
+      Path.join(System.tmp_dir!(), "rt_verify_content_#{System.unique_integer([:positive])}")
+
     tmp_sig = Path.join(System.tmp_dir!(), "rt_verify_sig_#{System.unique_integer([:positive])}")
 
     File.write!(tmp_content, content)
@@ -43,6 +45,7 @@ defmodule Roundtable.Provenance.Gpg do
     # If not, we could generate one or assume it's pre-provisioned.
     # For now, we'll try to find a key by the agent's ID (e.g. "gemini@roundtable.internal")
     email = "#{agent_id}@roundtable.internal"
+
     case gpg(["--list-keys", email], nil, opts) do
       {:ok, output} ->
         # Extract the Key ID from the output
@@ -50,7 +53,9 @@ defmodule Roundtable.Provenance.Gpg do
           [_, key_id] -> {:ok, key_id}
           nil -> {:error, {:key_not_found, email}}
         end
-      _ -> {:error, {:key_not_found, email}}
+
+      _ ->
+        {:error, {:key_not_found, email}}
     end
   end
 

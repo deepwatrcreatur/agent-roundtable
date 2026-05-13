@@ -93,8 +93,9 @@ defmodule Roundtable.Actions.RunCliAgent do
   end
 
   defp do_run(params) do
-    runner = Map.get(params, :runner) ||
-             Application.get_env(:roundtable, :cmd_runner, Roundtable.SystemCmdRunner)
+    runner =
+      Map.get(params, :runner) ||
+        Application.get_env(:roundtable, :cmd_runner, Roundtable.SystemCmdRunner)
 
     case build_command(params) do
       {:ok, {cmd, args, exec_opts, tmp}} ->
@@ -131,8 +132,9 @@ defmodule Roundtable.Actions.RunCliAgent do
         {:error, {:agent_prereq_missing, :deepseek, :deepseek_api_key_missing}}
 
       api_key ->
-        model = params[:deepseek_model] ||
-                Application.get_env(:roundtable, :deepseek_model, @deepseek_default_model)
+        model =
+          params[:deepseek_model] ||
+            Application.get_env(:roundtable, :deepseek_model, @deepseek_default_model)
 
         case Req.post(@deepseek_api_url,
                json: %{
@@ -176,7 +178,11 @@ defmodule Roundtable.Actions.RunCliAgent do
   defp build_command(%{agent: :codex, prompt: prompt, repo_root: root} = params) do
     # System.cmd/3 has no :input option for stdin. Write prompt to a temp file
     # and pass the path; codex exec accepts a filename in place of -.
-    tmp = Path.join(System.tmp_dir!(), "rt_prompt_#{System.unique_integer([:positive, :monotonic])}.txt")
+    tmp =
+      Path.join(
+        System.tmp_dir!(),
+        "rt_prompt_#{System.unique_integer([:positive, :monotonic])}.txt"
+      )
 
     case File.write(tmp, prompt) do
       :ok ->

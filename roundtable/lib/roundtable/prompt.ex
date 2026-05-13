@@ -42,6 +42,7 @@ defmodule Roundtable.Prompt do
 
   defp render_comments(nil), do: "(No comments yet)"
   defp render_comments([]), do: "(No comments yet)"
+
   defp render_comments(comments) do
     comments
     |> Enum.map(fn c ->

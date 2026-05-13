@@ -190,7 +190,10 @@ defmodule Roundtable.RoundRunTest do
         "labels" => [],
         "comments" => [
           %{"id" => "c1", "body" => "## Codex\n\nText.\n\n[satisfied]"},
-          %{"id" => "c2", "body" => "## Gemini\n\nText.\n\n[satisfied-conditional: needs deployment]"},
+          %{
+            "id" => "c2",
+            "body" => "## Gemini\n\nText.\n\n[satisfied-conditional: needs deployment]"
+          },
           %{"id" => "c3", "body" => "## Claude IC\n\nText.\n\n[needs more evidence: repro steps]"}
         ]
       }

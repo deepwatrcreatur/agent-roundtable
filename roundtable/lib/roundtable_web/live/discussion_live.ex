@@ -10,6 +10,7 @@ defmodule RoundtableWeb.DiscussionLive do
 
   alias Roundtable.CLI
   alias Roundtable.Actions.DiscussionGit
+
   alias Roundtable.{
     DiscussionRepo,
     HumanAnchor,
@@ -61,6 +62,7 @@ defmodule RoundtableWeb.DiscussionLive do
   @impl true
   def handle_info(:poll, socket) do
     schedule_poll()
+
     {:noreply,
      load_state(
        socket,
@@ -73,10 +75,15 @@ defmodule RoundtableWeb.DiscussionLive do
   @impl true
   def handle_info({:roundtable_event, {:round_complete, _n} = event}, socket) do
     msg = format_event(event)
+
     socket =
       socket
       |> assign(running: false, flash_msg: msg)
-      |> load_state(socket.assigns.repo, socket.assigns.local_path, socket.assigns.discussion_path)
+      |> load_state(
+        socket.assigns.repo,
+        socket.assigns.local_path,
+        socket.assigns.discussion_path
+      )
 
     {:noreply, socket}
   end
@@ -84,10 +91,15 @@ defmodule RoundtableWeb.DiscussionLive do
   @impl true
   def handle_info({:roundtable_event, event}, socket) do
     msg = format_event(event)
+
     socket =
       socket
       |> assign(:flash_msg, msg)
-      |> load_state(socket.assigns.repo, socket.assigns.local_path, socket.assigns.discussion_path)
+      |> load_state(
+        socket.assigns.repo,
+        socket.assigns.local_path,
+        socket.assigns.discussion_path
+      )
 
     {:noreply, socket}
   end
@@ -226,12 +238,17 @@ defmodule RoundtableWeb.DiscussionLive do
       socket =
         socket
         |> assign(:flash_msg, "Anchored issue ##{issue_number} with #{maintainer}")
-        |> load_state(socket.assigns.repo, socket.assigns.local_path, socket.assigns.discussion_path)
+        |> load_state(
+          socket.assigns.repo,
+          socket.assigns.local_path,
+          socket.assigns.discussion_path
+        )
 
       {:noreply, socket}
     else
       {:error, :no_local_repo} ->
-        {:noreply, assign(socket, :flash_msg, "Configure a local checkout before recording a human anchor.")}
+        {:noreply,
+         assign(socket, :flash_msg, "Configure a local checkout before recording a human anchor.")}
 
       {:error, reason} ->
         {:noreply, assign(socket, :flash_msg, "Failed to anchor: #{inspect(reason)}")}
@@ -252,13 +269,21 @@ defmodule RoundtableWeb.DiscussionLive do
            ) do
       socket =
         socket
-        |> assign(:flash_msg, "Vouched claim #{String.slice(claim_key, 0, 8)} for issue ##{issue_number}")
-        |> load_state(socket.assigns.repo, socket.assigns.local_path, socket.assigns.discussion_path)
+        |> assign(
+          :flash_msg,
+          "Vouched claim #{String.slice(claim_key, 0, 8)} for issue ##{issue_number}"
+        )
+        |> load_state(
+          socket.assigns.repo,
+          socket.assigns.local_path,
+          socket.assigns.discussion_path
+        )
 
       {:noreply, socket}
     else
       {:error, :no_local_repo} ->
-        {:noreply, assign(socket, :flash_msg, "Configure a local checkout before recording a claim vouch.")}
+        {:noreply,
+         assign(socket, :flash_msg, "Configure a local checkout before recording a claim vouch.")}
 
       {:error, reason} ->
         {:noreply, assign(socket, :flash_msg, "Failed to vouch claim: #{inspect(reason)}")}
@@ -272,14 +297,14 @@ defmodule RoundtableWeb.DiscussionLive do
 
     case CLI.resolve_conflict(local_path, path, vcs_atom) do
       :ok ->
-          socket =
-            socket
-            |> assign(:flash_msg, "Resolved #{path} in #{vcs}")
-            |> load_state(
-              socket.assigns.repo,
-              socket.assigns.local_path,
-              socket.assigns.discussion_path
-            )
+        socket =
+          socket
+          |> assign(:flash_msg, "Resolved #{path} in #{vcs}")
+          |> load_state(
+            socket.assigns.repo,
+            socket.assigns.local_path,
+            socket.assigns.discussion_path
+          )
 
         {:noreply, socket}
 
@@ -645,7 +670,9 @@ defmodule RoundtableWeb.DiscussionLive do
 
   defp round_history_card(assigns) do
     turns = visible_turns(assigns.view, assigns.red_team_only)
-    provenance_turns = visible_provenance_turns(assigns.provenance_view, assigns.red_team_only, turns)
+
+    provenance_turns =
+      visible_provenance_turns(assigns.provenance_view, assigns.red_team_only, turns)
 
     assigns =
       assigns
@@ -947,7 +974,8 @@ defmodule RoundtableWeb.DiscussionLive do
 
   defp load_state(socket, repo, local_path, discussion_path) do
     {questions, integrity_scorecard, robustness_meters, low_robustness_history, red_team_views,
-     provenance_views, anchor_statuses} =
+     provenance_views,
+     anchor_statuses} =
       case CLI.get_discussion_state(repo, detailed: true) do
         {:ok, qs} ->
           {brief_text, decision_text} = load_discussion_texts(repo, local_path, discussion_path)
@@ -955,8 +983,9 @@ defmodule RoundtableWeb.DiscussionLive do
           vouches = load_vouches(local_path)
 
           {qs, IntegrityMetrics.compute(qs, brief_text, decision_text), robustness,
-           RobustnessMetrics.low_robustness_history(qs, robustness), RedTeamHighlights.build(qs, brief_text),
-           ProvenanceMap.build(qs), HumanAnchor.build_statuses(qs, vouches)}
+           RobustnessMetrics.low_robustness_history(qs, robustness),
+           RedTeamHighlights.build(qs, brief_text), ProvenanceMap.build(qs),
+           HumanAnchor.build_statuses(qs, vouches)}
 
         {:error, _} ->
           {%{}, %{}, %{}, [], %{}, %{}, %{}}

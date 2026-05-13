@@ -66,8 +66,7 @@ defmodule Roundtable.Notifier.TelegramTest do
 
       assert :ok = Telegram.notify("hello from roundtable")
 
-      assert_receive {:http_request,
-                      "https://api.telegram.org/botbot-token/sendMessage",
+      assert_receive {:http_request, "https://api.telegram.org/botbot-token/sendMessage",
                       %{chat_id: "chat-id", text: "hello from roundtable"}}
     end
 

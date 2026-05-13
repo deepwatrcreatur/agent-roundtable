@@ -29,8 +29,7 @@ defmodule Roundtable.Actions.GhTest do
                        "--comments",
                        "--json",
                        "title,body,labels,state,comments,url"
-                     ],
-                     [stderr_to_stdout: true]}
+                     ], [stderr_to_stdout: true]}
   end
 
   test "comment_issue writes the comment to a temporary body file" do

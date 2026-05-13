@@ -26,6 +26,7 @@ defmodule Roundtable.Prompt.EvolutionAssembler do
     case Jujutsu.diff(id, repo_path: repo_path) do
       {:ok, diff} ->
         "Intent: #{desc} (by #{author})\nDelta:\n#{diff}"
+
       _ ->
         "Intent: #{desc} (by #{author})\n(Delta unavailable)"
     end
@@ -34,7 +35,8 @@ defmodule Roundtable.Prompt.EvolutionAssembler do
   defp maybe_limit(list, opts) do
     case Keyword.get(opts, :limit) do
       nil -> list
-      n -> Enum.take(list, -n) # Take most recent N evolutions
+      # Take most recent N evolutions
+      n -> Enum.take(list, -n)
     end
   end
 end

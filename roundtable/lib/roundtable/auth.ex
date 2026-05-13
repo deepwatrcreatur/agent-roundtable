@@ -53,15 +53,23 @@ defmodule Roundtable.Auth do
 
       token ->
         with {:ok, url} <- repo_permission_url(repo, github_login),
-             {:ok, %{status: 200, body: body}} <- request(:get, url, headers: github_headers(token)),
+             {:ok, %{status: 200, body: body}} <-
+               request(:get, url, headers: github_headers(token)),
              true <- is_map(body) or {:error, {:unexpected_github_body, body}} do
           permission = String.downcase(body["permission"] || "")
           {:ok, permission in @read_permissions}
         else
-          {:ok, %{status: 404}} -> {:ok, false}
-          {:ok, %{status: 403}} -> {:error, :github_forbidden}
-          {:ok, %{status: status, body: body}} -> {:error, {:unexpected_github_status, status, body}}
-          {:error, _} = err -> err
+          {:ok, %{status: 404}} ->
+            {:ok, false}
+
+          {:ok, %{status: 403}} ->
+            {:error, :github_forbidden}
+
+          {:ok, %{status: status, body: body}} ->
+            {:error, {:unexpected_github_status, status, body}}
+
+          {:error, _} = err ->
+            err
         end
     end
   end
@@ -215,7 +223,8 @@ defmodule Roundtable.Auth do
         name = String.trim(name)
 
         if valid_repo_segment?(owner) and valid_repo_segment?(name) do
-          {:ok, {URI.encode(owner, &URI.char_unreserved?/1), URI.encode(name, &URI.char_unreserved?/1)}}
+          {:ok,
+           {URI.encode(owner, &URI.char_unreserved?/1), URI.encode(name, &URI.char_unreserved?/1)}}
         else
           {:error, :invalid_repo}
         end
@@ -253,8 +262,11 @@ defmodule Roundtable.Auth do
             |> maybe_put(:form, Keyword.get(opts, :form))
 
           case Req.request(request_opts) do
-            {:ok, %Req.Response{status: status, body: body}} -> {:ok, %{status: status, body: body}}
-            {:error, reason} -> {:error, reason}
+            {:ok, %Req.Response{status: status, body: body}} ->
+              {:ok, %{status: status, body: body}}
+
+            {:error, reason} ->
+              {:error, reason}
           end
       end
     end
