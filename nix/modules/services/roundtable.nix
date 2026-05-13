@@ -14,8 +14,8 @@ let
     lib.optional (file != null) "${name}:${toString file}";
 
   exportOptionalCredential = envName: credentialName: ''
-    if [ -f "$CREDENTIALS_DIRECTORY/${credentialName}" ]; then
-      export ${envName}="$(cat "$CREDENTIALS_DIRECTORY/${credentialName}")"
+    if [ -n "$credential_dir" ] && [ -f "$credential_dir/${credentialName}" ]; then
+      export ${envName}="$(cat "$credential_dir/${credentialName}")"
     fi
   '';
 in
@@ -187,9 +187,10 @@ in
           set -eu
 
           mkdir -p "$HOME/state"
+          credential_dir="''${CREDENTIALS_DIRECTORY:-}"
 
-          if [ -f "$CREDENTIALS_DIRECTORY/secret_key_base" ]; then
-            export SECRET_KEY_BASE="$(cat "$CREDENTIALS_DIRECTORY/secret_key_base")"
+          if [ -n "$credential_dir" ] && [ -f "$credential_dir/secret_key_base" ]; then
+            export SECRET_KEY_BASE="$(cat "$credential_dir/secret_key_base")"
           elif [ -f "$HOME/secret_key_base" ]; then
             export SECRET_KEY_BASE="$(cat "$HOME/secret_key_base")"
           else
