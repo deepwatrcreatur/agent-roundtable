@@ -238,6 +238,21 @@ defmodule RoundtableWeb.ForgejoShellLive do
         </div>
       </section>
 
+      <section :if={@demo[:source][:history_summary]} style="margin-bottom: 2rem;">
+        <h2 style={section_heading_style()}>Sampled Repo Evidence</h2>
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+          <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase; margin-bottom: 0.45rem;">Tracked branch sample</div>
+          <p style="margin: 0; color: #8b949e; line-height: 1.55;">
+            This section is computed from a shallow sample of the public source branch, not hand-authored demo prose. It is meant to be the first visible proof that the page is tied to actual repository state.
+          </p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0.75rem;">
+          <.contributors_table contributors={@demo.source.history_summary.top_contributors} />
+          <.commit_log_table commits={@demo.source.history_summary.recent_commits} />
+        </div>
+      </section>
+
       <section :if={@benchmark} style="margin-bottom: 2rem;">
         <h2 style={section_heading_style()}>JJ vs Git Infrastructure Benchmark</h2>
         <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
@@ -556,6 +571,54 @@ defmodule RoundtableWeb.ForgejoShellLive do
     """
   end
 
+  defp contributors_table(assigns) do
+    ~H"""
+    <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;">
+      <h3 style="margin: 0 0 0.75rem; color: #f0f6fc; font-size: 0.95rem;">Top sampled contributors</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+        <thead>
+          <tr style="text-align: left; color: #58a6ff; border-bottom: 1px solid #30363d;">
+            <th style="padding: 0.45rem 0;">Author</th>
+            <th style="padding: 0.45rem 0;">Email</th>
+            <th style="padding: 0.45rem 0; text-align: right;">Commits</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr :for={contributor <- @contributors} style="border-bottom: 1px solid #21262d;">
+            <td style="padding: 0.5rem 0; color: #f0f6fc;">{contributor.author}</td>
+            <td style="padding: 0.5rem 0; color: #8b949e;">{contributor.email}</td>
+            <td style="padding: 0.5rem 0; color: #f0f6fc; text-align: right;">{contributor.commits}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    """
+  end
+
+  defp commit_log_table(assigns) do
+    ~H"""
+    <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;">
+      <h3 style="margin: 0 0 0.75rem; color: #f0f6fc; font-size: 0.95rem;">Recent sampled commits</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+        <thead>
+          <tr style="text-align: left; color: #58a6ff; border-bottom: 1px solid #30363d;">
+            <th style="padding: 0.45rem 0;">When</th>
+            <th style="padding: 0.45rem 0;">Author</th>
+            <th style="padding: 0.45rem 0;">SHA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr :for={commit <- @commits} style="border-bottom: 1px solid #21262d;">
+            <td style="padding: 0.5rem 0; color: #8b949e;">{format_commit_day(commit.committed_at_unix)}</td>
+            <td style="padding: 0.5rem 0; color: #f0f6fc;">{commit.author}</td>
+            <td style="padding: 0.5rem 0; color: #8b949e;"><code>{short_sha(commit.sha)}</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    """
+  end
+
   defp detail_item_title(%{title: title}), do: title
   defp detail_item_title(%{area: area, signal: signal}), do: area <> " — " <> signal
 
@@ -568,6 +631,14 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
   defp derived_percentage(value) when is_float(value), do: "#{Float.round(value * 100, 0)}%"
   defp derived_percentage(value), do: to_string(value)
+
+  defp format_commit_day(unix) when is_integer(unix) do
+    unix
+    |> DateTime.from_unix!()
+    |> Calendar.strftime("%Y-%m-%d")
+  end
+
+  defp short_sha(sha) when is_binary(sha), do: String.slice(sha, 0, 8)
 
   defp derived_hotspot(%{source: %{history_summary: history_summary}})
        when is_map(history_summary) do
