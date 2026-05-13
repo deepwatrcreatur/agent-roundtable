@@ -4,8 +4,7 @@ host = System.get_env("HOST") || System.get_env("PHX_HOST") || "localhost"
 
 config :roundtable, RoundtableWeb.Endpoint,
   server: true,
-  url: [host: host],
-  cache_static_manifest: "priv/static/cache_manifest.json"
+  url: [host: host]
 
 config :roundtable,
   web_enabled: System.get_env("ROUNDTABLE_WEB") != "false",
