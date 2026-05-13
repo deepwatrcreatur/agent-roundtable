@@ -202,6 +202,30 @@ defmodule RoundtableWeb.ForgejoShellLive do
         </div>
       </section>
 
+      <section :if={@demo && @demo.dashboard[:stress]} style="margin-bottom: 2rem;">
+        <h2 style={section_heading_style()}>Stress &amp; Change Heat</h2>
+        <div style="background: linear-gradient(180deg, rgba(39, 14, 18, 0.92), rgba(22, 27, 34, 0.96)); border: 1px solid #59343b; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+          <div style="color: #ff7b72; font-size: 0.78rem; text-transform: uppercase; margin-bottom: 0.45rem;">Active-inference surface</div>
+          <div style="color: #f0f6fc; font-weight: 600; margin-bottom: 0.45rem;">{@demo.dashboard.stress.headline}</div>
+          <p style="margin: 0; color: #c9d1d9; line-height: 1.55;">{@demo.dashboard.stress.narrative}</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
+          <.metric_card :for={metric <- @demo.dashboard.stress.metrics} metric={metric} accent="heat" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
+          <.stress_hotspot_card :for={hotspot <- @demo.dashboard.stress.hotspots} hotspot={hotspot} />
+        </div>
+
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;">
+          <h3 style="margin: 0 0 0.75rem; color: #f0f6fc; font-size: 0.95rem;">History heat timeline</h3>
+          <div style="display: grid; gap: 0.6rem;">
+            <.history_heat_row :for={entry <- @demo.dashboard.stress.history} entry={entry} />
+          </div>
+        </div>
+      </section>
+
       <section :if={@benchmark} style="margin-bottom: 2rem;">
         <h2 style={section_heading_style()}>JJ vs Git Infrastructure Benchmark</h2>
         <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
@@ -414,9 +438,11 @@ defmodule RoundtableWeb.ForgejoShellLive do
   end
 
   defp metric_card(assigns) do
+    assigns = assign_new(assigns, :accent, fn -> :default end)
+
     ~H"""
-    <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;">
-      <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase;">{@metric.label}</div>
+    <div style={"background: #161b22; border: 1px solid #{metric_border(@accent)}; border-radius: 8px; padding: 1rem;"}>
+      <div style={"color: #{metric_accent(@accent)}; font-size: 0.78rem; text-transform: uppercase;"}>{@metric.label}</div>
       <div style="color: #f0f6fc; font-size: 1.4rem; font-weight: 700; margin-top: 0.45rem;">{@metric.value}</div>
       <p style="margin: 0.6rem 0 0; color: #8b949e; line-height: 1.45;">{@metric.note}</p>
     </div>
@@ -485,6 +511,29 @@ defmodule RoundtableWeb.ForgejoShellLive do
     """
   end
 
+  defp stress_hotspot_card(assigns) do
+    ~H"""
+    <div style="background: #161b22; border: 1px solid #59343b; border-radius: 8px; padding: 1rem;">
+      <div style="display: flex; justify-content: space-between; gap: 0.75rem; align-items: baseline;">
+        <strong style="color: #f0f6fc;">{@hotspot.title}</strong>
+        <span style={"color: #{stress_level_color(@hotspot.stress)}; font-size: 0.78rem; text-transform: uppercase;"}>{@hotspot.stress} stress</span>
+      </div>
+      <div style="margin-top: 0.55rem; color: #ff7b72; font-size: 0.82rem; font-weight: 600;">Heat score {@hotspot.heat}</div>
+      <p style="margin: 0.45rem 0 0; color: #8b949e; line-height: 1.5;">{@hotspot.detail}</p>
+    </div>
+    """
+  end
+
+  defp history_heat_row(assigns) do
+    ~H"""
+    <div style="display: grid; grid-template-columns: 90px minmax(0, 180px) minmax(0, 1fr); gap: 0.75rem; align-items: start; border-top: 1px solid #21262d; padding-top: 0.6rem;">
+      <div style="color: #58a6ff; font-size: 0.8rem; font-weight: 600;">{@entry.window}</div>
+      <div style="color: #f0f6fc; font-size: 0.85rem;">{@entry.pressure}</div>
+      <div style="color: #8b949e; line-height: 1.45;">{@entry.note}</div>
+    </div>
+    """
+  end
+
   defp detail_item_title(%{title: title}), do: title
   defp detail_item_title(%{area: area, signal: signal}), do: area <> " — " <> signal
 
@@ -504,6 +553,17 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
   defp owner_color(:forgejo), do: "#3fb950"
   defp owner_color(:vaglio), do: "#d2a8ff"
+
+  defp metric_accent(:heat), do: "#ff7b72"
+  defp metric_accent(_), do: "#58a6ff"
+
+  defp metric_border(:heat), do: "#59343b"
+  defp metric_border(_), do: "#30363d"
+
+  defp stress_level_color("high"), do: "#ff7b72"
+  defp stress_level_color("medium"), do: "#d29922"
+  defp stress_level_color("low"), do: "#3fb950"
+  defp stress_level_color(_), do: "#8b949e"
 
   defp path_owner(:native), do: :vaglio
   defp path_owner("native"), do: :vaglio

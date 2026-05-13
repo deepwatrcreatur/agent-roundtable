@@ -90,8 +90,70 @@ defmodule Roundtable.InvestorDemo do
             title: "JJ-native review layer",
             detail:
               "Keep Git/Forgejo at the edge while preserving `jj`-level change identity for agent-heavy work."
-          }
-        ]
+            }
+        ],
+        stress: %{
+          headline: "Prediction error clusters around infra-wide rollout paths.",
+          narrative:
+            "The first-pass stress model treats contested, high-blast-radius paths as high prediction error and stable, well-vouched paths as low prediction error. It complements raw churn by showing where coordination pressure is compounding rather than merely changing.",
+          metrics: [
+            %{
+              label: "Branch stress",
+              value: "0.78",
+              note: "The HA router rollout branch bundles multiple tightly coupled infra surfaces."
+            },
+            %{
+              label: "History heat",
+              value: "3 peaks",
+              note: "Networking, module evaluation, and release plumbing each show repeated stress spikes."
+            },
+            %{
+              label: "Active-inference confidence",
+              value: "medium",
+              note: "Enough structured evidence exists to rank hotspots, but not yet enough provenance to collapse uncertainty."
+            }
+          ],
+          hotspots: [
+            %{
+              title: "router failover path",
+              detail:
+                "High precision operators disagree across firewall, DHCP, and DNS coupling, so contention remains costly even when code size is modest.",
+              stress: "high",
+              heat: "0.86"
+            },
+            %{
+              title: "module evaluation path",
+              detail:
+                "Repeated evaluation regressions signal unresolved model mismatch rather than one-off patch churn.",
+              stress: "high",
+              heat: "0.81"
+            },
+            %{
+              title: "release plumbing path",
+              detail:
+                "Rollout notes and provenance reduce surprise, but the path still spikes when fixes arrive under time pressure.",
+              stress: "medium",
+              heat: "0.63"
+            }
+          ],
+          history: [
+            %{
+              window: "T-21d",
+              pressure: "Escalating coordination",
+              note: "Routing and DNS changes begin to overlap in the same rollout slice."
+            },
+            %{
+              window: "T-7d",
+              pressure: "Peak contention",
+              note: "Evaluation failures and rollback planning stack on the same branch."
+            },
+            %{
+              window: "T-1d",
+              pressure: "Partial stabilization",
+              note: "Operational notes land, but a few high-cost review surfaces remain contested."
+            }
+          ]
+        }
       }
     },
     %{
@@ -176,8 +238,70 @@ defmodule Roundtable.InvestorDemo do
             title: "Lossy Git merge surfacing",
             detail:
               "Show where squash/rebase hides lineage so reviewers know when extra explanation is required."
-          }
-        ]
+            }
+        ],
+        stress: %{
+          headline: "Stress concentrates where subsystem specialization meets release obligations.",
+          narrative:
+            "The active-inference view highlights controller and API machinery paths where small contributor pools must absorb high ambiguity under strong compatibility constraints.",
+          metrics: [
+            %{
+              label: "Branch stress",
+              value: "0.69",
+              note: "Cross-SIG changes amplify review contention even when overall ownership is broad."
+            },
+            %{
+              label: "History heat",
+              value: "4 peaks",
+              note: "API machinery, controllers, release tooling, and test-infra recur as pressure zones."
+            },
+            %{
+              label: "Active-inference confidence",
+              value: "high",
+              note: "Maintainer specialization patterns are strong enough to make the hotspot ranking legible."
+            }
+          ],
+          hotspots: [
+            %{
+              title: "api machinery path",
+              detail:
+                "Compatibility obligations create repeated prediction error whenever controller-facing schema assumptions move.",
+              stress: "high",
+              heat: "0.84"
+            },
+            %{
+              title: "controller logic path",
+              detail:
+                "Fast-moving control loops create dense change history, but only some of that churn resolves underlying uncertainty.",
+              stress: "high",
+              heat: "0.79"
+            },
+            %{
+              title: "release tooling path",
+              detail:
+                "Stress rises when release readiness depends on a narrow operational review core.",
+              stress: "medium",
+              heat: "0.66"
+            }
+          ],
+          history: [
+            %{
+              window: "T-30d",
+              pressure: "Subsystem drift",
+              note: "Independent changes appear safe locally but begin to accumulate cross-cutting review cost."
+            },
+            %{
+              window: "T-10d",
+              pressure: "Compatibility crunch",
+              note: "Schema, controller, and release concerns converge on the same merge window."
+            },
+            %{
+              window: "T-2d",
+              pressure: "Review compression",
+              note: "A small reviewer set absorbs most of the remaining uncertainty before release."
+            }
+          ]
+        }
       }
     },
     %{
@@ -258,8 +382,70 @@ defmodule Roundtable.InvestorDemo do
           %{
             title: "Decision traceability",
             detail: "Overlay roundtable and review context on top of Forgejo pull-request flows."
-          }
-        ]
+            }
+        ],
+        stress: %{
+          headline: "Product-boundary stress is lowest where Forgejo stays native and Vaglio stays semantic.",
+          narrative:
+            "This demo frames stress as the cost of forcing one layer to impersonate the other. Heat is highest where repository APIs, UI expectations, and automation governance overlap.",
+          metrics: [
+            %{
+              label: "Branch stress",
+              value: "0.58",
+              note: "Most uncertainty is architectural rather than operational: where should the semantic boundary live?"
+            },
+            %{
+              label: "History heat",
+              value: "3 peaks",
+              note: "Repository APIs, web UI, and actions automation carry most of the integration pressure."
+            },
+            %{
+              label: "Active-inference confidence",
+              value: "medium-high",
+              note: "Boundary clarity reduces stress faster than raw code churn reduction in this demo."
+            }
+          ],
+          hotspots: [
+            %{
+              title: "repository api path",
+              detail:
+                "Heat appears where Git-facing expectations must be translated into a richer internal model without confusing operators.",
+              stress: "high",
+              heat: "0.74"
+            },
+            %{
+              title: "web shell path",
+              detail:
+                "UI reuse is valuable, but stress rises if product boundaries are hidden instead of made explicit.",
+              stress: "medium",
+              heat: "0.61"
+            },
+            %{
+              title: "actions governance path",
+              detail:
+                "Agent-scale automation needs provenance and policy hooks or the apparent convenience becomes latent operational debt.",
+              stress: "medium",
+              heat: "0.64"
+            }
+          ],
+          history: [
+            %{
+              window: "T-14d",
+              pressure: "Prototype ambiguity",
+              note: "The shell can demo well before the semantic boundary is fully explained."
+            },
+            %{
+              window: "T-5d",
+              pressure: "Boundary clarification",
+              note: "Separating Forgejo-native and Vaglio-native surfaces reduces confusion and lowers stress."
+            },
+            %{
+              window: "T-1d",
+              pressure: "Governance follow-through",
+              note: "The remaining heat sits in policy and provenance, not basic routing or host availability."
+            }
+          ]
+        }
       }
     }
   ]
@@ -341,7 +527,7 @@ defmodule Roundtable.InvestorDemo do
         step: "Render investor dashboard",
         status: :done,
         detail:
-          "Expose maintainer concentration, expertise signals, hotspots, and provenance overlays on the same host."
+          "Expose maintainer concentration, expertise signals, hotspots, provenance overlays, and the first stress/heat surface on the same host."
       }
     ]
   end
