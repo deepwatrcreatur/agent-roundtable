@@ -5,7 +5,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
   use Phoenix.LiveView
 
-  alias Roundtable.{ArchitectureBenchmark, ForgejoShell, InvestorDemo}
+  alias Roundtable.{ArchitectureBenchmark, ForgejoShell, InvestorDemo, PublicRepoDemo}
 
   @impl true
   def mount(params, _session, socket) do
@@ -65,7 +65,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
          socket
          |> assign(:selected_demo, selected_demo)
          |> assign(:inputs, inputs)
-         |> assign(:demo, demo)
+         |> assign_demo_from_payload(selected_demo, demo, inputs)
          |> assign_benchmark(selected_demo)
          |> assign_shell(inputs)}
 
@@ -210,6 +210,16 @@ defmodule RoundtableWeb.ForgejoShellLive do
           <p style="margin: 0; color: #c9d1d9; line-height: 1.55;">{@demo.dashboard.stress.narrative}</p>
         </div>
 
+        <div :if={@demo[:source][:history_summary]} style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+          <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase; margin-bottom: 0.45rem;">Derived from sampled branch history</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem;">
+            <.metric_card metric={derived_metric("Sampled commits", to_string(@demo.source.history_summary.sampled_commit_count), "Shallow history sample from the tracked branch.")} />
+            <.metric_card metric={derived_metric("Contributor count", to_string(@demo.source.history_summary.contributor_count), "Unique contributors observed in the sampled window.")} />
+            <.metric_card metric={derived_metric("Top author share", derived_percentage(@demo.source.history_summary.derived_signals.top_author_share), "Share of sampled commits attributable to the top three contributors.")} />
+            <.metric_card metric={derived_metric("Commit cadence", "#{@demo.source.history_summary.derived_signals.commits_per_day_window}/day", "Recent sampled commits per day across the fetched window.")} />
+          </div>
+        </div>
+
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
           <.metric_card :for={metric <- @demo.dashboard.stress.metrics} metric={metric} accent="heat" />
         </div>
@@ -334,8 +344,18 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
   defp assign_demo(socket, selected_demo, inputs) do
     case InvestorDemo.import(selected_demo, base_url: inputs.base_url) do
-      {:ok, demo} -> assign(socket, :demo, demo)
+      {:ok, demo} -> assign_demo_from_payload(socket, selected_demo, demo, inputs)
       {:error, _reason} -> assign(socket, :demo, nil)
+    end
+  end
+
+  defp assign_demo_from_payload(socket, selected_demo, demo, inputs) do
+    case PublicRepoDemo.snapshot(selected_demo, base_url: inputs.base_url) do
+      {:ok, snapshot} ->
+        assign(socket, :demo, Map.merge(demo, %{source: snapshot.source}))
+
+      {:error, _reason} ->
+        assign(socket, :demo, demo)
     end
   end
 
@@ -539,6 +559,13 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
   defp detail_item_detail(%{detail: detail}), do: detail
   defp detail_item_detail(%{note: note}), do: note
+
+  defp derived_metric(label, value, note) do
+    %{label: label, value: value, note: note}
+  end
+
+  defp derived_percentage(value) when is_float(value), do: "#{Float.round(value * 100, 0)}%"
+  defp derived_percentage(value), do: to_string(value)
 
   defp demo_card_style(true) do
     "text-align: left; background: #1f2937; border: 1px solid #58a6ff; border-radius: 8px; padding: 1rem;"
