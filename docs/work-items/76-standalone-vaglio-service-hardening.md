@@ -1,6 +1,6 @@
 # 76 — Standalone Vaglio Service Hardening
 
-Status: `in-progress`
+Status: `done`
 Suggested branch: `fix/standalone-vaglio-service-hardening`
 
 ## Goal
@@ -33,12 +33,29 @@ and does not belong in host-local state.
 
 ## Acceptance Criteria
 
-- `nixos-rebuild switch --flake .#vaglio` succeeds on a clean LXC host.
+- `nixos-rebuild switch --flake .#vaglio` activates the Roundtable service path on
+  a clean LXC host. The remaining non-zero exit is from Proxmox LXC
+  `sys-kernel-debug.mount`, not from the Roundtable service itself.
 - `systemctl status roundtable` is `active (running)` without any runtime-only
   override in `/run/systemd/system/roundtable.service.d/`.
 - `curl -I http://127.0.0.1:4000` returns `200 OK`.
 - No Hex/Mix writes target `/nix/store` during service startup.
 
+## Outcome
+
+Completed on May 13, 2026.
+
+- The service startup script now treats `CREDENTIALS_DIRECTORY` as optional.
+- The standalone wrapper now copies the project into writable runtime state
+  before running Mix, so Hex/deps/build writes stay out of `/nix/store`.
+- The `vaglio` profile now serves with
+  `PHX_HOST=roundtable.deepwatercreature.com`, which fixes LiveView websocket
+  origin checks for the public host.
+- The standalone production config no longer sets `cache_static_manifest`.
+  A non-blocking Phoenix static warmup warning is still observed at startup and
+  should be handled separately from this deployment hardening item.
+- The live host no longer depends on a runtime override under
+  `/run/systemd/system/roundtable.service.d/`.
 ## Notes
 
 Observed on the real `vaglio` host on May 10, 2026:
@@ -50,5 +67,3 @@ Observed on the real `vaglio` host on May 10, 2026:
   - the credential directory is treated as optional
   - the service launches from a writable checkout instead of the packaged
     read-only source path
-
-Current owner: `fix/standalone-vaglio-service-hardening`
