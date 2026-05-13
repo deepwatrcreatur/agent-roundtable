@@ -108,19 +108,29 @@ defmodule Roundtable.PublicRepoDemo do
                "git",
                ["-C", repo_dir, "log", "--format=%ct\t%an\t%H", "--max-count=12", "FETCH_HEAD"],
                stderr_to_stdout: true
+             ),
+           {paths_output, 0} <-
+             runner.cmd(
+               "git",
+               ["-C", repo_dir, "log", "--format=", "--name-only", "--max-count=30", "FETCH_HEAD"],
+               stderr_to_stdout: true
              ) do
+          parsed_shortlog = parse_shortlog(shortlog_output)
+          parsed_recent_commits = parse_recent_commits(log_output)
+
           {:ok,
            %{
              sample_depth: sample_depth,
              sampled_commit_count: parse_integer(count_output),
-             contributor_count: shortlog_output |> parse_shortlog() |> length(),
-             top_contributors: shortlog_output |> parse_shortlog() |> Enum.take(5),
-             recent_commits: parse_recent_commits(log_output),
+             contributor_count: length(parsed_shortlog),
+             top_contributors: Enum.take(parsed_shortlog, 5),
+             recent_commits: parsed_recent_commits,
+             path_hotspots: parse_path_hotspots(paths_output),
              derived_signals:
                build_derived_signals(
                  parse_integer(count_output),
-                 parse_shortlog(shortlog_output),
-                 parse_recent_commits(log_output)
+                 parsed_shortlog,
+                 parsed_recent_commits
                )
            }}
       else
@@ -230,5 +240,15 @@ defmodule Roundtable.PublicRepoDemo do
           true -> "low"
         end
     }
+  end
+
+  defp parse_path_hotspots(output) do
+    output
+    |> String.split("\n", trim: true)
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.frequencies()
+    |> Enum.sort_by(fn {_path, count} -> -count end)
+    |> Enum.take(8)
+    |> Enum.map(fn {path, count} -> %{path: path, mentions: count} end)
   end
 end

@@ -40,6 +40,7 @@ defmodule RoundtableWeb.ForgejoShellLiveTest do
     assert html =~ "Sampled Repo Evidence"
     assert html =~ "Top sampled contributors"
     assert html =~ "Recent sampled commits"
+    assert html =~ "Sampled path hotspots"
     assert html =~ "Commits"
     assert html =~ "Branch stress"
     assert html =~ "History heat timeline"

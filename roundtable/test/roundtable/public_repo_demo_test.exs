@@ -48,6 +48,10 @@ defmodule Roundtable.PublicRepoDemoTest do
         assert String.contains?(repo_dir, "roundtable-public-demo-")
         {"1715616000\tAlice Example\tdeadbeef\n1715529600\tBob Example\tcafebabe\n1715443200\tCarol Example\t8badf00d\n", 0}
 
+      "git", ["-C", repo_dir, "log", "--format=", "--name-only", "--max-count=30", "FETCH_HEAD"], _opts ->
+        assert String.contains?(repo_dir, "roundtable-public-demo-")
+        {"pkgs/top-level/all-packages.nix\npkgs/top-level/all-packages.nix\nnixos/modules/services/networking/firewall.nix\nnixos/modules/services/networking/firewall.nix\nnixos/modules/services/networking/firewall.nix\n", 0}
+
       command, args, _opts ->
         flunk("unexpected command: #{inspect({command, args})}")
     end)
@@ -65,6 +69,10 @@ defmodule Roundtable.PublicRepoDemoTest do
     assert Enum.any?(snapshot.source.refs, &(&1.ref == "refs/heads/master"))
     assert snapshot.source.history_summary.sampled_commit_count == 40
     assert snapshot.source.history_summary.contributor_count == 3
+    assert Enum.at(snapshot.source.history_summary.path_hotspots, 0) == %{
+             path: "nixos/modules/services/networking/firewall.nix",
+             mentions: 3
+           }
     assert snapshot.source.history_summary.derived_signals.top_author_share == 1.0
     assert snapshot.source.history_summary.derived_signals.contributor_concentration == "high"
     assert snapshot.dashboard.stress.headline =~ "Prediction error"
@@ -87,6 +95,7 @@ defmodule Roundtable.PublicRepoDemoTest do
     assert get_in(payload, ["demo", "id"]) == "nixpkgs"
     assert get_in(payload, ["source", "tracked_ref"]) == "refs/heads/master"
     assert get_in(payload, ["source", "history_summary", "sampled_commit_count"]) == 40
+    assert get_in(payload, ["source", "history_summary", "path_hotspots"]) != []
     assert get_in(payload, ["dashboard", "stress", "headline"]) =~ "Prediction error"
   end
 end

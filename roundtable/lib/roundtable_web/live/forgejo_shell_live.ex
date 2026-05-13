@@ -250,6 +250,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 0.75rem;">
           <.contributors_table contributors={@demo.source.history_summary.top_contributors} />
           <.commit_log_table commits={@demo.source.history_summary.recent_commits} />
+          <.path_hotspots_table hotspots={@demo.source.history_summary.path_hotspots} />
         </div>
       </section>
 
@@ -612,6 +613,28 @@ defmodule RoundtableWeb.ForgejoShellLive do
             <td style="padding: 0.5rem 0; color: #8b949e;">{format_commit_day(commit.committed_at_unix)}</td>
             <td style="padding: 0.5rem 0; color: #f0f6fc;">{commit.author}</td>
             <td style="padding: 0.5rem 0; color: #8b949e;"><code>{short_sha(commit.sha)}</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    """
+  end
+
+  defp path_hotspots_table(assigns) do
+    ~H"""
+    <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;">
+      <h3 style="margin: 0 0 0.75rem; color: #f0f6fc; font-size: 0.95rem;">Sampled path hotspots</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+        <thead>
+          <tr style="text-align: left; color: #58a6ff; border-bottom: 1px solid #30363d;">
+            <th style="padding: 0.45rem 0;">Path</th>
+            <th style="padding: 0.45rem 0; text-align: right;">Mentions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr :for={hotspot <- @hotspots} style="border-bottom: 1px solid #21262d;">
+            <td style="padding: 0.5rem 0; color: #f0f6fc;"><code>{hotspot.path}</code></td>
+            <td style="padding: 0.5rem 0; color: #f0f6fc; text-align: right;">{hotspot.mentions}</td>
           </tr>
         </tbody>
       </table>
