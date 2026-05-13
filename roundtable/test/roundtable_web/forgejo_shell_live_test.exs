@@ -29,6 +29,8 @@ defmodule RoundtableWeb.ForgejoShellLiveTest do
     assert html =~ "Recommended first view"
     assert html =~ "Recommended first click"
     assert html =~ "Curated Investor Demos"
+    assert html =~ "/forgejo-shell?demo=forgejo"
+    assert html =~ "/forgejo-shell?demo=kubernetes"
     assert html =~ "forgejo/forgejo"
     assert html =~ "Investor Dashboard"
     assert html =~ "Maintainer concentration"

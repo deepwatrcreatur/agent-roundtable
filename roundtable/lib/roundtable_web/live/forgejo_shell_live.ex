@@ -122,11 +122,9 @@ defmodule RoundtableWeb.ForgejoShellLive do
       <section style="margin-bottom: 2rem;">
         <h2 style={section_heading_style()}>Curated Investor Demos</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
-          <button
+          <a
             :for={demo <- @demo_catalog}
-            type="button"
-            phx-click="select_demo_repo"
-            phx-value-demo={demo.id}
+            href={"/forgejo-shell?demo=#{demo.id}"}
             id={"demo-#{demo.id}"}
             style={demo_card_style(demo.id == @selected_demo)}
           >
@@ -136,7 +134,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
             <span style="display: block; color: #f0f6fc; font-weight: 600;">{demo.name}</span>
             <span style="display: block; color: #58a6ff; font-size: 0.78rem; margin-top: 0.35rem;">{demo.source_label}</span>
             <span style="display: block; color: #8b949e; font-size: 0.82rem; margin-top: 0.55rem; line-height: 1.45;">{demo.teaser}</span>
-          </button>
+          </a>
         </div>
       </section>
 
@@ -691,11 +689,11 @@ defmodule RoundtableWeb.ForgejoShellLive do
   defp derived_history_entry(_), do: nil
 
   defp demo_card_style(true) do
-    "text-align: left; background: #1f2937; border: 1px solid #58a6ff; border-radius: 8px; padding: 1rem;"
+    "display: block; text-decoration: none; text-align: left; background: #1f2937; border: 1px solid #58a6ff; border-radius: 8px; padding: 1rem;"
   end
 
   defp demo_card_style(false) do
-    "text-align: left; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;"
+    "display: block; text-decoration: none; text-align: left; background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem;"
   end
 
   defp owner_label(:forgejo), do: "Forgejo"
