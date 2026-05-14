@@ -263,6 +263,7 @@ in
           "HOME=${stateHome}"
           "XDG_STATE_HOME=${stateHome}"
           "MIX_ENV=prod"
+          "ROUNDTABLE_WEB=false"
           "ROUNDTABLE_STATE_DIR=${stateHome}/state"
           "ROUNDTABLE_PUBLIC_REPO_CACHE_DIR=${stateHome}/state/public-repo-cache"
         ];
