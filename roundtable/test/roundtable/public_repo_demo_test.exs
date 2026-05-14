@@ -197,6 +197,20 @@ defmodule Roundtable.PublicRepoDemoTest do
     end
   end
 
+  test "prewarm uses cached snapshot path for selected demos" do
+    cache_root = Path.join(System.tmp_dir!(), "roundtable-public-cache-#{System.unique_integer()}")
+
+    assert :ok =
+             PublicRepoDemo.prewarm(["nixpkgs"],
+               runner: FakeCommandRunner,
+               cache_root: cache_root,
+               ttl_ms: 60_000,
+               timeout_ms: 100
+             )
+
+    assert File.exists?(Path.join(cache_root, "nixpkgs.term"))
+  end
+
   defp restore_env(name, nil), do: System.delete_env(name)
   defp restore_env(name, value), do: System.put_env(name, value)
 end

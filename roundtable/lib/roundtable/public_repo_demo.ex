@@ -97,6 +97,29 @@ defmodule Roundtable.PublicRepoDemo do
     end
   end
 
+  @spec prewarm([String.t()], options()) :: :ok
+  def prewarm(demo_ids, opts \\ []) when is_list(demo_ids) do
+    selected_demo_ids =
+      case demo_ids do
+        [] -> Enum.map(InvestorDemo.catalog(), & &1.id)
+        ids -> ids
+      end
+
+    Enum.each(selected_demo_ids, fn demo_id ->
+      case cached_snapshot(demo_id, opts) do
+        {:ok, snapshot} ->
+          IO.puts(
+            "warmed #{demo_id} -> #{snapshot.source.slug} (#{snapshot.source.history_summary.sampled_commit_count} sampled commits)"
+          )
+
+        {:error, reason} ->
+          IO.puts("failed to warm #{demo_id}: #{inspect(reason)}")
+      end
+    end)
+
+    :ok
+  end
+
   defp source_snapshot(demo, opts) do
     runner = Keyword.fetch!(opts, :runner)
     sample_depth = Keyword.get(opts, :sample_depth, 40)

@@ -18,16 +18,6 @@ defmodule Mix.Tasks.Roundtable.PrewarmPublicRepoCache do
         ids -> ids
       end
 
-    Enum.each(demo_ids, fn demo_id ->
-      case PublicRepoDemo.cached_snapshot(demo_id, opts) do
-        {:ok, snapshot} ->
-          Mix.shell().info(
-            "warmed #{demo_id} -> #{snapshot.source.slug} (#{snapshot.source.history_summary.sampled_commit_count} sampled commits)"
-          )
-
-        {:error, reason} ->
-          Mix.shell().error("failed to warm #{demo_id}: #{inspect(reason)}")
-      end
-    end)
+    PublicRepoDemo.prewarm(demo_ids, opts)
   end
 end
