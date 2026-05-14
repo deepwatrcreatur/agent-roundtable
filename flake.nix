@@ -88,7 +88,7 @@
 
           "roundtable-prewarm-public-repo-cache" = mkMixWrapper {
             name = "roundtable-prewarm-public-repo-cache";
-            script = ''exec mix roundtable.prewarm_public_repo_cache "$@"'';
+            script = ''exec mix run -e 'Mix.Tasks.Roundtable.PrewarmPublicRepoCache.run(System.argv())' -- "$@"'';
           };
         };
 
