@@ -7,8 +7,6 @@ defmodule Mix.Tasks.Roundtable.PrewarmPublicRepoCache do
 
   @impl true
   def run(args) do
-    Mix.Task.run("app.start")
-
     {opts, positional, _invalid} =
       OptionParser.parse(args,
         strict: [base_url: :string, timeout_ms: :integer, ttl_ms: :integer, cache_root: :string]
