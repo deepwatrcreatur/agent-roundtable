@@ -45,7 +45,7 @@
                 deps_path="$state_home/deps"
                 build_root="$state_home/build"
                 runtime_src="$state_home/src"
-                source_rev='${self.rev or self.dirtyRev or "dirty"}'
+                source_rev='${roundtableSrc}'
                 source_marker="$runtime_src/.roundtable-source-rev"
 
                 mkdir -p "$state_home" "$mix_home" "$deps_path" "$build_root"
