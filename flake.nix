@@ -109,7 +109,7 @@
             name = "roundtable-prewarm-public-repo-cache";
             script = ''
               export ROUNDTABLE_WEB="''${ROUNDTABLE_WEB:-false}"
-              exec mix run --no-start -e 'Roundtable.PublicRepoDemo.prewarm(System.argv(), [])' -- "$@"
+              exec mix run --no-start -e 'Mix.Tasks.Roundtable.PrewarmPublicRepoCache.run(System.argv())' -- "$@"
             '';
           };
         };
