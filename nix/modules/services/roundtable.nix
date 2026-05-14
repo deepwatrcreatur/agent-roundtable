@@ -252,6 +252,13 @@ in
         Type = "oneshot";
         WorkingDirectory = stateHome;
         StateDirectory = cfg.stateDir;
+        LoadCredential =
+          credential "secret_key_base" cfg.secretKeyBaseFile
+          ++ credential "github_token" cfg.githubTokenFile
+          ++ credential "anthropic_api_key" cfg.anthropicApiKeyFile
+          ++ credential "openai_api_key" cfg.openaiApiKeyFile
+          ++ credential "gemini_api_key" cfg.geminiApiKeyFile
+          ++ credential "deepseek_api_key" cfg.deepseekApiKeyFile;
         Environment = [
           "HOME=${stateHome}"
           "XDG_STATE_HOME=${stateHome}"
@@ -262,6 +269,23 @@ in
         ExecStart = pkgs.writeShellScript "roundtable-prewarm-public-repo-cache-start" ''
           set -eu
           mkdir -p "$HOME/state" "$HOME/state/public-repo-cache"
+          credential_dir="''${CREDENTIALS_DIRECTORY:-}"
+
+          if [ -n "$credential_dir" ] && [ -f "$credential_dir/secret_key_base" ]; then
+            export SECRET_KEY_BASE="$(cat "$credential_dir/secret_key_base")"
+          elif [ -f "$HOME/secret_key_base" ]; then
+            export SECRET_KEY_BASE="$(cat "$HOME/secret_key_base")"
+          else
+            echo "SECRET_KEY_BASE unavailable for prewarm" >&2
+            exit 1
+          fi
+
+          ${exportOptionalCredential "GH_TOKEN" "github_token"}
+          ${exportOptionalCredential "ANTHROPIC_API_KEY" "anthropic_api_key"}
+          ${exportOptionalCredential "OPENAI_API_KEY" "openai_api_key"}
+          ${exportOptionalCredential "GEMINI_API_KEY" "gemini_api_key"}
+          ${exportOptionalCredential "DEEPSEEK_API_KEY" "deepseek_api_key"}
+
           exec ${cfg.prewarmPackage}/bin/roundtable-prewarm-public-repo-cache \
             --timeout-ms ${toString cfg.prewarmPublicRepoCache.timeoutMs} \
             ${lib.escapeShellArgs cfg.prewarmPublicRepoCache.demos}
