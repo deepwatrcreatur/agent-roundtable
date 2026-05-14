@@ -41,13 +41,15 @@
                     state_home="$PWD/.roundtable-state"
                   fi
                 fi
-                mix_home="$state_home/mix"
-                deps_path="$state_home/deps"
-                build_root="$state_home/build"
-                runtime_src="$state_home/src"
+                runtime_namespace="''${ROUNDTABLE_RUNTIME_NAMESPACE:-${name}}"
+                runtime_root="$state_home/runtime/$runtime_namespace"
+                mix_home="$runtime_root/mix"
+                deps_path="$runtime_root/deps"
+                build_root="$runtime_root/build"
+                runtime_src="$runtime_root/src"
                 source_rev='${roundtableSrc}'
                 source_marker="$runtime_src/.roundtable-source-rev"
-                setup_lock="$state_home/.setup-lock"
+                setup_lock="$runtime_root/.setup-lock"
                 runtime_tmp=""
 
                 cleanup() {
@@ -59,14 +61,14 @@
 
                 trap cleanup EXIT
 
-                mkdir -p "$state_home" "$mix_home" "$deps_path" "$build_root"
+                mkdir -p "$state_home" "$runtime_root" "$mix_home" "$deps_path" "$build_root"
 
                 while ! mkdir "$setup_lock" 2>/dev/null; do
                   sleep 1
                 done
 
                 if [ ! -d "$runtime_src" ] || [ ! -f "$source_marker" ] || [ "$(cat "$source_marker")" != "$source_rev" ]; then
-                  runtime_tmp="$(mktemp -d "$state_home/src.tmp.XXXXXX")"
+                  runtime_tmp="$(mktemp -d "$runtime_root/src.tmp.XXXXXX")"
                   cp -R ${roundtableSrc}/. "$runtime_tmp"/
                   chmod -R u+w "$runtime_tmp"
                   printf '%s\n' "$source_rev" > "$runtime_tmp/.roundtable-source-rev"
