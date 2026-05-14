@@ -2,6 +2,8 @@
 
 Status: `done`
 Suggested branch: `fix/standalone-vaglio-service-hardening`
+Deployment target: `vaglio`
+Deployment coordination: `exclusive single-writer host lock while live deploy work is active`
 
 ## Goal
 

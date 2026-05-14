@@ -47,15 +47,32 @@
                 runtime_src="$state_home/src"
                 source_rev='${roundtableSrc}'
                 source_marker="$runtime_src/.roundtable-source-rev"
+                setup_lock="$state_home/.setup-lock"
+                runtime_tmp=""
+
+                cleanup() {
+                  if [ -n "$runtime_tmp" ] && [ -d "$runtime_tmp" ]; then
+                    rm -rf "$runtime_tmp"
+                  fi
+                  rmdir "$setup_lock" 2>/dev/null || true
+                }
+
+                trap cleanup EXIT
 
                 mkdir -p "$state_home" "$mix_home" "$deps_path" "$build_root"
 
+                while ! mkdir "$setup_lock" 2>/dev/null; do
+                  sleep 1
+                done
+
                 if [ ! -d "$runtime_src" ] || [ ! -f "$source_marker" ] || [ "$(cat "$source_marker")" != "$source_rev" ]; then
+                  runtime_tmp="$(mktemp -d "$state_home/src.tmp.XXXXXX")"
+                  cp -R ${roundtableSrc}/. "$runtime_tmp"/
+                  chmod -R u+w "$runtime_tmp"
+                  printf '%s\n' "$source_rev" > "$runtime_tmp/.roundtable-source-rev"
                   rm -rf "$runtime_src"
-                  mkdir -p "$runtime_src"
-                  cp -R ${roundtableSrc}/. "$runtime_src"/
-                  chmod -R u+w "$runtime_src"
-                  printf '%s\n' "$source_rev" > "$source_marker"
+                  mv "$runtime_tmp" "$runtime_src"
+                  runtime_tmp=""
                 fi
 
                 export MIX_ENV="''${MIX_ENV:-prod}"

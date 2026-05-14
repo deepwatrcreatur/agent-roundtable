@@ -4,6 +4,17 @@ Each file is one unit of work. Claim a `ready` item by changing its status to
 `in-progress` and committing before starting. Do not start a `blocked` item.
 Do not work on an item already marked `in-progress` by another agent.
 
+## Live Host Coordination
+
+- Treat each live deployment target as a single-writer resource.
+- If an item deploys to `vaglio` or changes its live services, record that in
+  the item file and treat that host as exclusively owned until the deploy step
+  is finished or explicitly handed off.
+- Do not run parallel deploys, rebuilds, `systemctl restart`, or cache-warming
+  jobs against the same host from different agent sessions.
+- If a host-scoped item is already `in-progress`, assume its deployment target
+  is locked even if the code changes look unrelated.
+
 ## Status model
 
 - `ready` — can start now
