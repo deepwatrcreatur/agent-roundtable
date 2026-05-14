@@ -14,6 +14,9 @@ Do not work on an item already marked `in-progress` by another agent.
   jobs against the same host from different agent sessions.
 - If a host-scoped item is already `in-progress`, assume its deployment target
   is locked even if the code changes look unrelated.
+- This lock applies to live host actions, not to repo work in general.
+  Parallel branch work, including unrelated areas such as DBus integration, is
+  still encouraged when it does not operate on the same deployment target.
 
 ## Status model
 
