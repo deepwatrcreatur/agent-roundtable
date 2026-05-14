@@ -85,6 +85,11 @@
             name = "roundtable-web";
             script = ''exec mix run --no-halt'';
           };
+
+          "roundtable-prewarm-public-repo-cache" = mkMixWrapper {
+            name = "roundtable-prewarm-public-repo-cache";
+            script = ''exec mix roundtable.prewarm_public_repo_cache "$@"'';
+          };
         };
 
       nixosModuleSet = {
@@ -106,6 +111,7 @@
             default = pkgs.roundtable;
             roundtable = pkgs.roundtable;
             "roundtable-web" = pkgs."roundtable-web";
+            "roundtable-prewarm-public-repo-cache" = pkgs."roundtable-prewarm-public-repo-cache";
           };
 
           apps = {
@@ -117,6 +123,11 @@
             "roundtable-web" = {
               type = "app";
               program = "${pkgs."roundtable-web"}/bin/roundtable-web";
+            };
+
+            "roundtable-prewarm-public-repo-cache" = {
+              type = "app";
+              program = "${pkgs."roundtable-prewarm-public-repo-cache"}/bin/roundtable-prewarm-public-repo-cache";
             };
           };
 

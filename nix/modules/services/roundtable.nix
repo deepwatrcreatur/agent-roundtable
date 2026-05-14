@@ -35,6 +35,12 @@ in
       description = "CLI package installed for local maintainer/TUI workflows.";
     };
 
+    prewarmPackage = lib.mkOption {
+      type = lib.types.package;
+      default = pkgs."roundtable-prewarm-public-repo-cache";
+      description = "Package providing the public-repo cache prewarm command.";
+    };
+
     port = lib.mkOption {
       type = lib.types.port;
       default = 4000;
@@ -89,6 +95,26 @@ in
       description = "Additional packages to install on the host for local workflows.";
     };
 
+    prewarmPublicRepoCache = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Warm cached public demo snapshots after the roundtable service starts.";
+      };
+
+      demos = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ "forgejo" "kubernetes" "nixpkgs" ];
+        description = "Demo ids to prewarm into the persistent public-repo cache.";
+      };
+
+      timeoutMs = lib.mkOption {
+        type = lib.types.int;
+        default = 30000;
+        description = "Per-demo timeout used by the public repo prewarm command.";
+      };
+    };
+
     secretKeyBaseFile = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = null;
@@ -134,6 +160,7 @@ in
         [
           cfg.cliPackage
           cfg.package
+          cfg.prewarmPackage
           pkgs.git
           pkgs.gh
           pkgs.dolt
@@ -209,6 +236,36 @@ in
         '';
         Restart = "on-failure";
         RestartSec = "5s";
+      };
+    };
+
+    systemd.services.roundtable-prewarm-public-repo-cache = lib.mkIf cfg.prewarmPublicRepoCache.enable {
+      description = "Warm cached public-repo snapshots for the roundtable demo";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "roundtable.service" ];
+      wants = [ "roundtable.service" ];
+      path = with pkgs; [
+        coreutils
+      ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        WorkingDirectory = stateHome;
+        StateDirectory = cfg.stateDir;
+        Environment = [
+          "HOME=${stateHome}"
+          "XDG_STATE_HOME=${stateHome}"
+          "MIX_ENV=prod"
+          "ROUNDTABLE_STATE_DIR=${stateHome}/state"
+          "ROUNDTABLE_PUBLIC_REPO_CACHE_DIR=${stateHome}/state/public-repo-cache"
+        ];
+        ExecStart = pkgs.writeShellScript "roundtable-prewarm-public-repo-cache-start" ''
+          set -eu
+          mkdir -p "$HOME/state" "$HOME/state/public-repo-cache"
+          exec ${cfg.prewarmPackage}/bin/roundtable-prewarm-public-repo-cache \
+            --timeout-ms ${toString cfg.prewarmPublicRepoCache.timeoutMs} \
+            ${lib.escapeShellArgs cfg.prewarmPublicRepoCache.demos}
+        '';
       };
     };
   };
