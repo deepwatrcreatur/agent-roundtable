@@ -7,6 +7,12 @@ defmodule Mix.Tasks.Roundtable.PrewarmPublicRepoCache do
 
   @impl true
   def run(args) do
+    {demo_ids, opts} = parse_args(args)
+    PublicRepoDemo.prewarm(demo_ids, opts)
+  end
+
+  @doc false
+  def parse_args(args) do
     {opts, positional, _invalid} =
       OptionParser.parse(args,
         strict: [base_url: :string, timeout_ms: :integer, ttl_ms: :integer, cache_root: :string]
@@ -18,6 +24,6 @@ defmodule Mix.Tasks.Roundtable.PrewarmPublicRepoCache do
         ids -> ids
       end
 
-    PublicRepoDemo.prewarm(demo_ids, opts)
+    {demo_ids, opts}
   end
 end
