@@ -50,6 +50,7 @@
                 source_rev='${roundtableSrc}'
                 source_marker="$runtime_src/.roundtable-source-rev"
                 deps_marker="$runtime_root/.roundtable-deps-rev"
+                toolchain_marker="$runtime_root/.roundtable-toolchain-ready"
                 setup_lock="$runtime_root/.setup-lock"
                 runtime_tmp=""
                 refresh_runtime=0
@@ -91,8 +92,11 @@
 
                 cd "$runtime_src"
 
-                mix local.hex --force >/dev/null 2>&1 || true
-                mix local.rebar --force >/dev/null 2>&1 || true
+                if [ ! -f "$toolchain_marker" ]; then
+                  mix local.hex --force >/dev/null 2>&1 || true
+                  mix local.rebar --force >/dev/null 2>&1 || true
+                  touch "$toolchain_marker"
+                fi
                 if [ "$refresh_runtime" -eq 1 ] || [ ! -f "$deps_marker" ] || [ "$(cat "$deps_marker")" != "$source_rev" ]; then
                   mix deps.get >/dev/null
                   printf '%s\n' "$source_rev" > "$deps_marker"
