@@ -49,8 +49,10 @@
                 runtime_src="$runtime_root/src"
                 source_rev='${roundtableSrc}'
                 source_marker="$runtime_src/.roundtable-source-rev"
+                deps_marker="$runtime_root/.roundtable-deps-rev"
                 setup_lock="$runtime_root/.setup-lock"
                 runtime_tmp=""
+                refresh_runtime=0
 
                 cleanup() {
                   if [ -n "$runtime_tmp" ] && [ -d "$runtime_tmp" ]; then
@@ -72,9 +74,12 @@
                   cp -R ${roundtableSrc}/. "$runtime_tmp"/
                   chmod -R u+w "$runtime_tmp"
                   printf '%s\n' "$source_rev" > "$runtime_tmp/.roundtable-source-rev"
+                  rm -rf "$deps_path" "$build_root"
+                  mkdir -p "$deps_path" "$build_root"
                   rm -rf "$runtime_src"
                   mv "$runtime_tmp" "$runtime_src"
                   runtime_tmp=""
+                  refresh_runtime=1
                 fi
 
                 export MIX_ENV="''${MIX_ENV:-prod}"
@@ -88,7 +93,10 @@
 
                 mix local.hex --force >/dev/null 2>&1 || true
                 mix local.rebar --force >/dev/null 2>&1 || true
-                mix deps.get >/dev/null
+                if [ "$refresh_runtime" -eq 1 ] || [ ! -f "$deps_marker" ] || [ "$(cat "$deps_marker")" != "$source_rev" ]; then
+                  mix deps.get >/dev/null
+                  printf '%s\n' "$source_rev" > "$deps_marker"
+                fi
 
                 ${script}
               '';
