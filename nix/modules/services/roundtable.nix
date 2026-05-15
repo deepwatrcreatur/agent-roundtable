@@ -201,6 +201,7 @@ in
             "XDG_STATE_HOME=${stateHome}"
             "MIX_ENV=prod"
             "ROUNDTABLE_WEB=true"
+            "ROUNDTABLE_RUNTIME_NAMESPACE=roundtable-web"
             "ROUNDTABLE_STATE_DIR=${stateHome}/state"
             "PORT=${toString cfg.port}"
             "PHX_HOST=${cfg.phoenixHost}"
@@ -264,6 +265,7 @@ in
           "XDG_STATE_HOME=${stateHome}"
           "MIX_ENV=prod"
           "ROUNDTABLE_WEB=false"
+          "ROUNDTABLE_RUNTIME_NAMESPACE=roundtable-prewarm-public-repo-cache"
           "ROUNDTABLE_STATE_DIR=${stateHome}/state"
           "ROUNDTABLE_PUBLIC_REPO_CACHE_DIR=${stateHome}/state/public-repo-cache"
         ];
