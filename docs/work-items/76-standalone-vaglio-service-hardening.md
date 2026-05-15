@@ -74,3 +74,7 @@ Observed on the real `vaglio` host on May 10, 2026:
     such as rebuilds, restarts, or runtime warmup against the running host
   - parallel branch work and unrelated code changes should not be blocked by that
     live-host mutation boundary
+  - before a live deploy, run `./scripts/vaglio-readonly-preflight.sh` or
+    `nix run .#vaglio-readonly-preflight`
+  - after a live deploy, run `./scripts/vaglio-post-deploy-smoke.sh` or
+    `nix run .#vaglio-post-deploy-smoke`
