@@ -97,6 +97,12 @@ After a live deploy, run the smoke check:
 ./scripts/vaglio-post-deploy-smoke.sh
 ```
 
+Helper script notes live in:
+
+```bash
+./scripts/README.md
+```
+
 That profile gives you:
 
 - the Phoenix / LiveView web service on port `4000`
