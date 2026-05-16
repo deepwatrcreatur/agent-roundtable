@@ -91,6 +91,12 @@ If another agent is already rebuilding or restarting services on the same CT,
 stop and hand off. Parallel branch work is fine; overlapping live deploy actions
 against the same host are not.
 
+After a live deploy, run the smoke check:
+
+```bash
+./scripts/vaglio-post-deploy-smoke.sh
+```
+
 That profile gives you:
 
 - the Phoenix / LiveView web service on port `4000`
