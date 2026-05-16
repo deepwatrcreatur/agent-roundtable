@@ -81,6 +81,16 @@ From this repository root:
 sudo nixos-rebuild switch --flake .#vaglio
 ```
 
+Before any live deploy on a shared `vaglio` host, run the read-only preflight:
+
+```bash
+./scripts/vaglio-readonly-preflight.sh
+```
+
+If another agent is already rebuilding or restarting services on the same CT,
+stop and hand off. Parallel branch work is fine; overlapping live deploy actions
+against the same host are not.
+
 That profile gives you:
 
 - the Phoenix / LiveView web service on port `4000`
