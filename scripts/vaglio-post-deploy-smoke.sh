@@ -1,9 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  cat <<'EOF'
+Usage: ./scripts/vaglio-post-deploy-smoke.sh [proxmox_host] [router_host] [ctid]
+
+Read-only smoke check to run after a Vaglio deploy.
+
+Defaults:
+  proxmox_host = root@10.10.11.55
+  router_host  = root@10.10.10.1
+  ctid         = 104
+EOF
+  exit 0
+fi
+
 proxmox_host="${1:-root@10.10.11.55}"
 router_host="${2:-root@10.10.10.1}"
 ctid="${3:-104}"
+
+printf '=== vaglio post-deploy smoke ===\n'
+printf 'proxmox host: %s\nrouter host: %s\nctid: %s\n\n' "$proxmox_host" "$router_host" "$ctid"
 
 ssh "$proxmox_host" "
   pct status $ctid
