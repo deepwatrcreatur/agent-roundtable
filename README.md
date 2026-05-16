@@ -85,6 +85,7 @@ Before any live deploy on a shared `vaglio` host, run the read-only preflight:
 
 ```bash
 ./scripts/vaglio-readonly-preflight.sh
+nix run .#vaglio-readonly-preflight
 ```
 
 If another agent is already rebuilding or restarting services on the same CT,
@@ -95,6 +96,7 @@ After a live deploy, run the smoke check:
 
 ```bash
 ./scripts/vaglio-post-deploy-smoke.sh
+nix run .#vaglio-post-deploy-smoke
 ```
 
 Helper script notes live in:

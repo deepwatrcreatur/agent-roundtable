@@ -15,6 +15,20 @@
             name = "roundtable-src";
           };
 
+          mkHelperScript = { name, file }:
+            final.writeShellApplication {
+              inherit name;
+              excludeShellChecks = [ "SC2029" ];
+              runtimeInputs = with final; [
+                bash
+                coreutils
+                openssh
+                ripgrep
+                curl
+              ];
+              text = builtins.readFile file;
+            };
+
           mkMixWrapper = { name, script }:
             final.writeShellApplication {
               inherit name;
@@ -124,6 +138,16 @@
               exec mix run --no-start -e 'Mix.Tasks.Roundtable.PrewarmPublicRepoCache.run(System.argv())' -- "$@"
             '';
           };
+
+          "vaglio-readonly-preflight" = mkHelperScript {
+            name = "vaglio-readonly-preflight";
+            file = ./scripts/vaglio-readonly-preflight.sh;
+          };
+
+          "vaglio-post-deploy-smoke" = mkHelperScript {
+            name = "vaglio-post-deploy-smoke";
+            file = ./scripts/vaglio-post-deploy-smoke.sh;
+          };
         };
 
       nixosModuleSet = {
@@ -146,6 +170,8 @@
             roundtable = pkgs.roundtable;
             "roundtable-web" = pkgs."roundtable-web";
             "roundtable-prewarm-public-repo-cache" = pkgs."roundtable-prewarm-public-repo-cache";
+            "vaglio-readonly-preflight" = pkgs."vaglio-readonly-preflight";
+            "vaglio-post-deploy-smoke" = pkgs."vaglio-post-deploy-smoke";
           };
 
           apps = {
@@ -162,6 +188,16 @@
             "roundtable-prewarm-public-repo-cache" = {
               type = "app";
               program = "${pkgs."roundtable-prewarm-public-repo-cache"}/bin/roundtable-prewarm-public-repo-cache";
+            };
+
+            "vaglio-readonly-preflight" = {
+              type = "app";
+              program = "${pkgs."vaglio-readonly-preflight"}/bin/vaglio-readonly-preflight";
+            };
+
+            "vaglio-post-deploy-smoke" = {
+              type = "app";
+              program = "${pkgs."vaglio-post-deploy-smoke"}/bin/vaglio-post-deploy-smoke";
             };
           };
 
