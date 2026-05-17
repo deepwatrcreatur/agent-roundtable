@@ -68,12 +68,15 @@
                 setup_lock="$runtime_root/.setup-lock"
                 runtime_tmp=""
                 refresh_runtime=0
+                lock_held=0
 
                 cleanup() {
                   if [ -n "$runtime_tmp" ] && [ -d "$runtime_tmp" ]; then
                     rm -rf "$runtime_tmp"
                   fi
-                  rmdir "$setup_lock" 2>/dev/null || true
+                  if [ "$lock_held" -eq 1 ]; then
+                    rmdir "$setup_lock" 2>/dev/null || true
+                  fi
                 }
 
                 trap cleanup EXIT
@@ -83,6 +86,7 @@
                 while ! mkdir "$setup_lock" 2>/dev/null; do
                   sleep 1
                 done
+                lock_held=1
 
                 if [ ! -d "$runtime_src" ] || [ ! -f "$source_marker" ] || [ "$(cat "$source_marker")" != "$source_rev" ]; then
                   runtime_tmp="$(mktemp -d "$runtime_root/src.tmp.XXXXXX")"
@@ -115,6 +119,9 @@
                   mix deps.get >/dev/null
                   printf '%s\n' "$source_rev" > "$deps_marker"
                 fi
+
+                rmdir "$setup_lock"
+                lock_held=0
 
                 ${script}
               '';
