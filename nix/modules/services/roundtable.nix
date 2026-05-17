@@ -252,7 +252,6 @@ in
       serviceConfig = {
         Type = "oneshot";
         WorkingDirectory = stateHome;
-        StateDirectory = cfg.stateDir;
         LoadCredential =
           credential "secret_key_base" cfg.secretKeyBaseFile
           ++ credential "github_token" cfg.githubTokenFile
