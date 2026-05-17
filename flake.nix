@@ -201,6 +201,16 @@
             };
           };
 
+          checks = {
+            "vaglio-helper-scripts" = pkgs.symlinkJoin {
+              name = "vaglio-helper-scripts";
+              paths = [
+                pkgs."vaglio-readonly-preflight"
+                pkgs."vaglio-post-deploy-smoke"
+              ];
+            };
+          };
+
           devShells.default = pkgs.mkShell {
             buildInputs = with pkgs; [
               elixir
