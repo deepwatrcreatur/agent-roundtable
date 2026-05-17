@@ -163,6 +163,14 @@
             inherit system;
             overlays = [ overlay ];
           };
+
+          mkApp = { program, description }: {
+            type = "app";
+            inherit program;
+            meta = {
+              inherit description;
+            };
+          };
         in
         {
           packages = {
@@ -175,29 +183,29 @@
           };
 
           apps = {
-            default = {
-              type = "app";
+            default = mkApp {
               program = "${pkgs.roundtable}/bin/roundtable";
+              description = "Roundtable CLI";
             };
 
-            "roundtable-web" = {
-              type = "app";
+            "roundtable-web" = mkApp {
               program = "${pkgs."roundtable-web"}/bin/roundtable-web";
+              description = "Roundtable web service wrapper";
             };
 
-            "roundtable-prewarm-public-repo-cache" = {
-              type = "app";
+            "roundtable-prewarm-public-repo-cache" = mkApp {
               program = "${pkgs."roundtable-prewarm-public-repo-cache"}/bin/roundtable-prewarm-public-repo-cache";
+              description = "Roundtable public repo cache prewarm entrypoint";
             };
 
-            "vaglio-readonly-preflight" = {
-              type = "app";
+            "vaglio-readonly-preflight" = mkApp {
               program = "${pkgs."vaglio-readonly-preflight"}/bin/vaglio-readonly-preflight";
+              description = "Read-only Vaglio deploy coordination preflight";
             };
 
-            "vaglio-post-deploy-smoke" = {
-              type = "app";
+            "vaglio-post-deploy-smoke" = mkApp {
               program = "${pkgs."vaglio-post-deploy-smoke"}/bin/vaglio-post-deploy-smoke";
+              description = "Read-only Vaglio post-deploy smoke check";
             };
           };
 
