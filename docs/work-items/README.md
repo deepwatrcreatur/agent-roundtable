@@ -11,7 +11,26 @@ Do not work on an item already marked `in-progress` by another agent.
 - `blocked` — depends on another item; listed in the file
 - `done` — merged; kept briefly for outcome notes
 
+## Concurrency rule
+
+- Parallel branch work remains encouraged.
+- Read-only inspection of shared resources remains allowed unless a specific
+  target is unusually fragile or rate-limited.
+- Single-writer discipline applies only to **mutating actions on the same live
+  resource** such as deploys, rebuilds, restarts, migrations, failover drills,
+  or cache-warming against a shared target.
+- Do not treat a live-resource lock as a general ban on all work related to that
+  repo or host.
+
 ## Queue
+
+84. [`82-hosted-analysis-provider-contract.md`](./82-hosted-analysis-provider-contract.md) — `ready` — `[product]` Hosted analysis provider contract
+85. [`83-hosted-analysis-release-gate.md`](./83-hosted-analysis-release-gate.md) — `ready` — `[integrity]` Hosted analysis release gate
+86. [`84-release-event-and-publish-authority-separation.md`](./84-release-event-and-publish-authority-separation.md) — `ready` — `[integrity]` Release event and publish authority separation
+87. [`85-package-quarantine-and-revocation-graph.md`](./85-package-quarantine-and-revocation-graph.md) — `ready` — `[security]` Package quarantine and revocation graph
+88. [`86-untrusted-contribution-trust-tiers.md`](./86-untrusted-contribution-trust-tiers.md) — `ready` — `[security]` Untrusted contribution trust tiers
+89. [`87-safe-default-cache-trust-boundaries.md`](./87-safe-default-cache-trust-boundaries.md) — `ready` — `[security]` Safe-by-default cache trust boundaries
+90. [`88-zero-config-trusted-publishing-ux.md`](./88-zero-config-trusted-publishing-ux.md) — `ready` — `[product]` Zero-config trusted publishing UX
 
 ### Foundation (do first, in order)
 
@@ -125,4 +144,18 @@ Do not work on an item already marked `in-progress` by another agent.
 
 63. [`71-forgejo-shell-shareable-web-entry.md`](./71-forgejo-shell-shareable-web-entry.md) — `done` — **Codex** — `[product]` Forgejo shell shareable web entry
 64. [`72-forgejo-shell-public-demo-polish.md`](./72-forgejo-shell-public-demo-polish.md) — `done` — **Codex** — `[market]` Forgejo shell public demo polish
-65. [`76-standalone-vaglio-service-hardening.md`](./76-standalone-vaglio-service-hardening.md) — `in-progress` — `[hosting]` Standalone Vaglio service hardening
+65. [`76-standalone-vaglio-service-hardening.md`](./76-standalone-vaglio-service-hardening.md) — `done` — `[hosting]` Standalone Vaglio service hardening
+
+### Prediction Calibration & Resource Coordination (Rounds 87-88)
+
+66. [`77-jj-prediction-calibration-protocol.md`](./77-jj-prediction-calibration-protocol.md) — `ready` — `[integrity]` `jj` prediction metadata and outcome-linked calibration
+67. [`78-resource-contention-and-single-writer-policy.md`](./78-resource-contention-and-single-writer-policy.md) — `ready` — `[structural]` Resource classes and live mutation single-writer policy
+
+### Canonical Markdown + Derived Structure (Round 89)
+
+68. [`79-derived-round-index-and-resource-claims.md`](./79-derived-round-index-and-resource-claims.md) — `ready` — `[structural]` Derived round metadata index and board resource-claim fields
+
+### Sourcegraph Complementarity (Round 90)
+
+69. [`80-sourcegraph-lineage-integration-briefs.md`](./80-sourcegraph-lineage-integration-briefs.md) — `done` — `[product]` Sourcegraph MCP/API integration for lineage briefs and outcome links
+70. [`81-sourcegraph-thin-adapter-implementation.md`](./81-sourcegraph-thin-adapter-implementation.md) — `ready` — `[tools]` First thin Sourcegraph adapter and normalized evidence flow

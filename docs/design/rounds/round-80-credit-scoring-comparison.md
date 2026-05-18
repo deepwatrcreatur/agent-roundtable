@@ -1,5 +1,6 @@
 ## Round 80 — Credit Scoring as Comparison, Precedent, or Warning Sign
 
+**Tags:** governance, epistemic-integrity, social
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, `opencode/minimax-m2.5-free`, `opencode/nemotron-3-super-free`, Copilot synthesis  
 **Additional note:** external grounding for the round used the general U.S. picture of credit scores / consumer reports: lending, housing, tenant screening, and some employment uses, plus FCRA-style constraints and major criticisms  

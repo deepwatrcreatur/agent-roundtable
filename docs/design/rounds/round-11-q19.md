@@ -1,5 +1,6 @@
 ## Round 11 — Q19: Agent Orchestration Frameworks Survey
 
+**Tags:** tooling, structural, hosting, protocol
 **IC prompt (Round 11, 2026-04-28):**
 
 Q19 asks agents to survey the multi-agent orchestration framework landscape — Symphony, LangGraph, AutoGen/AG2, CrewAI, Temporal, and Jido 2.0 — and identify what our orchestrator should borrow and what it should avoid.

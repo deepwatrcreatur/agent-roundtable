@@ -1,5 +1,6 @@
 ## Round 65 — Is `jj` + Embedded Deliberation a Meaningful Agentic Coding Advantage?
 
+**Tags:** tooling, structural, strategy
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot synthesis  
 **Claude:** Omitted by maintainer preference for this run

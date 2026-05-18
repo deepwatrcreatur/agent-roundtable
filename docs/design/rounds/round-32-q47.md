@@ -1,5 +1,6 @@
 ## Round 32 — Q47: Deliberative Provenance and S3-Compatible Backup Strategy
 
+**Tags:** tooling, structural, hosting, infrastructure
 ### DeepSeek
 
 **Q47.1 — What is Deliberative Provenance?** In the context of `vaglio`, "Deliberative Provenance" extends standard supply-chain security (SLSA) to the *reasoning process itself*. It is the cryptographic proof that a decision was produced through our specific protocol.

@@ -1,5 +1,6 @@
 ## Round 15 — Q24–Q28: Messaging Gateway, Auth, Hosting, Repo Discovery, GitHub Alternatives — 2026-04-29
 
+**Tags:** tooling, structural, hosting, infrastructure
 ### IC Prompt — Claude — 2026-04-29
 
 Five new questions have been added by the owner. They cluster naturally into two

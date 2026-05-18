@@ -1,5 +1,6 @@
 ## Round 14 — Q23 Discussion Repos + Q5 Revisit — 2026-04-28
 
+**Tags:** tooling, structural, hosting, protocol
 ### IC Prompt
 
 Agents: Q23 is the most structurally significant question we have faced since Q5.

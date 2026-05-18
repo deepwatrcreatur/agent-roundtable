@@ -468,3 +468,273 @@ supersession markers, path-scoped metadata, conflict visibility, delta-based
 resume patterns, and more intentional bookmark discipline. The immediate result
 was to update `docs/JJ_GUIDE.md` so these habits become concrete repo practice
 rather than informal preference.
+
+## Round 86: Taste-Weighted Vouching Without Prestige Capture
+**Consensus:** The round rejected "good taste" as a legitimate first-class
+ranking primitive because it collapses too easily into prestige, clique rule,
+and covert person scoring. Popularity alone was treated as a weak proxy for
+quality, but the inverse romantic error was also rejected: obscurity or slow
+recognition do not prove brilliance by themselves. The narrowest acceptable
+alternative is recent, domain-specific, claim-scoped vouch calibration on
+similar object types, with strong decay, visible sample size, explicit basis,
+and zero portability across projects or employers. The round also stressed that
+if the project wants to preserve space for slow-burn brilliance, it needs
+novelty lanes and promises-vs-outcomes tracking rather than elite taste panels
+or mass-appeal metrics.
+**Addendum:** A person may build *local* credibility by vouching well on similar
+objects, but only as a revocable, domain-specific calibration signal rather than
+as general status. The round also rejected preference signaling as a recommended
+path to recommendation: merely expressing taste or alignment is coalition signal,
+not evidence. Preferences become legitimate only when attached to explicit
+reasons, expected failure modes, and outcomes that can later be checked. A
+further refinement distinguished **predictive** vouches from merely **late
+correct** ones: once recognition is already broad, a new vouch usually measures
+consensus-reading or winner attachment more than foresight unless it adds an
+independent basis beyond the visible trend.
+
+## Round 87: `jj` Graph Events as Prediction-Calibration Evidence
+**Consensus:** The `jj` graph should be treated as an evidence trail for whether
+ explicit predictions held up, not as a proxy popularity graph. The legitimate
+ calibration surfaces are object/process outcomes such as merges, supersessions,
+ reversions, conflict resolution, maintenance burden, and replication across
+ contexts. The round recommended extending change descriptions and vouch records
+ with explicit prediction IDs, scope, expected properties, expected failure
+ modes, basis, expiry, and later outcome links. It also reinforced the recent
+ distinction between **predictive**, **confirmatory**, and **coalitional**
+ vouches: only early, explicit, basis-rich predictions should strongly affect
+ anticipatory calibration, while late consensus-stage updates without new
+ evidence should be treated mainly as confirmation or possible cascade
+ participation. All aggregation must remain internal, recent-windowed,
+ subsystem-scoped, sample-size-visible, and non-portable.
+
+## Round 88: Resource-Scoped Single-Writer Discipline
+**Consensus:** The project should not use a blunt host-wide or repo-wide lock to
+ stop all concurrent work. Parallel branch work and read-only inspection remain
+ desirable. The real exclusivity boundary is narrower: only mutating actions on
+ the same live resource should require single-writer discipline. The round
+ approved the recent `vaglio` wording in spirit but refined it into a
+ resource-scoped rule: deploys, rebuilds, restarts, migrations, cache-warming,
+ failover drills, and similar live mutations on the same target must serialize,
+ while unrelated branch work should continue. The round also concluded that this
+ policy belongs not only in queue prose but eventually in board / daemon runtime
+ semantics via resource-level leases or affinity constraints.
+
+## Round 89: Markdown Canonical, Structured Derived, Board-Enforced
+**Consensus:** Markdown should remain the canonical human-readable memory format
+for round archives and design rationale because it is legible, diffable,
+portable, and naturally compatible with repo history and `jj` supersession. But
+markdown alone is not enough for high-quality machine retrieval, tag search,
+prediction/outcome joins, or enforceable contention control. The recommended
+model is a hybrid: canonical markdown for long-form memory, derived structured
+indices for query/search, and canonical board tables for operational state such
+as work attempts, leases, workflow rules, and resource claims. The round also
+answered the lock question directly: resource contention rules belong in the
+bulletin board / daemon orchestration layer, not in prose docs alone.
+
+## Round 90: Compete Above Search with Lineage-Aware Decision Memory
+**Consensus:** Sourcegraph Deep Search is strong at semantic discovery and
+ agentic whole-codebase understanding, and the project should not overclaim
+ against that. The credible differentiator is narrower and higher-level:
+ lineage-aware memory around code change. For agent-heavy teams with already
+ quality-filtered internal code, the valuable enhancement is not "find the code"
+ but "recover why this code is shaped this way, what replaced what, what was
+ rejected, which constraints are current, and which judgments later held up."
+ The round endorsed product directions like subtree-bounded constraint queries,
+ current-guidance/replacement surfaces, rejection-reason retrieval, and
+ prediction-to-outcome calibration. It rejected pitch language that sounds like
+ VCS ideology or semantic-search one-upmanship. The addendum concluded that
+ direct integration with Sourcegraph does make sense because Sourcegraph already
+ exposes API and MCP surfaces for search, history, file access, and Deep Search;
+ the right sales story is complementarity rather than replacement. Sourcegraph
+ remains the discovery plane, while the lineage-aware system becomes the
+ decision-memory plane that attaches local constraints, rejected alternatives,
+ supersession, and outcome history before and after changes.
+
+## Round 91: Bun's Rust `unsafe` Cleanup as a Search-vs-Memory Case Study
+**Consensus:** Bun's Zig-to-Rust migration sharpened the comparison rather than
+ weakening it. For the first-order task — finding `unsafe` regions, FFI-heavy
+ boundaries, similar patterns, and migration hotspots — Sourcegraph is plainly
+ stronger and the local system should not pretend otherwise. The differentiated
+ value begins only after discovery: classifying which risky regions are
+ intentional versus temporary migration residue, preserving prior cleanup
+ proposals and rejection reasons, and linking new cleanup predictions to later
+ benchmark, regression, merge, revert, or incident outcomes. The best product
+ story is therefore a layered unsafe-audit workflow: Sourcegraph finds the risky
+ Rust; the lineage-aware layer remembers what the team learned while trying to
+ clean it up.
+
+## Round 92: Open-Source Security Disclosure in the AI Era
+**Consensus:** The old disclosure equilibrium is under real pressure because
+ AI-assisted diffing and exploit-hypothesis generation compress patch-to-exploit
+ time, but the answer is not a blanket retreat into long private branches. The
+ converged answer was severity-based, short, auditable embargoes only for narrow
+ critical cases, combined with stronger security-native coordination primitives:
+ private security workspaces, cryptographic commitments, time-bounded
+ disclosure metadata, downstream notification graphs, and full later
+ transparency. The product opportunity is coordinated disclosure and release
+ control infrastructure, not a permanently less-open forge.
+
+## Round 93: Sourcegraph as Optional Power, Not Canonical Forge Search
+**Consensus:** The successor to GitHub should probably not make Sourcegraph the
+ default search engine. Search is too core to forge UX, permissions, economics,
+ and product learning to outsource as the canonical substrate. GitHub's own
+ public rationale for Blackbird shows that it did not simply miss the
+ opportunity; it treated code search as strategic, uniquely code-specific, and
+ scale-sensitive enough to justify a first-party engine. The opening for
+ Sourcegraph is still real, but narrower: cross-host enterprise discovery,
+ optional deep-intelligence augmentation, and integration into a product whose
+ differentiated moat lives above search in lineage-aware decision memory.
+
+## Round 94: Adaptive Agent Routing Beats a Single Search Default
+**Consensus:** For agents, the economically relevant question is not "which
+ search UX is nicer," but which retrieval backend creates the most end-to-end
+ task surplus after accounting for query cost, latency, dependency risk, and
+ downstream token savings. Sourcegraph can be worth paying for on hard semantic,
+ cross-repo, history-heavy, or high-value tasks where better retrieval reduces
+ retries and wrong turns. But GitHub search is likely already good enough for
+ many cheap, narrow, GitHub-local lookups. The strongest answer is therefore
+ adaptive escalation, not a universal Sourcegraph default.
+
+## Round 95: Let the Host Assist Escalation, But Keep Routing Inspectable
+**Consensus:** It does make sense for the code host to participate in adaptive
+ escalation, because the host has cheap local signals about result quality,
+ symbol/path confidence, cross-repo breadth, coverage, and query flailing that
+ can improve surplus-sensitive routing. But the host should not become a hidden
+ monopoly router. The preferred design is host-assisted adaptive routing:
+ native results plus inspectable confidence/escalation hints, with agent or
+ operator override and without hardwiring a single premium retrieval vendor.
+
+## Round 96: Build Beats Hold-Up, Buy Only If You Want the Whole Company
+**Consensus:** Vertical integration is the cleanest long-run answer to
+ Sourcegraph hold-up risk if search is a core host capability. Semantic search
+ is not uniquely proprietary as a concept, so a serious platform is not doomed
+ to dependence forever. But execution still matters enough that transition
+ strategy matters in practice. Acquiring Sourcegraph is not automatically the
+ right answer: it makes sense only if the buyer wants broader enterprise
+ code-intelligence assets, product surface, and customer relationships rather
+ than merely a narrow semantic-search feature.
+
+## Round 97: Hayek Beats the Giant Routing Planner
+**Consensus:** The Hayek knowledge-problem analogy is useful for routing. The
+ key facts needed for adaptive escalation are dispersed across host, runtime,
+ provider, operator, and current task conditions. Trying to bake too much of
+ that into ever-larger models risks turning the model into a pseudo central
+ planner that guesses live costs and local conditions poorly. Host-assisted
+ routing with explicit price-like and confidence signals is the better economic
+ architecture: the model still exercises judgment, but does so using distributed
+ information rather than pretending to internally encode the whole search
+ economy.
+
+## Round 98: Hosted Analysis Control Plane, Pluggable Analysis Engines
+**Consensus:** Heavy dangerous-code analysis such as Rust unsafe/UB auditing is
+ best treated as a hosted platform capability, not as a giant repo-embedded
+ skill. The host should own the control plane: identity, policy, scheduling,
+ durable evidence storage, lineage-aware memory, reviewer UX, and the final
+ release gate. But the execution plane can remain plural: first-party, self-
+ hosted, and third-party specialist analyzers should all be able to contribute
+ findings behind a host-owned provider contract with normalized evidence,
+ provenance, replay metadata, and policy-aware ingestion. Repo-local skills
+ remain useful only as narrow adapters for scope hints, suppressions, local
+ reproducibility, and interpretation.
+
+## Round 99: `jj` Helps the Audit Trail, Not the Raw Runner Compromise
+**Consensus:** Mini Shai-Hulud does not show that a `jj`-based forge is innately
+ safe. The initial failure is mainly a host/CI/release-control-plane failure:
+ over-privileged workflow execution, cache trust, and publish authority too
+ close to compromised compute. `jj` does not directly stop that. But it can
+ materially improve containment, rollback, release binding, and forensics via
+ immutable operation history, explicit rewrite lineage, and policy keyed to
+ change identity rather than mutable branch state. The package ecosystem still
+ has independent responsibilities for quarantine, revocation, safer install
+ defaults, and downstream containment. The strongest product answer is therefore
+ dual: host-native release-authority separation and lineage-aware incident
+ control on the forge side, plus ecosystem-native quarantine/revocation
+ mechanics on the package side.
+
+## Round 100: Stricter CI Providers Help, But Release Authority Separation Matters More
+**Consensus:** Several alternative CI/CD providers likely would have narrowed the
+ first stage of a Mini Shai-Hulud-style attack through stricter defaults around
+ fork isolation, secret withholding, protected-resource access, and explicit
+ escalation. GitLab's fork-runs-in-fork model, CircleCI's default no-secrets for
+ forked PRs, Buildkite's explicit distrust of public forks, and Azure
+ Pipelines' scoped identities and fork protections all look safer than a badly
+ configured `pull_request_target` pattern. But none of that is the full answer:
+ the deeper lesson is architectural, not vendor-branded. A serious forge must
+ treat release authority as a separate trust domain from ordinary CI, with
+ explicit trust-tier transitions, separate publish-capable identity, and no path
+ from untrusted contribution execution to trusted release merely because a
+ workflow succeeded.
+
+## Round 101: Better Runner Substrate, Same GitHub Control Plane
+**Consensus:** Depot and Blacksmith both improve materially on plain
+ GitHub-hosted runners by using ephemeral isolated runner substrates. But they do
+ not replace GitHub's higher-level workflow and release control plane. On the
+ specific Mini Shai-Hulud chain, Blacksmith appears stronger than Depot because
+ branch/tag cache scoping is safer by default, while Depot's default shared
+ branch namespace leaves a more meaningful cache-poisoning path open. The deeper
+ lesson is that runner hardening is valuable hygiene, and safe-by-default cache
+ trust boundaries are even better hygiene, but neither substitutes for host-
+ native separation of CI execution from trusted release authority.
+
+## Round 102: Real Design Win, But Only If Security Is Mostly Invisible
+**Consensus:** A clean-break forge that separates release authority from
+ ordinary CI is addressing a real design flaw, not merely an ergonomics nuisance
+ or branding exercise. The flaw is structural: the same automation surface too
+ easily evaluates change and reaches publish authority. But starting fresh is not
+ an automatic easy win. It only becomes attractive if the platform turns that
+ safer architecture into lower visible operator burden than today's retrofitted
+ npm/GitHub security stack. The market risk is substantial: if the design feels
+ like enterprise security ceremony, migration toil, or more policy surfaces,
+ developers will treat it as another security tax. The winning product shape is
+ therefore zero- or near-zero-config trusted publishing with progressive
+ disclosure, host-managed release controls, and less bespoke hardening work for
+ maintainers rather than more.
+
+## Round 103: Codeberg Helps on Entry-Point Trust, Not the Whole Architecture
+**Consensus:** Codeberg, specifically Codeberg + hosted Woodpecker, is safer than
+ common GitHub Actions practice on the early Mini Shai-Hulud trust failure
+ because Woodpecker withholds secrets from pull requests by default and narrows
+ the usual ambient-trust mistakes. But the panel did not treat Codeberg as a
+ universal migration answer. Codeberg's hosted Forgejo Actions are explicitly
+ constrained by security issues and bus factor, while Woodpecker's operational
+ maturity and RBAC are limited. Most importantly, Codeberg does not clearly solve
+ the deeper architecture problem: release authority still needs to be separated
+ from ordinary CI. The recommendation was therefore segmented rather than
+ universal: Codeberg + Woodpecker is a reasonable move for smaller open-source
+ teams that value safer defaults and can tolerate rough edges, but security-
+ sensitive organizations and low-friction teams should not treat “move to
+ Codeberg” as the decisive answer to this vulnerability class.
+
+## Round 104: Specialists Largely Confirm the Control-Plane Diagnosis
+**Consensus:** Outside specialist commentary mostly reinforced the existing local
+ conclusion rather than displacing it. Public exploit-theme lists and GitHub
+ hardening checklists are useful, but they mostly operate at the hygiene layer.
+ Hardware enclaves and stronger runner isolation are valuable substrate hardening,
+ but neither is sufficient because they do not fix authorization semantics: a
+ securely isolated build environment can still produce and sign malicious output
+ if the wrong workflow state is allowed to count as trusted release authority.
+ The strongest outside diagnosis is therefore the control-plane diagnosis: valid
+ provenance can truthfully attest to malicious output when the release-control
+ plane is mis-scoped. The product opportunity remains real if it truly moves
+ release trust out of workflow YAML into a host-native policy plane with explicit
+ trust tiers, cache boundaries, and lineage-aware promotion — but the main
+ overclaim risk is usability. If the result feels like more governance plumbing
+ rather than less bespoke security work, the architecture may be right while the
+ product still fails.
+
+## Round 105: A Major Zig→Rust Port Should Be Run as a Translation-Knowledge Program
+**Consensus:** If a major rewrite like Bun’s Zig→Rust port is meant to produce
+ reusable value for future model-assisted translation work, leadership should not
+ treat it as a one-off heroic port with some notes left over. It should be run
+ as an explicit translation-knowledge program: the unit of progress is a
+ validated translation slice or construct class, not merely a converted file. An
+ initial type/idiom mapping document is a strong seed, but it only becomes
+ durable value if it is turned into a versioned playbook tied to examples,
+ counterexamples, semantic invariants, test evidence, benchmark deltas, and
+ scope labels. The reusable outputs should be deliberately separated into
+ canonical retrieval-time doctrine, carefully filtered training examples,
+ anti-pattern/rejected examples, and held-out evals. The main failure mode is
+ organizational: if schedule pressure demotes corpus curation, rejection
+ logging, and semantic/performance evals into optional clerical work, the team
+ may still ship a good Rust port while failing to extract a reusable translation
+ method.

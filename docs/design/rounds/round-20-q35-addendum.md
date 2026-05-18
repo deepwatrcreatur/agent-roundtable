@@ -1,5 +1,6 @@
 ## Round 20 Addendum — Q35: High Modernist Icons in Literature and Art (2026-04-29)
 
+**Tags:** tooling, structural, protocol, governance
 **IC Addendum Prompt:**
 
 Round 20 produced strong candidates from philosophical and structural metaphors

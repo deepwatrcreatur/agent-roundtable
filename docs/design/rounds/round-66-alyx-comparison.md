@@ -1,5 +1,6 @@
 ## Round 66 — Alyx, Planning Discipline, and What We Should Copy
 
+**Tags:** market, strategy, tooling
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot synthesis  
 **Claude:** Omitted by maintainer preference for this run

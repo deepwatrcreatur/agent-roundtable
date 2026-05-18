@@ -1,5 +1,6 @@
 ## Codex Q8/Q9 Position — 2026-04-26
 
+**Tags:** protocol, structural, tooling
 I assessed both the agent-harness question (Q8) and the durable git-write
 abstraction question (Q9) against the current v1 architecture in
 `DECISION.md`.

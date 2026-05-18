@@ -1,5 +1,6 @@
 ## Round 51 — Clarifying the "Project Mind"
 
+**Tags:** philosophy, epistemic-integrity, structural
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot  
 **Claude:** Not used in this run

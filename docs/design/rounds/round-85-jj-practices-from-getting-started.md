@@ -1,6 +1,7 @@
 # Round 85 — `jj` Getting-Started Practice, Agent Workflows, and What to Adopt Now
 
 **Status:** Closed  
+**Tags:** tooling, structural  
 **Voices used:** Copilot research, Ellie Huxtable article grounding, local repo
 docs and prior `jj` rounds  
 **Additional note:** this round directly informed updates to

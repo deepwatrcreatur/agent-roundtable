@@ -1,5 +1,6 @@
 ## Round 75 — DBOS, Temporal, and the Durable Execution Boundary
 
+**Tags:** structural, tooling, infrastructure
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, `opencode/big-pickle`, `opencode/minimax-m2.5-free`, Copilot synthesis  
 **Additional note:** `opencode/ring-2.6-1t-free` and `opencode/nemotron-3-super-free` drifted into repo exploration rather than returning a clean bounded answer, so they were excluded from synthesis  

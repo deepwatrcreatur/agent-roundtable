@@ -1,5 +1,6 @@
 ## Round 22 — Q37: Vaglio Evaluation Framework (2026-04-30)
 
+**Tags:** tooling, structural, hosting, infrastructure
 **IC prompt:**
 
 Q37 asks how to evaluate whether vaglio (the multi-agent protocol) actually

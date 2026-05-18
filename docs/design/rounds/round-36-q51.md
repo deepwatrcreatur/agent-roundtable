@@ -1,5 +1,6 @@
 ## Round 36 — Q51: Unifying Dolt and JJ: Fork, Backend, or Co-location?
 
+**Tags:** tooling, structural, hosting, infrastructure
 **Topic:** Determining the optimal integration path for Dolt (SQL versioning) and jj (Logical evolution). Is a Dolt fork necessary to achieve the vision of the "JJ-Native Forge"?
 
 ### DeepSeek

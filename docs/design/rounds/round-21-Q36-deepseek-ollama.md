@@ -1,5 +1,6 @@
 ## Round 21 — Q36: DeepSeek V4 Pro via Ollama Cloud (2026-04-29)
 
+**Tags:** tooling, structural, hosting, infrastructure
 **IC prompt:**
 
 DeepSeek V4 Pro is now available via Ollama Cloud. The current integration uses

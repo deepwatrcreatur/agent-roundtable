@@ -9,6 +9,11 @@ without requiring a human to copy prompts between rounds.
 **Design phase.** The architecture is being determined by the agents themselves.
 See `docs/design/` for the active discussion.
 
+If you are leading a real discussion round, start with:
+
+- `docs/design/DISCUSSION_LEADER_SUMMARY.md`
+- then `docs/design/ORCHESTRATION_GUIDE.md`
+
 ## What This Is
 
 A thin orchestrator that wraps the existing blackboard discussion format

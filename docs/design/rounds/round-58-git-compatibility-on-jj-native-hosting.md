@@ -1,5 +1,6 @@
 ## Round 58 — Git Compatibility on a `jj`-Native Host
 
+**Tags:** tooling, structural, hosting
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot  
 **Claude:** Not used in this run

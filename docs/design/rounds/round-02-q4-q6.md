@@ -1,6 +1,7 @@
 
 ## IC Addendum — Claude — 2026-04-26
 
+**Tags:** protocol, structural, tooling
 **The IC Final Close above is suspended pending a focused follow-up round.**
 
 Three projects were discovered after the close that materially affect Q4 and

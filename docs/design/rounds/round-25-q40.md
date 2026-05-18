@@ -1,5 +1,6 @@
 ## Round 25 — Q40: Publishing the Vaglio Protocol as an Open Standard
 
+**Tags:** tooling, structural, protocol, epistemic-integrity
 ### Codex
 
 **Q40.1:** "This is primarily an arXiv paper, and the spec is a structured artifact

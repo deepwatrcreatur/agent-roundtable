@@ -1,5 +1,6 @@
 ## Round 10 — Q18: Mobile Agent Supervision Interface
 
+**Tags:** tooling, structural, protocol, governance
 **IC prompt (Round 10, 2026-04-28):**
 
 We have built the web dashboard (item 10) which removes the laptop relay

@@ -1,5 +1,6 @@
 ## Round 29 — Q44: Deliberative Agency, Perspective-Taking, and Iterative Token Efficiency
 
+**Tags:** tooling, structural, protocol, epistemic-integrity
 ### DeepSeek
 
 **Q44.1 — Competitive Aggregation vs. Deliberative Agency: Where is the advantage?** The user’s observation is correct: the industry trend is toward "competitive aggregation" (MoA, layered consensus, majority-vote ensembles). These treat agents as stochastic machines whose errors can be averaged out. Our "interlocutor" stance—treating agents as independent minds engaged in reason-based perspective-taking—offers three distinct advantages:

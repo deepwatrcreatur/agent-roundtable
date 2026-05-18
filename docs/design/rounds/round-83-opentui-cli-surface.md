@@ -1,5 +1,6 @@
 # Round 83 — OpenTUI, Terminal UX, and Whether It Should Shape the Local CLI
 
+**Tags:** tooling, product, structural
 **Status:** Closed  
 **Voices used:** Copilot research, OpenTUI primary docs, local repo grounding  
 **Additional note:** this round was grounded in the current OpenTUI README/docs,

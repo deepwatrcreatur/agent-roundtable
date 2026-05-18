@@ -1,5 +1,6 @@
 ## Round 69 — Persistent Identity, Cross-Company Trust, and the Ethics of Power
 
+**Tags:** governance, epistemic-integrity, social
 **Status:** Closed  
 **Voices used:** Codex CLI, `opencode/big-pickle`, `opencode/minimax-m2.5-free`, `opencode/nemotron-3-super-free`, Copilot synthesis  
 **Additional note:** `opencode/ring-2.6-1t-free` was listed locally but unavailable from allowed providers in this environment  

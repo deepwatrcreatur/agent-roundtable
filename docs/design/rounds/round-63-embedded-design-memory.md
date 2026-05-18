@@ -1,5 +1,6 @@
 ## Round 63 — Embedded Design Memory in `jj` / Code Context
 
+**Tags:** structural, epistemic-integrity, tooling
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot synthesis  
 **Claude:** Omitted by maintainer preference for this run

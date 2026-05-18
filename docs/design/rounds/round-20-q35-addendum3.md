@@ -1,5 +1,6 @@
 ## Round 20 Addendum 3 — Q35: Iterative Refinement (2026-04-30)
 
+**Tags:** tooling, structural, protocol, epistemic-integrity
 **IC Addendum Prompt:**
 
 The owner identifies a deeper problem with the entire High Modernist literary

@@ -1,5 +1,6 @@
 ## Round 20 Addendum 2 — Q35: Parallax as Skepticism; Musil's Parallel Campaign (2026-04-30)
 
+**Tags:** tooling, structural, protocol, governance
 **IC Addendum Prompt:**
 
 The owner challenges the Round 20 addendum synthesis on two grounds:

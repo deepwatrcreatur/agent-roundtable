@@ -1,5 +1,6 @@
 ## Round 23 — Q38: Eval Landscape and Competitive Analysis
 
+**Tags:** structural, hosting, epistemic-integrity, governance
 ### Codex
 
 **Q38.1 — Benchmark landscape:** Assessed 10+ benchmarks. Strongest fits for

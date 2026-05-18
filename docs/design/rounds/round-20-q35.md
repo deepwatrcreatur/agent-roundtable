@@ -1,5 +1,6 @@
 ## Round 20 — Q35: Naming the Roundtable (2026-04-29)
 
+**Tags:** tooling, structural, protocol, epistemic-integrity
 **IC prompt:**
 
 Q35 is a naming exercise — and a test of divergent thinking. The owner draws on

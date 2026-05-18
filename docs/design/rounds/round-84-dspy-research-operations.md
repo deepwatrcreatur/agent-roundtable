@@ -1,5 +1,6 @@
 # Round 84 — DSPy, Research Operations, and Structuring Deliberative Knowledge
 
+**Tags:** tooling, structural, epistemic-integrity
 **Status:** Closed  
 **Voices used:** Copilot research, DSPy primary docs, local repo grounding  
 **Additional note:** this round focused on DSPy's architectural patterns rather

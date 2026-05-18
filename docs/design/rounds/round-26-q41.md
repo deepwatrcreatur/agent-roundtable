@@ -1,5 +1,6 @@
 ## Round 26 — Q41: The Delve Scandal and AI-Assisted Compliance
 
+**Tags:** tooling, structural, hosting, infrastructure
 ### Codex
 
 **Q41.1 — Would vaglio's protocol have prevented Delve's failure?** No, not by

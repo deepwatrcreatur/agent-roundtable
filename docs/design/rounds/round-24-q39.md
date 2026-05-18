@@ -1,5 +1,6 @@
 ## Round 24 — Q39: Karpathy's LLM Council and Vaglio's Market Position
 
+**Tags:** tooling, structural, infrastructure, protocol
 ### Codex
 
 **Q39.1 — Architectural comparison:** Council: anonymized peer review, single-pass,

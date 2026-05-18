@@ -1,5 +1,6 @@
 ## Round 28 — Q43: External Recursive Multi-Agent Systems, Self-Improvement, and Consensus Protocols
 
+**Tags:** tooling, structural, infrastructure, protocol
 ### DeepSeek
 
 **Q43.1 — Which outside systems matter most?** The short list that matters most

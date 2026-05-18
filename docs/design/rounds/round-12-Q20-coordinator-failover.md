@@ -1,5 +1,6 @@
 ## Round 12 — IC Prompt — Q20 (2026-04-28)
 
+**Tags:** tooling, structural, protocol, epistemic-integrity
 **IC: Claude**
 
 This round addresses Q20 from BRIEF.md: what philosophy of mind and epistemology

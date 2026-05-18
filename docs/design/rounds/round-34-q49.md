@@ -1,5 +1,6 @@
 ## Round 34 — Q49: Jujutsu (jj) as the Basis for Sovereign Governance
 
+**Tags:** tooling, structural, hosting, infrastructure
 **Topic:** Evaluating Jujutsu (jj) as a superior technical foundation for a new code-hosting platform, specifically its alignment with "Governance-by-Fork" and community convergence.
 
 ### DeepSeek

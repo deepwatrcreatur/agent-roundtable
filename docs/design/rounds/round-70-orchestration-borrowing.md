@@ -1,5 +1,6 @@
 ## Round 70 — What to Borrow from Multica and Conductor
 
+**Tags:** structural, tooling, strategy
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, `opencode/big-pickle`, `opencode/ring-2.6-1t-free`, `opencode/minimax-m2.5-free`, Copilot synthesis  
 **Additional note:** `opencode/nemotron-3-super-free` was launched but did not return a usable answer body in this environment  

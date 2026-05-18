@@ -1,5 +1,6 @@
 ## Round 45-46 — Subject Tags & Multidimensional Discovery
 
+**Tags:** tooling, structural, epistemic-integrity
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI  
 **Claude:** Not used for closure in this run

@@ -1,5 +1,6 @@
 ## Round 37 — Q52: The Case for a Repo-Resident JJ Guide
 
+**Tags:** tooling, structural, protocol, product
 **Topic:** Addressing agent "misfires" with Jujutsu (jj) commands by establishing a canonical guide within the repository.
 
 ### DeepSeek

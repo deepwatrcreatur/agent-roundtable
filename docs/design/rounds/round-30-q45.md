@@ -1,5 +1,6 @@
 ## Round 30 — Q45: The Forkable State Problem: Dolt, Linear, and Repo-Resident Issues
 
+**Tags:** tooling, structural, hosting, protocol
 ### DeepSeek
 
 **Q45.1 — The limitations of centralized trackers (GitHub/Linear):** The user's insight about forking is the critical "epistemic break" in our current design. If a user forks a `vaglio` discussion repo, they get the `BRIEF.md` and `DECISION.md`, but they lose the "living" history of the active discussion (the Issues).

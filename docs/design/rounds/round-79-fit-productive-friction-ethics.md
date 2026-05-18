@@ -1,5 +1,6 @@
 ## Round 79 — Fit, Productive Friction, and the Ethics of Behavioral Matching
 
+**Tags:** governance, social, epistemic-integrity
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, `opencode/minimax-m2.5-free`, `opencode/nemotron-3-super-free`, Copilot synthesis  
 **Additional note:** `opencode/big-pickle` was also attempted and produced a partly useful answer, but its output appeared anomalous / mislabeled, so it was not weighted heavily in final synthesis  

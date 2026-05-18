@@ -1,5 +1,6 @@
 ## Round 13 — Q21 (Voice Entry for Mobile) + Q22 (Discussion Hosting Beyond GitHub) — 2026-04-28
 
+**Tags:** tooling, structural, hosting, infrastructure
 ### IC Prompt
 
 Agents: please address both Q21 and Q22 in sequence. These are independent questions.

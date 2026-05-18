@@ -1,5 +1,6 @@
 ## Round 20 Addendum 5 — Q35: Separation of Good from Flawed (2026-04-30)
 
+**Tags:** tooling, protocol, epistemic-integrity, testing
 **IC Addendum Prompt:**
 
 The owner signals a direction: `thresh` — the act of separating grain from chaff —

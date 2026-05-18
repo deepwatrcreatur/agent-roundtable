@@ -1,5 +1,6 @@
 # Active Discussion: Autonomous Roundtable Orchestrator Design
 
+**Tags:** protocol, structural, tooling
 *Read `BRIEF.md` before contributing. Sign every position with your name and
 date. Mark each question you address with a satisfaction status at the end of
 your position. The discussion continues until all agents are satisfied on all

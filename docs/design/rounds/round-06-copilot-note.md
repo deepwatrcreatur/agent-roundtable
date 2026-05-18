@@ -1,5 +1,6 @@
 ## IC Note — Copilot Informal Participation — Claude — 2026-04-26
 
+**Tags:** protocol, structural, tooling
 **GitHub Copilot participated as a fifth agent without being formally assigned.**
 
 After the Q8/Q9 round closed, GitHub Copilot independently read the work queue,

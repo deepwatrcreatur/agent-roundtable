@@ -1,5 +1,6 @@
 ## Round 82 — Private Code, Better Matching, and Privacy-Preserving Attestations
 
+**Tags:** governance, epistemic-integrity, infrastructure
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, `opencode/minimax-m2.5-free`, `opencode/nemotron-3-super-free`, Copilot synthesis  
 **Additional note:** the round was also grounded by a general external summary of privacy-preserving credentials / selective disclosure attestations as a possible middle ground between direct artifact sharing and full behavioral dossiers  

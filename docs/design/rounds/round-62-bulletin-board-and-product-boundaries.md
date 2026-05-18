@@ -1,5 +1,6 @@
 ## Round 62 — Bulletin Board, Product Boundaries, and Reducing Supervision Burden
 
+**Tags:** structural, tooling, governance
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot synthesis  
 **Claude:** Omitted by maintainer preference for this run

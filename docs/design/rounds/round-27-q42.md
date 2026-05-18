@@ -1,5 +1,6 @@
 ## Round 27 — Q42: Garry Tan's `gstack` and Skill-Driven Agent Workflows
 
+**Tags:** tooling, structural, hosting, governance
 ### DeepSeek
 
 **Q42.1 — Use it, improve it, or replace it?** Use it **now** if you are a

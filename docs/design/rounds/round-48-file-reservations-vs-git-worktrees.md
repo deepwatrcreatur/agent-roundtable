@@ -1,5 +1,6 @@
 ## Round 48 — File Reservations vs. Git Worktrees
 
+**Tags:** tooling, structural, protocol
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI  
 **Claude:** Not used for closure in this run

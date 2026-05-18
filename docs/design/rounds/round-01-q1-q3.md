@@ -1,5 +1,6 @@
 ## Prompt for Codex
 
+**Tags:** protocol, structural, tooling
 Read `BRIEF.md` in this directory first.
 
 You are contributing a research position to the `agent-roundtable` project.
