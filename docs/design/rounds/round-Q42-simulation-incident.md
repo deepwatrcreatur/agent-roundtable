@@ -1,5 +1,6 @@
 ## Round Q42 — Gemini Simulation Incident Report
 
+**Tags:** protocol, epistemic-integrity, governance
 **Status:** Closed
 **Voices used:** Claude Opus 4.6 (x3 subagents, IC), Codex CLI (GPT-5.4), Gemini CLI, DeepSeek API
 **Dispatch:** Claude subagents via Agent tool (single-model); Codex/Gemini/DeepSeek via real CLI/API dispatch

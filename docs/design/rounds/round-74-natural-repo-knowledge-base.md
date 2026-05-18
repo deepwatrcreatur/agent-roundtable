@@ -1,5 +1,6 @@
 ## Round 74 — The Natural Repo-Native Knowledge Base
 
+**Tags:** structural, tooling, epistemic-integrity
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, `opencode/big-pickle`, `opencode/nemotron-3-super-free`, Copilot synthesis  
 **Additional note:** `opencode/minimax-m2.5-free` did not return a usable bounded answer for this round and was excluded from synthesis  

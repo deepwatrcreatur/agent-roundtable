@@ -1,5 +1,6 @@
 ## Round 76 — Open Agent Skills Standard and Project Alignment
 
+**Tags:** tooling, structural, protocol
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, Copilot synthesis  
 **Additional note:** The requested free `opencode` voices were attempted, but the

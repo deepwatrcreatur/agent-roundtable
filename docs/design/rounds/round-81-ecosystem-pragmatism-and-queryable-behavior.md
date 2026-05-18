@@ -1,5 +1,6 @@
 ## Round 81 — Ecosystem Pragmatism, Queryable Behavioral Data, and Hiring / Maintainer Trust
 
+**Tags:** governance, market, open-source
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, `opencode/nemotron-3-super-free`, Copilot synthesis  
 **Additional note:** `opencode/minimax-m2.5-free` was launched but did not produce a substantive final answer in the run window, so it was excluded from synthesis  

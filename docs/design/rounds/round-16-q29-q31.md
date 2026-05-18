@@ -1,5 +1,6 @@
 ## Round 16 — Q29/Q30/Q31: Co-evolution, Collaborator Permissions, Homelab Revisit
 
+**Tags:** tooling, structural, hosting, infrastructure
 **IC Round 16 Prompt (2026-04-29)**
 
 Three questions added from user context provided mid-implementation:

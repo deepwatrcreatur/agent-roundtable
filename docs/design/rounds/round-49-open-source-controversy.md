@@ -1,5 +1,6 @@
 ## Round 49 — Controversial Open Source Figures as Case Studies
 
+**Tags:** governance, open-source, social
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot  
 **Claude:** Not used in this run

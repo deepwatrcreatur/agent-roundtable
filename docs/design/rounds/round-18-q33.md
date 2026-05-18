@@ -1,5 +1,6 @@
 ## Round 18 — Q33: Adding DeepSeek as a Roundtable Agent
 
+**Tags:** tooling, hosting, infrastructure, protocol
 **IC Round 18 Prompt (2026-04-29)**
 
 Q33 asks how to add DeepSeek to the agent roster. Owner context: `opencode`

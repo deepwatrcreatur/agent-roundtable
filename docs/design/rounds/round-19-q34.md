@@ -1,5 +1,6 @@
 ## Round 19 — Q34: AI Subscription Procurement (2026-04-29)
 
+**Tags:** tooling, structural, hosting, infrastructure
 **IC prompt:**
 
 Q34 asks agents to assess the procurement landscape for Chinese AI models —

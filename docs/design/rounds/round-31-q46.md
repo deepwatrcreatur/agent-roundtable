@@ -1,5 +1,6 @@
 ## Round 31 — Q46: GitHub CI/CD and Supply Chain Security (Mix & SLSA)
 
+**Tags:** tooling, structural, hosting, infrastructure
 ### DeepSeek
 
 **Q46.1 — GitHub Actions for Elixir/Mix: Should we adopt it?** GitHub’s "Build and test" workflow is the standard for most Elixir projects. However, for `vaglio`, we must evaluate it against our "sovereign hosting" and "forkable context" goals.

@@ -1,5 +1,6 @@
 ## Round 53 — Self-Escalation and Protocol Friction
 
+**Tags:** protocol, governance, safety
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot  
 **Claude:** Not used in this run

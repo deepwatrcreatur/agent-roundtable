@@ -1,5 +1,6 @@
 ## Round 51 — Q38: NPTv6 Implementation
 
+**Tags:** tooling, structural, hosting, infrastructure
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI  
 **Claude:** Used as IC for synthesis

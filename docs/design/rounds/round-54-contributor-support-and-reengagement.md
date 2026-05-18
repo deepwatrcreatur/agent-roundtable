@@ -1,5 +1,6 @@
 ## Round 54 — Contributor Support and Re-Engagement
 
+**Tags:** governance, social, open-source
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot  
 **Claude:** Not used in this run

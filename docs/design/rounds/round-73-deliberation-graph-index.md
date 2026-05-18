@@ -1,5 +1,6 @@
 ## Round 73 — A Deliberation Graph Index, Not a Canonical Graph
 
+**Tags:** tooling, structural, epistemic-integrity
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, `opencode/big-pickle`, `opencode/ring-2.6-1t-free`, Copilot synthesis  
 **Additional note:** `opencode/minimax-m2.5-free` and `opencode/nemotron-3-super-free` drifted into repo/tool exploration rather than returning a clean bounded answer, so they were excluded from synthesis  

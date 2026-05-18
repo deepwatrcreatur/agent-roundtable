@@ -1,5 +1,6 @@
 ## Round 55 — Socially Coupled Priors and Brigading
 
+**Tags:** epistemic-integrity, governance, social
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot  
 **Claude:** Not used in this run

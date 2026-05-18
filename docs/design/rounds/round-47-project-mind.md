@@ -1,5 +1,6 @@
 ## Round 47 — The Project Mind (Active Inference)
 
+**Tags:** philosophy, governance, epistemic-integrity
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI  
 **Claude:** Not used for closure in this run

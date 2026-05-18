@@ -1,5 +1,6 @@
 ## Round 61 — Preserving Breakthrough Fixes Across Independent Agents
 
+**Tags:** epistemic-integrity, structural, tooling
 **Status:** Closed for Q1-Q4 / Q5 release-tag verdict still pending  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Claude IC  
 **Run mode:** Live GitHub-issue roundtable on `deepwatrcreatur/agent-roundtable` issues `#80`-`#84`

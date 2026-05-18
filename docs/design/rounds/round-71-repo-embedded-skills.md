@@ -1,5 +1,6 @@
 ## Round 71 — Repo-Embedded Skills as Deliberative Artifacts
 
+**Tags:** tooling, structural, governance
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, `opencode/big-pickle`, `opencode/minimax-m2.5-free`, `opencode/nemotron-3-super-free`, Copilot synthesis  
 **Additional note:** `opencode/ring-2.6-1t-free` repeatedly drifted into local file exploration for this round and was not used in the final synthesis  

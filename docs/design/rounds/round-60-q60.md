@@ -1,5 +1,6 @@
 ## Round 60 — `jj` vs. code.storage for Agent-Scale Code Velocity
 
+**Tags:** testing, infrastructure, tooling
 **Status:** Second manual redo / supersedes noisy legacy issue-export transcript  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot synthesis  
 **Claude:** Omitted from the redo after low-quality repeated output in the legacy issue-run path

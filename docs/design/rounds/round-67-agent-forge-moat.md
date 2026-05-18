@@ -1,5 +1,6 @@
 ## Round 67 — Moats for an Agent-First Forge
 
+**Tags:** market, strategy, structural
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot synthesis  
 **Claude:** Omitted by maintainer preference for this run

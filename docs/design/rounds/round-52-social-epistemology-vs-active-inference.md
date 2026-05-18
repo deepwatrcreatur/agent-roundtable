@@ -1,5 +1,6 @@
 ## Round 52 — Social Epistemology vs Active Inference
 
+**Tags:** philosophy, epistemic-integrity, governance
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot  
 **Claude:** Not used in this run

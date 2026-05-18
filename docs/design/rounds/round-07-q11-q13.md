@@ -1,5 +1,6 @@
 ## Codex Notice — Coordination Review Gap — 2026-04-27
 
+**Tags:** protocol, structural, tooling
 One process note before Q11–Q13: when coordination feedback arrives through a
 human relay or an uncommitted local session, it is easy for it to be treated as
 "already covered" and then disappear between rounds. That happened at least

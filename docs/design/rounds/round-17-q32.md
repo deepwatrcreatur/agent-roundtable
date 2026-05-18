@@ -1,5 +1,6 @@
 ## Round 17 — Q32: Protocol Self-Assessment and Discourse Literature
 
+**Tags:** structural, protocol, epistemic-integrity, social
 **IC Round 17 Prompt (2026-04-29)**
 
 Q32 is a meta-question: assess the structural flaws in the roundtable protocol

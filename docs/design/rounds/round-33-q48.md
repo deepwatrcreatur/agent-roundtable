@@ -1,5 +1,6 @@
 ## Round 33 — Q48: Forkable Deliberation as a Platform (Governance-by-Fork)
 
+**Tags:** tooling, structural, hosting, infrastructure
 **Topic:** Using repo-resident discussions (like the recent nix-router-optimized example) as the blueprint for a new GitHub-style hosting platform.
 
 ### DeepSeek

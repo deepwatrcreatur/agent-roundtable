@@ -1,5 +1,6 @@
 # Round 78 — `gstack` Retention, Standards Fit, and Whether It Should Stay Installed
 
+**Tags:** tooling, hosting, governance
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, free `opencode` voices where substantive, Copilot synthesis  
 **Additional note:** `big-pickle`, `minimax`, and `ring` produced short but useful bounded comments late in the run; Codex and Gemini remained the main substantive voices  

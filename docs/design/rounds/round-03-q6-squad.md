@@ -1,5 +1,6 @@
 ## Codex Follow-Up — 2026-04-26 (Q6 / Squad Revisit)
 
+**Tags:** protocol, structural, tooling
 The new prior art changes two parts of my earlier position:
 
 1. **Q5 is still hybrid, but Squad clarifies why files remain important.**

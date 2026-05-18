@@ -1,5 +1,6 @@
 ## Round 50 — Active Inference, Merit, and the "Slop Shield"
 
+**Tags:** epistemic-integrity, governance, philosophy
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot  
 **Claude:** Not used in this run

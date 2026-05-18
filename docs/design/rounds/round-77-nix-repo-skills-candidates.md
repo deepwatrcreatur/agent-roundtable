@@ -1,5 +1,6 @@
 ## Round 77 — Skill Candidates for `unified-nix-configuration` and `nix-router-optimized`
 
+**Tags:** tooling, structural, hosting
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, Copilot synthesis  
 **Additional note:** free `opencode` voices were attempted; `big-pickle` returned

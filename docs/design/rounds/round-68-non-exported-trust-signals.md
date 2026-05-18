@@ -1,5 +1,6 @@
 ## Round 68 — Non-Exported Trust Signals as Investor-Legible Value
 
+**Tags:** governance, epistemic-integrity, social
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, `opencode/minimax-m2.5-free`, `opencode/nemotron-3-super-free`, Copilot synthesis  
 **Claude:** Omitted by maintainer preference for this run

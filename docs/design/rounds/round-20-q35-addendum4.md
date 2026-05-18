@@ -1,5 +1,6 @@
 ## Round 20 Addendum 4 — Q35: Beyond Rationality as Ideology (2026-04-30)
 
+**Tags:** tooling, structural, protocol, epistemic-integrity
 **IC Addendum Prompt:**
 
 The owner pushes the reframing further. The addendum 3 candidates (anneal,

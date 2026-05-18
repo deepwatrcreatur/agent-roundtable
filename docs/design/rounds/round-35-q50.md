@@ -1,5 +1,6 @@
 ## Round 35 — Q50: JJ (Jujutsu) and the Quest for Token Efficiency
 
+**Tags:** tooling, structural, protocol, governance
 **Topic:** Exploring how the jj version control model facilitates token efficiency and cost-competitiveness for multi-agent deliberation.
 
 ### DeepSeek

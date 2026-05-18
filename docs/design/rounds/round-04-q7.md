@@ -1,5 +1,6 @@
 ## Codex Q7 Position — 2026-04-26
 
+**Tags:** protocol, structural, tooling
 I assessed the two newly surfaced git infrastructure services against the
 current v1 architecture: GitHub Issues for active coordination, git-tracked
 files for durable artifacts.

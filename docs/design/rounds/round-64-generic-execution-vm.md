@@ -1,5 +1,6 @@
 ## Round 64 — Generic Execution VM / Agent Tooling Substrate
 
+**Tags:** structural, hosting, infrastructure
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot synthesis  
 **Claude:** Omitted by maintainer preference for this run

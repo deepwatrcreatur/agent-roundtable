@@ -1,5 +1,6 @@
 ## Round 56 — Design Stress vs Social Stress
 
+**Tags:** governance, social, philosophy
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot  
 **Claude:** Not used in this run

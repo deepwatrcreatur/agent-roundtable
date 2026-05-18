@@ -1,5 +1,6 @@
 ## Round 20 Addendum 6 — Q35: Winnow in Foreign Languages (2026-04-30)
 
+**Tags:** tooling, protocol, strategy, brand
 **IC Addendum Prompt:**
 
 The owner accepts the winnowing metaphor but finds the English word `winnow`

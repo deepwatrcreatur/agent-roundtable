@@ -1,5 +1,6 @@
 ## Round 57 — Governance Collapse, Constitutional Gaps, and Branch Naming
 
+**Tags:** governance, open-source, structural
 **Status:** Closed  
 **Voices used:** Codex CLI, Gemini CLI, DeepSeek API, Copilot  
 **Claude:** Not used in this run
