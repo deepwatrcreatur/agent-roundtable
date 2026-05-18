@@ -3,6 +3,9 @@
 This guide is for the human or agent acting as the **discussion leader** for a
 real Vaglio / `agent-roundtable` round.
 
+If you need the shortest possible entry point, start with
+`docs/design/DISCUSSION_LEADER_SUMMARY.md` and then come back here.
+
 It exists to prevent repeated failure on the same operational problems:
 
 - simulated voices being mistaken for genuine quorum
@@ -126,6 +129,14 @@ Source secret in config repo:
 Do **not** print the key. Only read it into the environment of the subprocess
 that needs it.
 
+If the local CLI path is unavailable or inconvenient, a direct HTTP API seat is
+also valid here and has been successfully recovered in-session using:
+
+- `https://api.deepseek.com/v1/chat/completions`
+- the decrypted local key file
+- explicit CA bundle:
+  `/etc/ssl/certs/ca-certificates.crt`
+
 #### Copilot
 
 - the current conversation itself is the Copilot voice
@@ -215,6 +226,86 @@ nix develop . --command bash -lc '
 If DeepSeek fails with `:deepseek_api_key_missing`, fix the environment before
 continuing. Do not downgrade silently to a three-voice round unless the human
 approves that degraded quorum.
+
+Direct HTTP fallback is also acceptable when it is the real DeepSeek API.
+This pattern was successfully used to restore the DeepSeek seat:
+
+```bash
+python - <<'PY'
+import json, pathlib, subprocess
+
+key = pathlib.Path.home() / '.local/share/agenix-user-secrets/deepseek-api-key'
+prompt = pathlib.Path('/tmp/round_prompt.txt').read_text()
+
+cmd = [
+    'curl', '-sS', '--max-time', '120',
+    '--cacert', '/etc/ssl/certs/ca-certificates.crt',
+    'https://api.deepseek.com/v1/chat/completions',
+    '-H', 'Content-Type: application/json',
+    '-H', f'Authorization: Bearer {key.read_text().strip()}',
+    '-d', json.dumps({
+        'model': 'deepseek-chat',
+        'messages': [{'role': 'user', 'content': prompt}],
+        'temperature': 0.2
+    }),
+]
+
+proc = subprocess.run(cmd, capture_output=True, text=True)
+print(proc.stdout)
+PY
+```
+
+Notes:
+
+- do **not** use `curl -k`
+- if plain `curl` fails with certificate error 60, retry with the explicit
+  `--cacert` path above
+- record the seat as `DeepSeek API` in the round note if this path is used
+
+### 6.3.1 Worked example: Round 104 DeepSeek rerun
+
+This exact failure-and-recovery path happened while archiving:
+
+- `round-104-critiquing-alternatives-and-product-necessity.md`
+
+Observed sequence:
+
+1. DeepSeek was initially marked unavailable because there was no working local
+   CLI seat.
+2. The discussion leader then checked for the decrypted local key and found:
+
+   ```bash
+   /home/deepwatrcreatur/.local/share/agenix-user-secrets/deepseek-api-key
+   ```
+
+3. A first direct `curl` call failed with TLS verification error 60:
+
+   - unable to get local issuer certificate
+
+4. Retrying with:
+
+   ```bash
+   --cacert /etc/ssl/certs/ca-certificates.crt
+   ```
+
+   succeeded.
+
+5. The round note was then amended to say:
+
+   - `DeepSeek API: substantive after restoring direct HTTP access`
+
+6. The round note also explicitly recorded that the seat had been recovered via:
+
+   - direct HTTP API
+   - the local decrypted key
+   - explicit CA bundle configuration
+
+Operational lesson:
+
+- if the key exists locally, DeepSeek is **not** unavailable merely because there
+  is no standalone CLI binary
+- recover the seat honestly, then amend the round note rather than leaving a
+  stale “DeepSeek unavailable” statement in the durable record
 
 ## 6.4 Copilot
 
@@ -359,7 +450,23 @@ When handing a round to the next discussion leader, include:
 
 ---
 
-## 13. Current guardrails in code
+## 13. Vaglio web app caution
+
+The Vaglio VM may already be running the Phoenix / LiveView web app, but do not
+assume the web app is yet the authoritative operational path for proving that a
+requested roster is actually ready.
+
+Until that is explicitly true, continue to validate:
+
+- the real CLI/API path for each requested voice
+- the local credential path where relevant
+- and the actual returned output
+
+before describing a round as complete.
+
+---
+
+## 14. Current guardrails in code
 
 The repo now contains fail-fast guardrails for roster validation:
 

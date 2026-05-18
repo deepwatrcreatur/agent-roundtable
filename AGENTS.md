@@ -25,6 +25,7 @@ being built now.
 | `docs/design/BRIEF.md` | The original design questions (Q1–Q10). Start here for context. |
 | `docs/design/DECISION.md` | The closed architecture decisions. The authoritative spec. |
 | `docs/design/ACTIVE_DISCUSSION.md` | Full discussion record. Read only — do not append during implementation. |
+| `docs/design/DISCUSSION_LEADER_SUMMARY.md` | Find-this-first summary for humans/agents leading real discussion rounds. |
 | `docs/design/ORCHESTRATION_GUIDE.md` | Practical runbook for discussion leaders running real rounds. |
 | `docs/work-items/README.md` | Work queue with statuses. Check this before claiming a task. |
 | `docs/work-items/NN-*.md` | Individual work items. One item = one module. |
