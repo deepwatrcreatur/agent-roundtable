@@ -1,5 +1,7 @@
 # Vaglio Historical Synthesis: Genuine Follow-Up Rounds
 
+Browse-oriented HTML companion: [`historical-synthesis.html`](./historical-synthesis.html).
+
 These notes record genuine follow-up rounds run with the actual CLI agents
 (`codex` and `gemini`). Claude was not used in these closes because the round
 owner explicitly allowed proceeding without Claude and Claude CLI availability
@@ -738,3 +740,32 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  logging, and semantic/performance evals into optional clerical work, the team
  may still ship a good Rust port while failing to extract a reusable translation
  method.
+
+## Round 106: JEPA-Like Modules Fit Better Under LLM-Centered Porting Stacks
+**Consensus:** The panel did not support a near-term bet that JEPA-style or
+ world-model-heavy systems will displace LLM-centered stacks for large code
+ ports such as Zig→Rust or C/C++→Rust. The stronger convergence was a hybrid
+ architecture: LLMs remain the top-level generator, repair loop, and interactive
+ interface, while JEPA-like or other semantic modules may help on narrower
+ subproblems such as unsafe code, layout/ABI risk, concurrency, and
+ performance-sensitive translation. The panel also converged that “world model
+ of hardware” is mostly the wrong abstraction for ordinary source-to-source
+ translation, and that the right next move is experimental benchmarking on top
+ of the translation-knowledge program described in Round 105 rather than a
+ world-model-first architecture bet.
+
+## Round 107: Keep Markdown Canonical, Add HTML Only for Browse-Heavy Surfaces
+**Consensus:** The panel rejected a broad shift from agent-produced Markdown to
+ HTML as the default documentation mode. Markdown should remain canonical
+ because it is easier to diff, patch, grep, and maintain in repo-native
+ workflows. HTML is justified only as a companion view for a narrow class of
+ browse-heavy documents that humans consume nonlinearly. All voices agreed that
+ `historical-synthesis.md` is such a document and should have an HTML companion.
+ The second candidate produced real disagreement: Codex favored the router
+ discussions index as a browse surface, Gemini favored the dense
+ `DECLARATIVE_CLAT.md` design spec, and DeepSeek favored the operational
+ discussion-leader summary. The implemented follow-up kept the unanimous
+ `historical-synthesis` conversion and chose `DECLARATIVE_CLAT.md` as the second
+ HTML companion because it is the strongest long-lived hierarchical design
+ document among the disputed candidates, while queues, short operational notes,
+ and ordinary round records remain Markdown-only.
