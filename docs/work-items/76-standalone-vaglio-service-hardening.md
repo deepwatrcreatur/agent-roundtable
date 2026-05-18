@@ -67,3 +67,8 @@ Observed on the real `vaglio` host on May 10, 2026:
   - the credential directory is treated as optional
   - the service launches from a writable checkout instead of the packaged
     read-only source path
+- Coordination note:
+  - single-writer discipline on `vaglio` should apply to live mutating actions
+    such as rebuilds, restarts, or runtime warmup against the running host
+  - parallel branch work and unrelated code changes should not be blocked by that
+    live-host mutation boundary
