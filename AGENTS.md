@@ -87,6 +87,9 @@ care which.
 - **Shared state:** GitHub Issues (active turns) + git files (durable artifacts).
 - **Agent invocation:** `claude -p`, `codex exec -`, `gemini -p` in v1.
   OpenCode HTTP API for Copilot/OpenCode Go in v2.
+- **Round enrichment:** optional free-model/OpenCode-style seats are encouraged
+  when they add genuine extra coverage, but they are experimental supplements,
+  not replacements for the primary requested roster.
 - **Side effects:** the orchestrator owns all `gh` calls. Agents only produce prose.
 - **Storage abstraction:** `Roundtable.Actions.Gh` for Issues;
   `Roundtable.Actions.Git` for file commits. Keep them separate.

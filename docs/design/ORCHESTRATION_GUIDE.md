@@ -84,6 +84,34 @@ Notes:
 - If Claude is unavailable, say so plainly and run a degraded synthesis process
   instead of inventing an IC voice.
 
+### 3.1 Enrichment seats: free-model experiments are worth using when they add value
+
+Do **not** forget the opportunity to enrich a round with an additional
+experimental seat when a free-model path is available and the topic would benefit
+from broader coverage.
+
+In practice this usually means:
+
+- an OpenCode/free-model voice
+- or another explicitly experimental non-primary seat
+
+Use these seats when they are likely to add one of:
+
+- a cheaper dissenting view
+- broader model-family coverage
+- a stress test of whether the question is robust outside the main vendor CLIs
+
+But keep the boundary clear:
+
+- the core serious roster is still the vendor CLI / direct API path
+- free-model seats are **enrichment**, not a substitute for the main quorum
+- and they must be labeled honestly in the round note as experimental if they are
+  lower-confidence or historically drift-prone
+
+The failure mode to avoid is not “using free models.” The failure mode is
+leaving value on the table by never trying them, or pretending they are
+first-class evidence when they are really exploratory supplements.
+
 ---
 
 ## 4. Preflight checklist
@@ -140,6 +168,29 @@ also valid here and has been successfully recovered in-session using:
 #### Copilot
 
 - the current conversation itself is the Copilot voice
+
+#### Optional enrichment seat: OpenCode / free-model path
+
+If you think a round would benefit from one extra experimental voice, check
+whether the local OpenCode/free-model path is actually usable before launch.
+
+Typical reasons to add it:
+
+- the topic is broad and would benefit from one more independent angle
+- cost matters and you want a cheap extra challenge seat
+- the project is explicitly evaluating harnesses, model access paths, or whether
+  free-model voices are still worth keeping in the toolbox
+
+Typical cautions:
+
+- free-model voices have produced mixed-quality answers in prior rounds
+- some have drifted into repo exploration instead of bounded response
+- some have failed to return substantive output in the run window
+
+So the rule is:
+
+- use them opportunistically when they enrich the round
+- but never count them as evidence that the main requested roster was satisfied
 
 ### 4.3 Preflight failure policy
 
@@ -319,6 +370,28 @@ That means writing a real independent position answering the same prompt:
 - what Copilot would surface as the main failure mode
 - a satisfaction marker
 
+## 6.5 Optional enrichment seat: OpenCode / free models
+
+If you add a free-model seat, do it intentionally rather than casually.
+
+Recommended use:
+
+- add **one** extra experimental seat
+- keep the same shared prompt
+- save the raw output separately
+- and record in the durable round note that it was an enrichment seat rather than
+  part of the mandatory core quorum
+
+Operational stance:
+
+- use it when it can make the round better
+- do not skip the chance reflexively
+- but do not let it blur the distinction between primary and experimental
+  evidence
+
+If the seat drifts, times out, or returns weak output, record that honestly and
+do not smooth it into the main consensus.
+
 ---
 
 ## 7. Interpreting outputs
@@ -420,7 +493,24 @@ path on the host and must export it for the subprocess only.
 
 Gemini in particular may emit keychain warnings and still succeed.
 
-### 11.4 Treating controversial-figure rounds as reputation scoring
+### 11.4 Forgetting useful enrichment seats because they are not part of the default roster
+
+The leader should remember that free-model or OpenCode-style seats can add real
+value when used deliberately.
+
+Do not fall into the habit of:
+
+- running only the default roster mechanically
+- forgetting cheap extra coverage when it is available
+- or treating enrichment seats as too low-status to bother with
+
+The right pattern is:
+
+- primary roster first
+- enrichment seats when they are likely to improve the round
+- honest labeling if the extra seat is experimental or degraded
+
+### 11.5 Treating controversial-figure rounds as reputation scoring
 
 The system should surface:
 

@@ -40,6 +40,11 @@ DeepSeek is **not** a local CLI seat here.
 It is normally accessed through the repo's direct HTTP integration or an
 equivalent direct API call using the local decrypted key.
 
+Free-model / OpenCode-style seats are **not** part of the mandatory core roster,
+but they are still worth remembering as optional enrichment seats when they can
+add a useful extra angle at low cost. Use them to enrich a round, not to replace
+the main vendor/direct-API quorum.
+
 ---
 
 ## 3. Where to look first
@@ -140,6 +145,8 @@ Every voice should answer the **same** prompt.
 - `Claude`: real `claude -p`
 - `DeepSeek`: repo Elixir action or direct HTTP API with the CA bundle fix above
 - `Copilot`: an explicit independent position, not just a summary of others
+- optional enrichment seat: a real OpenCode/free-model voice when it is
+  available and likely to add value
 
 ### 5.3 Save raw artifacts temporarily
 
@@ -200,3 +207,6 @@ Do **not** flatten real disagreement away just to make the round look neat.
 
 The discussion leader's job is not to make the round look complete; it is to
 make the round's **actual roster and evidence trail** explicit and recoverable.
+
+That includes remembering when an experimental free-model seat could enrich the
+discussion, and then labeling that seat honestly if it is used.
