@@ -802,3 +802,20 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  explicitly want centralized search and alerting. The only remaining nuance was
  timing: most voices were comfortable with an eventual advanced runbook, while
  the most conservative view preferred waiting until there is real demand.
+
+## Round 110: phpIPAM Is the Wrong Authority for a Repo-Native Homelab Inventory
+**Consensus:** The panel rejected adopting phpIPAM as a new source of truth for
+ IP-address-to-host mappings in the current setup. The core reason was not that
+ phpIPAM is a bad tool in the abstract, but that the repo already has a declared
+ authority model: `lib/hosts.nix` owns operational/network-layer metadata and is
+ already tied into DNS, SSH, DHCP reservations, ingress labels, and inventory
+ checks. phpIPAM’s strongest value here would only be browsing convenience —
+ visual subnet views, quick queries, scans, and a friendlier UI — while its
+ strongest cost would be introducing a second mutable authority with database,
+ sync, and drift risks. The maintained line was: do not adopt phpIPAM, do not
+ introduce it as a read/write sync peer, and instead improve repo-native
+ inventory UX with generated views, subnet/utilization reports, query tooling,
+ and tighter reduction of remaining duplicated inventory surfaces. A small
+ minority allowed that a future read-only mirror generated from repo data could
+ be defensible if browsing pain becomes real, but no voice supported phpIPAM as
+ the operational source of truth.
