@@ -786,3 +786,19 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  direct HTTP for DeepSeek, keep OpenCode for free-model experiments and future
  session-backed server use, and add Pi only as an opt-in secondary harness for
  BYOK provider experiments after real credentialed verification.
+
+## Round 109: Graylog Is an Optional Observability Layer, Not the Default Wear Fix
+**Consensus:** The panel converged that Graylog Open is mostly a solution to a
+ different problem than the one that prompted the question. The existing local
+ HDD/RAM-oriented mitigations already address SSD wear directly: journald can be
+ moved to secondary storage, noisy ZFS debug logging can be kept in RAM, and the
+ router stack already supports persistent journal layout on secondary storage.
+ Graylog's real value is centralized observability — cross-host search,
+ retention, dashboards, and alerting — not boot-media preservation. For that
+ reason, the round rejected Graylog as a first-class default for Proxmox and
+ router users. The maintained line was: keep local HDD/RAM logging as the main
+ recommendation, keep router log storage local and self-contained, and treat
+ Graylog at most as an optional advanced runbook for multi-node operators who
+ explicitly want centralized search and alerting. The only remaining nuance was
+ timing: most voices were comfortable with an eventual advanced runbook, while
+ the most conservative view preferred waiting until there is real demand.
