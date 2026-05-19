@@ -769,3 +769,20 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  HTML companion because it is the strongest long-lived hierarchical design
  document among the disputed candidates, while queues, short operational notes,
  and ordinary round records remain Markdown-only.
+
+## Round 108: Pi Is a Useful Second Harness, Not the New Primary One
+**Consensus:** The panel rejected a simple “replace OpenCode with Pi” story.
+ Pi's strongest value is as a thin bring-your-own-key harness for bounded
+ one-shot runs: explicit provider/model selection, stateless invocation, and
+ JSON-friendly output make it attractive for API-key-backed seats that do not
+ need a vendor-tuned CLI. But the round also converged that OpenCode remains
+ more useful for this project's specific free-model history because it already
+ demonstrated access to curated free voices, while the live Pi seat failed
+ locally with `No models available` and unverified model hydration. DeepSeek did
+ not move: the earlier local decision still stands that direct HTTP/API
+ integration is cleaner than routing DeepSeek through either OpenCode or Pi for
+ ordinary one-shot rounds. The practical recommendation was therefore a
+ disciplined hybrid boundary: keep vendor CLIs for serious named seats, keep
+ direct HTTP for DeepSeek, keep OpenCode for free-model experiments and future
+ session-backed server use, and add Pi only as an opt-in secondary harness for
+ BYOK provider experiments after real credentialed verification.
