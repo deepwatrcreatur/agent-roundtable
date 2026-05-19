@@ -724,6 +724,23 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  rather than less bespoke security work, the architecture may be right while the
  product still fails.
 
+## Round 111: Paraxial Improves Scanner Hygiene, Not the Release Control Plane
+**Consensus:** The panel judged Michael Lubas / Paraxial.io's GitHub Actions
+ guidance as competent but narrow. It does contain real improvements: PR-time
+ scanning, failing CI on findings, and least-privilege `GITHUB_TOKEN` scoping
+ with `permissions: contents: read` are all materially better than passive or
+ over-privileged defaults. But the round converged that this is still mainly
+ scanner-integration and workflow-hygiene advice, not architectural hardening of
+ GitHub Actions as a trust system. The material leaves the critical
+ Mini-Shai-Hulud-class questions mostly untouched: `pull_request_target`
+ misuse, `workflow_run` privilege hops, action pinning, cache trust boundaries,
+ OIDC trust scoping, runner-memory token theft, and — most importantly —
+ release-authority separation. So the guidance does not overturn the earlier
+ rounds. It improves the “find bad code in PRs” layer and trims some blast
+ radius inside existing workflows, but mostly confirms the deeper conclusion
+ that a safer forge needs host-native separation of ordinary CI from trusted
+ release authority.
+
 ## Round 105: A Major Zig→Rust Port Should Be Run as a Translation-Knowledge Program
 **Consensus:** If a major rewrite like Bun’s Zig→Rust port is meant to produce
  reusable value for future model-assisted translation work, leadership should not
