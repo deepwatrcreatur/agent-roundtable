@@ -458,6 +458,10 @@ Recommended files:
 
 The durable note should capture the consensus, not every raw paragraph.
 
+Publishing is not finished when the note exists locally. After updating the
+durable files, the leader should make sure the archival commit is actually
+created and pushed unless the maintainer explicitly asked to leave it unpushed.
+
 ---
 
 ## 10. Safe git workflow for publishing rounds
@@ -470,7 +474,8 @@ Use this workflow:
 1. inspect `git status`
 2. if dirty and not clearly yours, create a separate worktree/branch
 3. write round notes there
-4. commit and push from the clean worktree
+4. commit and push from the clean worktree after verifying the intended archive
+   files
 5. only then fast-forward or merge into `main`
 
 This avoids overwriting unrelated local documentation or implementation work.
@@ -537,6 +542,9 @@ When handing a round to the next discussion leader, include:
 - whether the round is first-pass, red-team, or narrowed follow-up
 - whether durable notes were written
 - whether commit/push happened
+
+Do not treat "notes written locally" as equivalent to "round published". The
+handoff should say explicitly if the archival commit is still only local.
 
 ---
 

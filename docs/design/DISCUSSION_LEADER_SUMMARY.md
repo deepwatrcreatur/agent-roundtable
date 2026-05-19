@@ -170,6 +170,9 @@ Then update:
 - `docs/design/rounds/historical-synthesis.md`
 - any queue/index files affected
 
+Before declaring the round finished, commit and push the archival update unless
+the maintainer explicitly asked you to stop before publication.
+
 ---
 
 ## 6. Vaglio web app note
