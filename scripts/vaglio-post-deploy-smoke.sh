@@ -19,10 +19,12 @@ proxmox_host="${1:-root@10.10.11.55}"
 router_host="${2:-root@10.10.10.1}"
 ctid="${3:-104}"
 
+ssh_cmd=(ssh -F /dev/null)
+
 printf '=== vaglio post-deploy smoke ===\n'
 printf 'proxmox host: %s\nrouter host: %s\nctid: %s\n\n' "$proxmox_host" "$router_host" "$ctid"
 
-ssh "$proxmox_host" "
+"${ssh_cmd[@]}" "$proxmox_host" "
   pct status $ctid
   printf '\n---\n'
   pct exec $ctid -- sh -lc '
@@ -34,19 +36,19 @@ ssh "$proxmox_host" "
 
     for demo in forgejo kubernetes nixpkgs; do
       printf \"\n=== %s local route ===\n\" \"\$demo\"
-      curl -I --max-time 15 \"http://127.0.0.1:4000/forgejo-shell?demo=\$demo\"
+      curl -I --max-time 30 \"http://127.0.0.1:4000/forgejo-shell?demo=\$demo\"
       printf \"\n---\n\"
       curl --max-time 30 -s \"http://127.0.0.1:4000/forgejo-shell?demo=\$demo\" \
-        | rg -n \"Sampled Repo Evidence|Top sampled contributors|Recent sampled commits|Sampled path hotspots|Selected demo details\" -n || true
+        | grep -n -E \"Sampled Repo Evidence|Top sampled contributors|Recent sampled commits|Sampled path hotspots|Selected demo details\" || true
     done
   '
 "
 
 printf '\n=== public route ===\n'
-if ssh "$router_host" "curl -k -I --max-time 15 https://roundtable.deepwatercreature.com/forgejo-shell"; then
+if "${ssh_cmd[@]}" "$router_host" "curl -k -I --max-time 15 https://roundtable.deepwatercreature.com/forgejo-shell"; then
   for demo in forgejo kubernetes nixpkgs; do
     printf '\n=== %s public markers ===\n' "$demo"
-    ssh "$router_host" "curl -k --max-time 30 -s 'https://roundtable.deepwatercreature.com/forgejo-shell?demo=$demo' | rg -n 'Sampled Repo Evidence|Top sampled contributors|Recent sampled commits|Sampled path hotspots|Selected demo details' -n || true"
+    "${ssh_cmd[@]}" "$router_host" "curl -k --max-time 30 -s 'https://roundtable.deepwatercreature.com/forgejo-shell?demo=$demo' | grep -n -E 'Sampled Repo Evidence|Top sampled contributors|Recent sampled commits|Sampled path hotspots|Selected demo details' || true"
   done
 else
   printf 'router probe unavailable; local container checks above remain authoritative\n'
