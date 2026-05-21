@@ -1,6 +1,6 @@
 # 77 — Large Demo Prewarm Scaling
 
-Status: `in-progress`
+Status: `done`
 Suggested branch: `fix/large-demo-prewarm-scaling`
 Deployment target: `vaglio`
 Deployment coordination: `exclusive single-writer host lock while live deploy work is active`
@@ -57,5 +57,26 @@ degrades on the largest curated repo.
 The deployment hardening that made the standalone host stable now lives in
 `76-standalone-vaglio-service-hardening.md`. This item is intentionally about
 performance/scale, not service boot correctness.
+
+Outcome on `vaglio` as of May 21, 2026:
+
+- `roundtable-prewarm-public-repo-cache.service` now warms all three demos:
+  - `forgejo`
+  - `kubernetes`
+  - `nixpkgs`
+- `nixpkgs.term` now exists under
+  `/var/lib/roundtable/state/public-repo-cache/`
+- `/forgejo-shell?demo=nixpkgs` now shows the sampled evidence sections instead
+  of the fallback-only surface
+
+Implementation notes:
+
+- `nixpkgs` now carries a repo-specific sampling profile
+- the prewarm timeout budget honors a larger per-demo floor only when a demo
+  explicitly asks for one
+- `nixpkgs` now uses a lighter sample shape during prewarm:
+  - lower `sample_depth`
+  - fewer recent commits
+  - fewer path-log entries
 
 Current owner: `Codex`
