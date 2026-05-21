@@ -958,3 +958,17 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  line is therefore not “replace all CI” but “demote CI providers into controlled
  executors under host authority,” with the host brokering leases, credentials,
  attestation evaluation, trust-tier transitions, and human-gated promotion.
+
+## Round 122: Buildkite Is the Best Reference, Not the Sovereign Contract
+**Consensus:** The panel converged that Buildkite is the strongest current
+ external reference for a programmable controlled-executor boundary — polling
+ agents, programmatic dispatch, logs, artifacts, and a cleaner separation
+ between controller and worker than GitHub-shaped runner accelerators. But it
+ rejected making Buildkite's pipeline/build/job model the canonical internal
+ form. The maintained line is that Vaglio should keep a narrower native
+ executor contract centered on claims, leases, attempts, events, gates,
+ artifacts/attestations, and terminal results, while copying only the useful
+ executor-boundary ideas from Buildkite and implementing provider compatibility
+ outward via adapters. The first local runner should therefore speak the
+ Vaglio-native contract directly, and a Buildkite subscription should wait until
+ the native contract and local executor path are proven.

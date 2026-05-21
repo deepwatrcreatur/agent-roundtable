@@ -37,6 +37,9 @@ Do not work on an item already marked `in-progress` by another agent.
 94. [`92-canonical-governance-object-model.md`](./92-canonical-governance-object-model.md) — `ready` — `[structural]` Canonical governance object model
 95. [`93-backend-adapter-and-performance-tier-contract.md`](./93-backend-adapter-and-performance-tier-contract.md) — `ready` — `[hosting]` Backend adapter and performance-tier contract
 96. [`94-governance-state-export-and-backend-migration.md`](./94-governance-state-export-and-backend-migration.md) — `ready` — `[integrity]` Governance state export and backend migration
+97. [`95-buildkite-compatible-controlled-executor.md`](./95-buildkite-compatible-controlled-executor.md) — `ready` — `[tools]` Buildkite-compatible controlled executor
+98. [`96-board-kanban-read-model.md`](./96-board-kanban-read-model.md) — `ready` — `[structural]` Board kanban read model
+99. [`97-browseable-board-surface.md`](./97-browseable-board-surface.md) — `ready` — `[product]` Browseable board surface
 
 ### Foundation (do first, in order)
 
