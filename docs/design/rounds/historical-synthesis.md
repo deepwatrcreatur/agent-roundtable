@@ -947,3 +947,14 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  required mitigation is provider portability, a startup-owned object model, and
  repo-portable memory/artifacts that prevent any single backend from becoming
  the sole owner of governance truth.
+
+## Round 121: Orchestration Authority Belongs in the Control Plane, Not the Runner
+**Consensus:** The panel converged that for an agent-oriented forge, multi-agent
+ orchestration is not a separable workflow add-on but part of the control plane
+ itself, because the same sovereign must own claims, leases, trust tiers,
+ attempt lineage, scoped credentials, promotion gates, and final publish
+ authority. But it also converged that execution runtime remains separable and
+ can stay with today's GitHub-compatible CI providers. The near-term product
+ line is therefore not “replace all CI” but “demote CI providers into controlled
+ executors under host authority,” with the host brokering leases, credentials,
+ attestation evaluation, trust-tier transitions, and human-gated promotion.
