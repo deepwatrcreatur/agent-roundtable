@@ -111,6 +111,12 @@ defmodule Roundtable.PublicRepoDemoTest do
     assert get_in(payload, ["dashboard", "stress", "headline"]) =~ "Prediction error"
   end
 
+  test "rejects invalid snapshot export ids" do
+    assert_raise ArgumentError, ~r/invalid demo id/, fn ->
+      PublicRepoDemo.export_snapshot("../escape", runner: FakeCommandRunner)
+    end
+  end
+
   test "times out slow snapshots for interactive surfaces" do
     assert {:error, :timeout} =
              PublicRepoDemo.snapshot_with_timeout("forgejo",

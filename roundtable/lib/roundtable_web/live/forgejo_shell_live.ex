@@ -219,7 +219,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
-          <.metric_card :for={metric <- @demo.dashboard.stress.metrics} metric={metric} accent="heat" />
+          <.metric_card :for={metric <- @demo.dashboard.stress.metrics} metric={metric} accent={:heat} />
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">

@@ -88,12 +88,29 @@ defmodule Roundtable.PublicRepoDemo do
   @spec export_snapshot(String.t(), options()) :: {:ok, Path.t()} | {:error, term()}
   def export_snapshot(id, opts \\ []) do
     output_root = Keyword.get(opts, :output_root, "reports/public-repo-demos")
+    safe_id = safe_export_id(id)
 
     with {:ok, snapshot} <- snapshot(id, opts) do
-      File.mkdir_p!(output_root)
-      path = Path.join(output_root, "#{id}.json")
-      File.write!(path, Jason.encode_to_iodata!(snapshot, pretty: true))
-      {:ok, path}
+      expanded_root = Path.expand(output_root)
+      path = Path.join(expanded_root, "#{safe_id}.json")
+
+      with :ok <- File.mkdir_p(expanded_root),
+           true <- String.starts_with?(Path.expand(path), expanded_root <> "/"),
+           {:ok, encoded_snapshot} <- Jason.encode_to_iodata(snapshot, pretty: true),
+           :ok <- File.write(path, encoded_snapshot) do
+        {:ok, path}
+      else
+        false -> {:error, :invalid_output_path}
+        {:error, _reason} = error -> error
+      end
+    end
+  end
+
+  defp safe_export_id(id) do
+    if Regex.match?(~r/\A[a-zA-Z0-9_-]+\z/, id) do
+      id
+    else
+      raise ArgumentError, "invalid demo id for export path: #{inspect(id)}"
     end
   end
 
