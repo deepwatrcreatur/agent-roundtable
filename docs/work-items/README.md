@@ -96,7 +96,7 @@ Do not work on an item already marked `in-progress` by another agent.
 22. [`29-eval-judge.md`](./29-eval-judge.md) — `done` — **Codex** — LLM-as-judge metrics (`Vaglio.Eval.Judge`)
 23. [`30-eval-task-set.md`](./30-eval-task-set.md) — `done` — **Gemini** — design 12 eval tasks
 31. [`31-blind-comparison.md`](./31-blind-comparison.md) — `done` — **Codex** — blind side-by-side comparison interface
-32. [`32-run-first-eval.md`](./32-run-first-eval.md) — `in-progress` — **Gemini** — execute 6-task eval batch + report
+32. [`32-run-first-eval.md`](./32-run-first-eval.md) — `blocked` — **Gemini** — execute 6-task eval batch + report
 
 ### Epistemic Integrity & WebUI (Protocol 15)
 
