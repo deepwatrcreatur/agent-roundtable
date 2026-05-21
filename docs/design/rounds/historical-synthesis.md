@@ -932,3 +932,18 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  slice remained deliberately tiny, and the main warning was to avoid scope creep
  into a second VCS, a workflow engine, or a Gastown-style orchestration
  monster.
+
+## Round 120: Outsource the Substrate, Keep the Governance Truth
+**Consensus:** The panel accepted a credible startup thesis in which a company
+ specializes above the code-hosting/storage substrate while relying on
+ providers such as ERSC or `code.storage` for lower-level persistence,
+ transport, uptime, and hardware concerns. But the round made the dependency
+ boundary explicit: this only works if the startup's canonical product remains
+ the governance/control plane above the VCS rather than “better hosting by
+ proxy.” The maintained line was that the durable differentiated assets are
+ claims, leases, attempt/supersession lineage, review and promotion semantics,
+ decision memory, and maintainer-facing trust support. The main risk is
+ bargaining power and disintermediation by the substrate provider, so the
+ required mitigation is provider portability, a startup-owned object model, and
+ repo-portable memory/artifacts that prevent any single backend from becoming
+ the sole owner of governance truth.
