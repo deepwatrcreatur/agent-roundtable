@@ -31,13 +31,23 @@ ssh "$proxmox_host" "
     ss -ltnp | grep 4000 || true
     printf \"\n---\n\"
     ls -la /var/lib/roundtable/state/public-repo-cache 2>/dev/null || true
+
+    for demo in forgejo kubernetes nixpkgs; do
+      printf \"\n=== %s local route ===\n\" \"\$demo\"
+      curl -I --max-time 15 \"http://127.0.0.1:4000/forgejo-shell?demo=\$demo\"
+      printf \"\n---\n\"
+      curl --max-time 30 -s \"http://127.0.0.1:4000/forgejo-shell?demo=\$demo\" \
+        | rg -n \"Sampled Repo Evidence|Top sampled contributors|Recent sampled commits|Sampled path hotspots|Selected demo details\" -n || true
+    done
   '
 "
 
 printf '\n=== public route ===\n'
-ssh "$router_host" "curl -k -I --max-time 15 https://roundtable.deepwatercreature.com/forgejo-shell"
-
-for demo in forgejo kubernetes nixpkgs; do
-  printf '\n=== %s demo markers ===\n' "$demo"
-  ssh "$router_host" "curl -k --max-time 30 -s 'https://roundtable.deepwatercreature.com/forgejo-shell?demo=$demo' | rg -n 'Sampled Repo Evidence|Top sampled contributors|Recent sampled commits|Sampled path hotspots|Selected demo details' -n || true"
-done
+if ssh "$router_host" "curl -k -I --max-time 15 https://roundtable.deepwatercreature.com/forgejo-shell"; then
+  for demo in forgejo kubernetes nixpkgs; do
+    printf '\n=== %s public markers ===\n' "$demo"
+    ssh "$router_host" "curl -k --max-time 30 -s 'https://roundtable.deepwatercreature.com/forgejo-shell?demo=$demo' | rg -n 'Sampled Repo Evidence|Top sampled contributors|Recent sampled commits|Sampled path hotspots|Selected demo details' -n || true"
+  done
+else
+  printf 'router probe unavailable; local container checks above remain authoritative\n'
+fi

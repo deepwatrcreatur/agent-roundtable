@@ -100,7 +100,9 @@ nix run .#vaglio-post-deploy-smoke
 ```
 
 That smoke check now validates the public `forgejo`, `kubernetes`, and
-`nixpkgs` demo surfaces, not just one sample route.
+`nixpkgs` demo surfaces, not just one sample route. It treats the local
+container endpoint as authoritative and uses the router/public hostname probe as
+best-effort.
 
 Helper script notes live in:
 
