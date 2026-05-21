@@ -908,3 +908,15 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  favored smallest slice was claims + leases + attempt log + human promotion
  gate, with the maintainer UX feeling like a calmer PR/activity surface rather
  than an orchestration console.
+
+## Round 119: Explain the Control Plane as a Reservation Board, Not a Monster
+**Consensus:** The panel converged that the optional hosted control plane should
+ be explained in plain terms as a small shared coordination layer for agent
+ work — essentially a reservation board, permit desk, or referee for who is
+ doing what right now. The maintained line was: keep code history in Git/`jj`,
+ keep portable project memory in the repo, and let the hosting site own only
+ the live shared facts that need one referee: claims, expiring leases, attempt
+ lineage, scoped authority, and human promotion gates. The smallest useful
+ slice remained deliberately tiny, and the main warning was to avoid scope creep
+ into a second VCS, a workflow engine, or a Gastown-style orchestration
+ monster.
