@@ -43,7 +43,7 @@ defmodule Roundtable.PublicRepoDemoTest do
 
       "git", ["-C", repo_dir, "fetch", "--depth", depth, "origin", tracked_ref], _opts ->
         assert String.contains?(repo_dir, "roundtable-public-demo-")
-        assert depth == "40"
+        assert depth == "20"
         assert tracked_ref == "refs/heads/master"
         {"", 0}
 
@@ -55,11 +55,11 @@ defmodule Roundtable.PublicRepoDemoTest do
         assert String.contains?(repo_dir, "roundtable-public-demo-")
         {"   22  Alice Example <alice@example.com>\n   11  Bob Example <bob@example.com>\n    7  Carol Example <carol@example.com>\n", 0}
 
-      "git", ["-C", repo_dir, "log", "--format=%ct\t%an\t%H", "--max-count=12", "FETCH_HEAD"], _opts ->
+      "git", ["-C", repo_dir, "log", "--format=%ct\t%an\t%H", "--max-count=8", "FETCH_HEAD"], _opts ->
         assert String.contains?(repo_dir, "roundtable-public-demo-")
         {"1715616000\tAlice Example\tdeadbeef\n1715529600\tBob Example\tcafebabe\n1715443200\tCarol Example\t8badf00d\n", 0}
 
-      "git", ["-C", repo_dir, "log", "--format=", "--name-only", "--max-count=30", "FETCH_HEAD"], _opts ->
+      "git", ["-C", repo_dir, "log", "--format=", "--name-only", "--max-count=12", "FETCH_HEAD"], _opts ->
         assert String.contains?(repo_dir, "roundtable-public-demo-")
         {"pkgs/top-level/all-packages.nix\npkgs/top-level/all-packages.nix\nnixos/modules/services/networking/firewall.nix\nnixos/modules/services/networking/firewall.nix\nnixos/modules/services/networking/firewall.nix\n", 0}
 
@@ -78,6 +78,7 @@ defmodule Roundtable.PublicRepoDemoTest do
     assert snapshot.source.tracked_ref == "refs/heads/master"
     assert Enum.any?(snapshot.source.refs, &(&1.ref == "HEAD"))
     assert Enum.any?(snapshot.source.refs, &(&1.ref == "refs/heads/master"))
+    assert snapshot.source.history_summary.sample_depth == 20
     assert snapshot.source.history_summary.sampled_commit_count == 40
     assert snapshot.source.history_summary.contributor_count == 3
     assert Enum.at(snapshot.source.history_summary.path_hotspots, 0) == %{
@@ -112,10 +113,15 @@ defmodule Roundtable.PublicRepoDemoTest do
 
   test "times out slow snapshots for interactive surfaces" do
     assert {:error, :timeout} =
-             PublicRepoDemo.snapshot_with_timeout("nixpkgs",
+             PublicRepoDemo.snapshot_with_timeout("forgejo",
                runner: SlowCommandRunner,
                timeout_ms: 1
              )
+  end
+
+  test "uses the larger configured timeout floor for nixpkgs" do
+    assert PublicRepoDemo.timeout_ms_for("nixpkgs", timeout_ms: 1) == 120_000
+    assert PublicRepoDemo.timeout_ms_for("forgejo", timeout_ms: 30_000) == 30_000
   end
 
   test "reuses a fresh cached snapshot without running git again" do
@@ -146,13 +152,13 @@ defmodule Roundtable.PublicRepoDemoTest do
 
   test "falls back to stale cache when refresh times out" do
     cache_root = Path.join(System.tmp_dir!(), "roundtable-public-cache-#{System.unique_integer()}")
-    cache_file = Path.join(cache_root, "nixpkgs.term")
+    cache_file = Path.join(cache_root, "forgejo.term")
 
     File.mkdir_p!(cache_root)
 
     stale_snapshot = %{
       generated_at: "2026-05-12T16:00:00Z",
-      demo: %{id: "nixpkgs", name: "Nixpkgs", teaser: "cached"},
+      demo: %{id: "forgejo", name: "Forgejo", teaser: "cached"},
       source: %{slug: "cached/source", history_summary: %{sampled_commit_count: 9}},
       imported_repo: %{},
       shell_inputs: %{},
@@ -163,7 +169,7 @@ defmodule Roundtable.PublicRepoDemoTest do
     File.write!(cache_file, :erlang.term_to_binary(stale_snapshot))
 
     assert {:ok, snapshot} =
-             PublicRepoDemo.cached_snapshot("nixpkgs",
+             PublicRepoDemo.cached_snapshot("forgejo",
                runner: SlowCommandRunner,
                cache_root: cache_root,
                ttl_ms: 1,

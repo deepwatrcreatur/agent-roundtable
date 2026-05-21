@@ -17,11 +17,11 @@ defmodule Roundtable.PublicRepoDemo do
   def snapshot(id, opts \\ []) do
     runner = Keyword.get(opts, :runner, SystemCmdRunner)
     base_url = Keyword.get(opts, :base_url, "https://codeberg.org")
-    sample_depth = Keyword.get(opts, :sample_depth, 40)
 
     with {:ok, demo} <- InvestorDemo.import(id, base_url: base_url),
+         sampling_opts <- sampling_opts(demo, opts),
          {:ok, source_snapshot} <-
-           source_snapshot(demo, runner: runner, sample_depth: sample_depth) do
+           source_snapshot(demo, Keyword.merge([runner: runner], sampling_opts)) do
       {:ok,
        %{
          generated_at: Keyword.get(opts, :generated_at, DateTime.utc_now() |> DateTime.to_iso8601()),
@@ -41,7 +41,7 @@ defmodule Roundtable.PublicRepoDemo do
 
   @spec snapshot_with_timeout(String.t(), options()) :: {:ok, map()} | {:error, term()}
   def snapshot_with_timeout(id, opts \\ []) do
-    timeout_ms = Keyword.get(opts, :timeout_ms, 5_000)
+    timeout_ms = timeout_ms_for(id, opts)
     task = Task.async(fn -> snapshot(id, Keyword.delete(opts, :timeout_ms)) end)
 
     case Task.yield(task, timeout_ms) || Task.shutdown(task, :brutal_kill) do
@@ -122,7 +122,6 @@ defmodule Roundtable.PublicRepoDemo do
 
   defp source_snapshot(demo, opts) do
     runner = Keyword.fetch!(opts, :runner)
-    sample_depth = Keyword.get(opts, :sample_depth, 40)
     source = demo.source
     clone_url = clone_url(source.url)
     tracked_ref = "refs/heads/#{demo.shell_inputs.default_branch}"
@@ -130,7 +129,7 @@ defmodule Roundtable.PublicRepoDemo do
     with {ls_remote_output, 0} <-
            runner.cmd("git", ["ls-remote", clone_url, "HEAD", tracked_ref], stderr_to_stdout: true),
          {:ok, history_summary} <-
-           shallow_history_summary(clone_url, tracked_ref, sample_depth, runner) do
+           shallow_history_summary(clone_url, tracked_ref, runner, opts) do
       {:ok,
        %{
          label: source.label,
@@ -150,7 +149,10 @@ defmodule Roundtable.PublicRepoDemo do
     end
   end
 
-  defp shallow_history_summary(clone_url, tracked_ref, sample_depth, runner) do
+  defp shallow_history_summary(clone_url, tracked_ref, runner, opts) do
+    sample_depth = Keyword.get(opts, :sample_depth, 40)
+    recent_commit_limit = Keyword.get(opts, :recent_commit_limit, 12)
+    path_log_limit = Keyword.get(opts, :path_log_limit, 30)
     repo_dir = Path.join(System.tmp_dir!(), "roundtable-public-demo-#{System.unique_integer([:positive])}")
     depth = Integer.to_string(sample_depth)
 
@@ -175,13 +177,13 @@ defmodule Roundtable.PublicRepoDemo do
            {log_output, 0} <-
              runner.cmd(
                "git",
-               ["-C", repo_dir, "log", "--format=%ct\t%an\t%H", "--max-count=12", "FETCH_HEAD"],
+               ["-C", repo_dir, "log", "--format=%ct\t%an\t%H", "--max-count=#{recent_commit_limit}", "FETCH_HEAD"],
                stderr_to_stdout: true
              ),
            {paths_output, 0} <-
              runner.cmd(
                "git",
-               ["-C", repo_dir, "log", "--format=", "--name-only", "--max-count=30", "FETCH_HEAD"],
+               ["-C", repo_dir, "log", "--format=", "--name-only", "--max-count=#{path_log_limit}", "FETCH_HEAD"],
                stderr_to_stdout: true
              ) do
           parsed_shortlog = parse_shortlog(shortlog_output)
@@ -210,6 +212,37 @@ defmodule Roundtable.PublicRepoDemo do
       File.rm_rf(repo_dir)
     end
   end
+
+  defp sampling_opts(demo, opts) do
+    configured = Map.get(demo, :source_sampling, %{})
+
+    []
+    |> put_opt(:sample_depth, Keyword.get(opts, :sample_depth, Map.get(configured, :sample_depth, 40)))
+    |> put_opt(
+      :recent_commit_limit,
+      Keyword.get(opts, :recent_commit_limit, Map.get(configured, :recent_commit_limit, 12))
+    )
+    |> put_opt(:path_log_limit, Keyword.get(opts, :path_log_limit, Map.get(configured, :path_log_limit, 30)))
+  end
+
+  @doc false
+  def timeout_ms_for(id, opts \\ []) do
+    base_url = Keyword.get(opts, :base_url, "https://codeberg.org")
+
+    configured_timeout_ms =
+      case InvestorDemo.import(id, base_url: base_url) do
+        {:ok, demo} -> demo |> Map.get(:source_sampling, %{}) |> Map.get(:timeout_ms)
+        {:error, _reason} -> nil
+      end
+
+    case configured_timeout_ms do
+      nil -> Keyword.get(opts, :timeout_ms, 5_000)
+      configured -> max(Keyword.get(opts, :timeout_ms, configured), configured)
+    end
+  end
+
+  defp put_opt(opts, _key, nil), do: opts
+  defp put_opt(opts, key, value), do: Keyword.put(opts, key, value)
 
   defp parse_ls_remote(output) do
     output

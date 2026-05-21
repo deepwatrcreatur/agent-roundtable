@@ -19,6 +19,12 @@ defmodule Roundtable.InvestorDemo do
         slug: "NixOS/nixpkgs",
         url: "https://github.com/NixOS/nixpkgs"
       },
+      source_sampling: %{
+        sample_depth: 20,
+        timeout_ms: 120_000,
+        recent_commit_limit: 8,
+        path_log_limit: 12
+      },
       import_target: %{
         repo_slug: "vaglio-demos/nixpkgs",
         default_branch: "master",
@@ -491,6 +497,7 @@ defmodule Roundtable.InvestorDemo do
          name: profile.name,
          teaser: profile.teaser,
          source: profile.source,
+         source_sampling: Map.get(profile, :source_sampling, %{}),
          imported_repo: %{
            base_url: base_url,
            repo_url:

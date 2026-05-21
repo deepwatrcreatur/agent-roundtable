@@ -1,6 +1,6 @@
 # 77 — Large Demo Prewarm Scaling
 
-Status: `ready`
+Status: `in-progress`
 Suggested branch: `fix/large-demo-prewarm-scaling`
 Deployment target: `vaglio`
 Deployment coordination: `exclusive single-writer host lock while live deploy work is active`
@@ -57,3 +57,5 @@ degrades on the largest curated repo.
 The deployment hardening that made the standalone host stable now lives in
 `76-standalone-vaglio-service-hardening.md`. This item is intentionally about
 performance/scale, not service boot correctness.
+
+Current owner: `Codex`
