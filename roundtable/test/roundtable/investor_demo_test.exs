@@ -26,6 +26,10 @@ defmodule Roundtable.InvestorDemoTest do
       assert length(demo.dashboard.metrics) >= 3
       assert length(demo.dashboard.hotspots) >= 2
       assert length(demo.dashboard.provenance) >= 2
+      assert demo.dashboard.stress.headline =~ "Prediction error"
+      assert length(demo.dashboard.stress.metrics) >= 3
+      assert length(demo.dashboard.stress.hotspots) >= 2
+      assert length(demo.dashboard.stress.history) >= 2
     end
 
     test "rejects unknown demo ids" do

@@ -4,6 +4,20 @@ Each file is one unit of work. Claim a `ready` item by changing its status to
 `in-progress` and committing before starting. Do not start a `blocked` item.
 Do not work on an item already marked `in-progress` by another agent.
 
+## Live Host Coordination
+
+- Treat each live deployment target as a single-writer resource.
+- If an item deploys to `vaglio` or changes its live services, record that in
+  the item file and treat that host as exclusively owned until the deploy step
+  is finished or explicitly handed off.
+- Do not run parallel deploys, rebuilds, `systemctl restart`, or cache-warming
+  jobs against the same host from different agent sessions.
+- If a host-scoped item is already `in-progress`, assume its deployment target
+  is locked even if the code changes look unrelated.
+- This lock applies to live host actions, not to repo work in general.
+  Parallel branch work, including unrelated areas such as DBus integration, is
+  still encouraged when it does not operate on the same deployment target.
+
 ## Status model
 
 - `ready` — can start now
@@ -153,7 +167,7 @@ Do not work on an item already marked `in-progress` by another agent.
 
 63. [`71-forgejo-shell-shareable-web-entry.md`](./71-forgejo-shell-shareable-web-entry.md) — `done` — **Codex** — `[product]` Forgejo shell shareable web entry
 64. [`72-forgejo-shell-public-demo-polish.md`](./72-forgejo-shell-public-demo-polish.md) — `done` — **Codex** — `[market]` Forgejo shell public demo polish
-65. [`76-standalone-vaglio-service-hardening.md`](./76-standalone-vaglio-service-hardening.md) — `done` — `[hosting]` Standalone Vaglio service hardening
+65. [`76-standalone-vaglio-service-hardening.md`](./76-standalone-vaglio-service-hardening.md) — `done` — **Codex** — `[hosting]` Standalone Vaglio service hardening
 
 ### Prediction Calibration & Resource Coordination (Rounds 87-88)
 

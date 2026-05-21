@@ -2,6 +2,8 @@
 
 Status: `done`
 Suggested branch: `fix/standalone-vaglio-service-hardening`
+Deployment target: `vaglio`
+Deployment coordination: `exclusive single-writer host lock while live deploy work is active`
 
 ## Goal
 
@@ -67,8 +69,77 @@ Observed on the real `vaglio` host on May 10, 2026:
   - the credential directory is treated as optional
   - the service launches from a writable checkout instead of the packaged
     read-only source path
-- Coordination note:
-  - single-writer discipline on `vaglio` should apply to live mutating actions
-    such as rebuilds, restarts, or runtime warmup against the running host
-  - parallel branch work and unrelated code changes should not be blocked by that
-    live-host mutation boundary
+Operational note from May 14, 2026:
+
+- `vaglio` is a single-writer deployment target for this item.
+- Parallel agent rebuilds/restarts on the same CT can race in `/var/lib/roundtable`
+  and leave `roundtable.service` or the cache-prewarm service in a broken state.
+- Any agent touching this item should pause before live deployment if another
+  agent session is already rebuilding or restarting services on `vaglio`.
+- This does not block parallel code work on other branches; it only blocks
+  overlapping live deploy actions against the same host.
+
+Recommended read-only lock check before any live deploy:
+
+```bash
+./scripts/vaglio-readonly-preflight.sh
+nix run .#vaglio-readonly-preflight
+```
+
+If that output shows an active rebuild, switch, or another agent-owned service
+operation, stop and hand off instead of attempting a second live deploy.
+
+Recommended post-deploy smoke check:
+
+```bash
+./scripts/vaglio-post-deploy-smoke.sh
+nix run .#vaglio-post-deploy-smoke
+```
+
+Branch status on PR `#88` as of May 15, 2026:
+
+- runtime source refresh is keyed to the copied flake source path instead of a
+  generic `"dirty"` marker
+- wrapper setup now uses an explicit setup lock and atomic source replacement
+- `roundtable-web` and prewarm now use separate runtime roots, deps, and build
+  paths
+- the prewarm wrapper routes arguments through the Mix task parser instead of
+  passing raw CLI args directly into `PublicRepoDemo.prewarm/2`
+- dependency bootstrap is gated on source changes instead of running on every
+  invocation
+- Hex/Rebar bootstrap is skipped after the first successful runtime setup
+- `ROUNDTABLE_RUNTIME_NAMESPACE` is pinned explicitly in the systemd unit
+  environments
+- `cache_static_manifest` was removed from prod config to eliminate a misleading
+  missing-manifest startup warning
+- the prewarm Mix task now has a regression test that verifies flags like
+  `--timeout-ms` do not get treated as demo IDs
+- the read-only preflight and post-deploy smoke helpers are exposed as flake
+  apps and covered by a flake check build path
+
+Deployment outcome on the real `vaglio` host as of May 21, 2026:
+
+- `roundtable.service` is active on the standalone `vaglio` LXC host without
+  runtime-only systemd drop-ins
+- `/forgejo-shell` serves from the deployed standalone flake profile
+- `roundtable-prewarm-public-repo-cache.service` now completes successfully
+- cached snapshot artifacts exist under
+  `/var/lib/roundtable/state/public-repo-cache/`
+- sampled evidence sections are live for at least:
+  - `forgejo`
+  - `kubernetes`
+
+Additional fixes that were required during rollout:
+
+- the prewarm oneshot service no longer asks systemd to manage the same
+  state directory twice
+- wrapper setup locks are now released before the wrapper `exec`s into the
+  long-running command, so successful runs do not leave stale lock dirs behind
+
+Residual limitation moved out of this item:
+
+- `nixpkgs` still times out during cache prewarm and falls back to the lighter
+  page variant without sampled evidence sections
+- follow-up: `77-large-demo-prewarm-scaling.md`
+
+Current owner: `Codex`

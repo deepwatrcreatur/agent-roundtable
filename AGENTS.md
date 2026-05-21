@@ -41,6 +41,16 @@ being built now.
    starting work. This is how contention is avoided.
 4. Do not start a `blocked` item. Do not start an item already `in-progress`.
 
+If the item touches the shared live `vaglio` host:
+
+5. Treat `vaglio` as a single-writer deployment target.
+6. Before any live deploy action, run `./scripts/vaglio-readonly-preflight.sh`
+   or `nix run .#vaglio-readonly-preflight`.
+7. After a live deploy, run `./scripts/vaglio-post-deploy-smoke.sh` or
+   `nix run .#vaglio-post-deploy-smoke`.
+8. Parallel branch work is still fine; only overlapping live deploy actions on
+   the same host need serialization.
+
 ---
 
 ## Discussion norms (the satisfied protocol)

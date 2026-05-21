@@ -3,6 +3,8 @@
 {
   imports = [ "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix" ];
 
+  boot.zfs.forceImportRoot = false;
+
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   networking.hostName = "vaglio-installer";

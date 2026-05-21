@@ -81,6 +81,35 @@ From this repository root:
 sudo nixos-rebuild switch --flake .#vaglio
 ```
 
+Before any live deploy on a shared `vaglio` host, run the read-only preflight:
+
+```bash
+./scripts/vaglio-readonly-preflight.sh
+nix run .#vaglio-readonly-preflight
+```
+
+If another agent is already rebuilding or restarting services on the same CT,
+stop and hand off. Parallel branch work is fine; overlapping live deploy actions
+against the same host are not.
+
+After a live deploy, run the smoke check:
+
+```bash
+./scripts/vaglio-post-deploy-smoke.sh
+nix run .#vaglio-post-deploy-smoke
+```
+
+That smoke check now validates the public `forgejo`, `kubernetes`, and
+`nixpkgs` demo surfaces, not just one sample route. It treats the local
+container endpoint as authoritative and uses the router/public hostname probe as
+best-effort.
+
+Helper script notes live in:
+
+```bash
+./scripts/README.md
+```
+
 That profile gives you:
 
 - the Phoenix / LiveView web service on port `4000`

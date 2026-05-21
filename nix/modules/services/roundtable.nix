@@ -35,6 +35,12 @@ in
       description = "CLI package installed for local maintainer/TUI workflows.";
     };
 
+    prewarmPackage = lib.mkOption {
+      type = lib.types.package;
+      default = pkgs."roundtable-prewarm-public-repo-cache";
+      description = "Package providing the public-repo cache prewarm command.";
+    };
+
     port = lib.mkOption {
       type = lib.types.port;
       default = 4000;
@@ -89,6 +95,26 @@ in
       description = "Additional packages to install on the host for local workflows.";
     };
 
+    prewarmPublicRepoCache = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Warm cached public demo snapshots after the roundtable service starts.";
+      };
+
+      demos = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ "forgejo" "kubernetes" "nixpkgs" ];
+        description = "Demo ids to prewarm into the persistent public-repo cache.";
+      };
+
+      timeoutMs = lib.mkOption {
+        type = lib.types.int;
+        default = 30000;
+        description = "Per-demo timeout used by the public repo prewarm command.";
+      };
+    };
+
     secretKeyBaseFile = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = null;
@@ -134,6 +160,7 @@ in
         [
           cfg.cliPackage
           cfg.package
+          cfg.prewarmPackage
           pkgs.git
           pkgs.gh
           pkgs.dolt
@@ -174,6 +201,7 @@ in
             "XDG_STATE_HOME=${stateHome}"
             "MIX_ENV=prod"
             "ROUNDTABLE_WEB=true"
+            "ROUNDTABLE_RUNTIME_NAMESPACE=roundtable-web"
             "ROUNDTABLE_STATE_DIR=${stateHome}/state"
             "PORT=${toString cfg.port}"
             "PHX_HOST=${cfg.phoenixHost}"
@@ -209,6 +237,61 @@ in
         '';
         Restart = "on-failure";
         RestartSec = "5s";
+      };
+    };
+
+    systemd.services.roundtable-prewarm-public-repo-cache = lib.mkIf cfg.prewarmPublicRepoCache.enable {
+      description = "Warm cached public-repo snapshots for the roundtable demo";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "roundtable.service" ];
+      wants = [ "roundtable.service" ];
+      path = with pkgs; [
+        coreutils
+      ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        WorkingDirectory = stateHome;
+        LoadCredential =
+          credential "secret_key_base" cfg.secretKeyBaseFile
+          ++ credential "github_token" cfg.githubTokenFile
+          ++ credential "anthropic_api_key" cfg.anthropicApiKeyFile
+          ++ credential "openai_api_key" cfg.openaiApiKeyFile
+          ++ credential "gemini_api_key" cfg.geminiApiKeyFile
+          ++ credential "deepseek_api_key" cfg.deepseekApiKeyFile;
+        Environment = [
+          "HOME=${stateHome}"
+          "XDG_STATE_HOME=${stateHome}"
+          "MIX_ENV=prod"
+          "ROUNDTABLE_WEB=false"
+          "ROUNDTABLE_RUNTIME_NAMESPACE=roundtable-prewarm-public-repo-cache"
+          "ROUNDTABLE_STATE_DIR=${stateHome}/state"
+          "ROUNDTABLE_PUBLIC_REPO_CACHE_DIR=${stateHome}/state/public-repo-cache"
+        ];
+        ExecStart = pkgs.writeShellScript "roundtable-prewarm-public-repo-cache-start" ''
+          set -eu
+          mkdir -p "$HOME/state" "$HOME/state/public-repo-cache"
+          credential_dir="''${CREDENTIALS_DIRECTORY:-}"
+
+          if [ -n "$credential_dir" ] && [ -f "$credential_dir/secret_key_base" ]; then
+            export SECRET_KEY_BASE="$(cat "$credential_dir/secret_key_base")"
+          elif [ -f "$HOME/secret_key_base" ]; then
+            export SECRET_KEY_BASE="$(cat "$HOME/secret_key_base")"
+          else
+            echo "SECRET_KEY_BASE unavailable for prewarm" >&2
+            exit 1
+          fi
+
+          ${exportOptionalCredential "GH_TOKEN" "github_token"}
+          ${exportOptionalCredential "ANTHROPIC_API_KEY" "anthropic_api_key"}
+          ${exportOptionalCredential "OPENAI_API_KEY" "openai_api_key"}
+          ${exportOptionalCredential "GEMINI_API_KEY" "gemini_api_key"}
+          ${exportOptionalCredential "DEEPSEEK_API_KEY" "deepseek_api_key"}
+
+          exec ${cfg.prewarmPackage}/bin/roundtable-prewarm-public-repo-cache \
+            --timeout-ms ${toString cfg.prewarmPublicRepoCache.timeoutMs} \
+            ${lib.escapeShellArgs cfg.prewarmPublicRepoCache.demos}
+        '';
       };
     };
   };
