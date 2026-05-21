@@ -34,6 +34,9 @@ Do not work on an item already marked `in-progress` by another agent.
 91. [`89-forge-claim-and-lease-protocol.md`](./89-forge-claim-and-lease-protocol.md) — `ready` — `[structural]` Forge claim and lease protocol
 92. [`90-agent-capability-and-promotion-boundaries.md`](./90-agent-capability-and-promotion-boundaries.md) — `ready` — `[security]` Agent capability and promotion boundaries
 93. [`91-maintainer-activity-and-promotion-surface.md`](./91-maintainer-activity-and-promotion-surface.md) — `ready` — `[product]` Maintainer activity and promotion surface
+94. [`92-canonical-governance-object-model.md`](./92-canonical-governance-object-model.md) — `ready` — `[structural]` Canonical governance object model
+95. [`93-backend-adapter-and-performance-tier-contract.md`](./93-backend-adapter-and-performance-tier-contract.md) — `ready` — `[hosting]` Backend adapter and performance-tier contract
+96. [`94-governance-state-export-and-backend-migration.md`](./94-governance-state-export-and-backend-migration.md) — `ready` — `[integrity]` Governance state export and backend migration
 
 ### Foundation (do first, in order)
 
