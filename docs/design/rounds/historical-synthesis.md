@@ -724,23 +724,6 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  rather than less bespoke security work, the architecture may be right while the
  product still fails.
 
-## Round 111: Paraxial Improves Scanner Hygiene, Not the Release Control Plane
-**Consensus:** The panel judged Michael Lubas / Paraxial.io's GitHub Actions
- guidance as competent but narrow. It does contain real improvements: PR-time
- scanning, failing CI on findings, and least-privilege `GITHUB_TOKEN` scoping
- with `permissions: contents: read` are all materially better than passive or
- over-privileged defaults. But the round converged that this is still mainly
- scanner-integration and workflow-hygiene advice, not architectural hardening of
- GitHub Actions as a trust system. The material leaves the critical
- Mini-Shai-Hulud-class questions mostly untouched: `pull_request_target`
- misuse, `workflow_run` privilege hops, action pinning, cache trust boundaries,
- OIDC trust scoping, runner-memory token theft, and — most importantly —
- release-authority separation. So the guidance does not overturn the earlier
- rounds. It improves the “find bad code in PRs” layer and trims some blast
- radius inside existing workflows, but mostly confirms the deeper conclusion
- that a safer forge needs host-native separation of ordinary CI from trusted
- release authority.
-
 ## Round 105: A Major Zig→Rust Port Should Be Run as a Translation-Knowledge Program
 **Consensus:** If a major rewrite like Bun’s Zig→Rust port is meant to produce
  reusable value for future model-assisted translation work, leadership should not
@@ -836,3 +819,28 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  minority allowed that a future read-only mirror generated from repo data could
  be defensible if browsing pain becomes real, but no voice supported phpIPAM as
  the operational source of truth.
+
+## Round 111: Paraxial Improves Scanner Hygiene, Not GitHub's Control Plane
+**Consensus:** Paraxial / Lubas offers competent PR-time scanning and workflow
+ hygiene guidance inside GitHub Actions, especially least-privilege
+ `contents: read`, fail-the-build enforcement, and inline remediation UX. But
+ the panel did not treat this as a structural answer to Mini-Shai-Hulud-class
+ trust-boundary failures. The main gaps remain `pull_request_target`,
+ `workflow_run`, action pinning, cache trust, OIDC scoping, runner token theft,
+ and release-authority separation. The round therefore reinforced, rather than
+ overturned, the earlier conclusion that a better host-native security/control
+ plane still matters.
+
+## Round 112: `jj` Looks More Timely, Not More Sufficient
+**Consensus:** The panel accepted that the recent Git-vs-`jj` agent-era
+ discourse identifies real pain: Git's staging/index model, brittle rewrite
+ recovery, and conflict-as-blocker semantics are genuinely awkward for
+ agent-heavy local work. It also accepted that `jj` materially improves that
+ local workflow through operation-log recovery, durable conflict state, and
+ change-centric rewrite handling. But the round rejected the stronger investor-
+ flavored framing that Git is broadly “melting down” today or that a better VCS
+ substrate is the whole product thesis. The maintained line is unchanged:
+ `jj` is a useful enabling substrate, Git compatibility remains necessary at the
+ edge, and the real differentiated opportunity for this project is above the VCS
+ layer in proposal lineage, supersession, objection/conflict handling, durable
+ project memory, promotion semantics, and execution discipline.
