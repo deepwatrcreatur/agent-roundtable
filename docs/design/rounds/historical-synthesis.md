@@ -859,3 +859,17 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  estates, short-lived brokered or device-bound credentials, unusual bulk
  read/search/archive detection, selective high-sensitivity compartments, and
  explicit separation between source access, CI, and publication authority.
+
+## Round 114: Hermes Validates the Bot Surface, Not a Product Boundary Shift
+**Consensus:** The panel treated Hermes Agent's Telegram/message-bot integration
+ as strong validation that mobile dispatch, quick status checks, and final
+ synthesis delivery can work well through a chat interface. But it rejected chat
+ as the main surface for transcript browsing or structured round supervision.
+ The strongest maintained line from the earlier mobile-supervision work still
+ holds: the dashboard/PWA plus a companion API remain the rich browse/control
+ plane, while messaging is a bounded notify-and-dispatch layer. Hermes is
+ therefore most useful as a design reference and possibly a short-lived
+ deployment experiment, not as the final product boundary for Vaglio. The
+ favored direction is a thin Vaglio-owned bot/API layer that submits topics,
+ reports status, and returns concise syntheses while linking back to the pushed
+ GitHub transcript or web dashboard for deeper review.
