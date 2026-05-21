@@ -873,3 +873,16 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  favored direction is a thin Vaglio-owned bot/API layer that submits topics,
  reports status, and returns concise syntheses while linking back to the pushed
  GitHub transcript or web dashboard for deeper review.
+
+## Round 115: Exa Fits as a Premium Web-Discovery Tier
+**Consensus:** The panel treated Exa as a good fit for the project's real
+ live-web research needs — current docs, incidents, product comparisons, and
+ unfamiliar external tooling — but rejected using it as a universal search
+ default. The maintained line was: repo-local and code-host-native retrieval
+ first, direct fetch when the URL is already known, and Exa only for genuine
+ open-web discovery, freshness checks, or multi-source comparison. The preferred
+ defaults were cheap first-pass settings such as `contents.highlights: true`
+ plus `type: "auto"` or `"fast"`, with `deep-lite` / `deep` /
+ `deep-reasoning` reserved for genuinely synthesis-heavy questions. The guide
+ implication is that Exa should be presented as a bounded premium escalation
+ tier, not as a replacement for local search or direct source fetches.
