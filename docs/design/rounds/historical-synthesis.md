@@ -909,6 +909,18 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  gate, with the maintainer UX feeling like a calmer PR/activity surface rather
  than an orchestration console.
 
+## Round 118: Harnesses Help at the Edge, but the Control Plane Owns Coordination
+**Consensus:** The panel treated current major-provider harnesses as structurally
+ weak at multi-agent coordination because they are designed as strong
+ single-agent session managers, not as shared governance systems. The maintained
+ line was that harnesses can improve local discipline — especially programmable
+ ones like Pi — but the deeper problem is a layer-boundary problem: claims,
+ leases, attempt lineage, scoped authority, and promotion gates belong in a
+ control plane above the harness, not inside it. The practical recommendation
+ was to keep strong provider-native harnesses where they have pricing or quality
+ advantages, wrap them with thin preflight discipline, and invest first in
+ narrow control-plane primitives.
+
 ## Round 119: Explain the Control Plane as a Reservation Board, Not a Monster
 **Consensus:** The panel converged that the optional hosted control plane should
  be explained in plain terms as a small shared coordination layer for agent
