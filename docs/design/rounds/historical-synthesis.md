@@ -886,3 +886,25 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  `deep-reasoning` reserved for genuinely synthesis-heavy questions. The guide
  implication is that Exa should be presented as a bounded premium escalation
  tier, not as a replacement for local search or direct source fetches.
+
+## Round 116: Hygiene Needs a Read-Mostly Main Checkout and a Preflight Guard
+**Consensus:** The panel treated the recurring cleanup debt as a defaults and
+ enforcement failure more than a conceptual misunderstanding. The project
+ already knows to prefer worktrees, but the shared checkout is still the lowest
+ friction writable path, so agents keep mutating it and later force patch
+ replay, cherry-pick recovery, and artifact cleanup. The maintained line was:
+ make the shared checkout read-mostly / sync-only by default, surface that rule
+ in the root agent entrypoints, add a lightweight dirty-checkout preflight guard
+ before edits begin, and tighten ignore/worktree-path hygiene so `git status`
+ regains signal. In short: fewer reminders, more load-bearing defaults.
+
+## Round 117: The Forge Should Own Coordination Authority, Not the Whole Workflow
+**Consensus:** The panel treated `jj` as a real improvement for local agent-era
+ mutation and recovery, but not as a complete answer to multi-agent
+ coordination. The maintained line was that the successor forge should become a
+ narrow coordination and trust plane above Git/`jj`: first-class claims, leases,
+ attempt lineage, promotion gates, and scoped agent authority, while leaving
+ repo memory portable and keeping runtime/worktree mechanics mostly local. The
+ favored smallest slice was claims + leases + attempt log + human promotion
+ gate, with the maintainer UX feeling like a calmer PR/activity surface rather
+ than an orchestration console.
