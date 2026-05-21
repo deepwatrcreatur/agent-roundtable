@@ -13,7 +13,10 @@ These scripts are read-only operator helpers for the shared `vaglio` host.
   - also available as `nix run .#vaglio-post-deploy-smoke`
   - run after a live deploy
   - checks service state, port `4000`, cache directory visibility, the public
-    `/forgejo-shell` route, and demo markers for `?demo=kubernetes`
+    `/forgejo-shell` route, and demo markers for:
+    - `?demo=forgejo`
+    - `?demo=kubernetes`
+    - `?demo=nixpkgs`
 
 ## Coordination
 

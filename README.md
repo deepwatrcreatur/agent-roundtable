@@ -99,6 +99,9 @@ After a live deploy, run the smoke check:
 nix run .#vaglio-post-deploy-smoke
 ```
 
+That smoke check now validates the public `forgejo`, `kubernetes`, and
+`nixpkgs` demo surfaces, not just one sample route.
+
 Helper script notes live in:
 
 ```bash

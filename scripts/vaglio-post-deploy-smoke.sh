@@ -37,5 +37,7 @@ ssh "$proxmox_host" "
 printf '\n=== public route ===\n'
 ssh "$router_host" "curl -k -I --max-time 15 https://roundtable.deepwatercreature.com/forgejo-shell"
 
-printf '\n=== kubernetes demo markers ===\n'
-ssh "$router_host" "curl -k --max-time 20 -s 'https://roundtable.deepwatercreature.com/forgejo-shell?demo=kubernetes' | rg -n 'Sampled Repo Evidence|Top sampled contributors|Recent sampled commits|Sampled path hotspots|Selected demo details' -n || true"
+for demo in forgejo kubernetes nixpkgs; do
+  printf '\n=== %s demo markers ===\n' "$demo"
+  ssh "$router_host" "curl -k --max-time 30 -s 'https://roundtable.deepwatercreature.com/forgejo-shell?demo=$demo' | rg -n 'Sampled Repo Evidence|Top sampled contributors|Recent sampled commits|Sampled path hotspots|Selected demo details' -n || true"
+done
