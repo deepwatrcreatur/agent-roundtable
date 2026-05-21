@@ -844,3 +844,18 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  edge, and the real differentiated opportunity for this project is above the VCS
  layer in proposal lineage, supersession, objection/conflict handling, durable
  project memory, promotion semantics, and execution discipline.
+
+## Round 113: Compromised Editors Should Not Become Org-Wide Read Authority
+**Consensus:** The panel treated the recent GitHub internal-repo compromise via a
+ poisoned VS Code extension as a trust-boundary and blast-radius failure more
+ than a mere extension-marketplace failure. The extension was the entry vector,
+ but the deeper issue was that one compromised workstation identity appears to
+ have translated into very broad internal repo read power. The round sharply
+ distinguished this from Mini Shai-Hulud by plane — developer endpoint / source
+ read-plane versus CI / release-plane — while still insisting that both expose
+ the same architectural flaw: too much authority is aggregated into one
+ compromised seat. The maintained recommendation was that a next-generation forge
+ should assume endpoint compromise by default and respond with segmented code
+ estates, short-lived brokered or device-bound credentials, unusual bulk
+ read/search/archive detection, selective high-sensitivity compartments, and
+ explicit separation between source access, CI, and publication authority.
