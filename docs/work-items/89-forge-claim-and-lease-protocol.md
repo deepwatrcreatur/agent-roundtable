@@ -1,6 +1,6 @@
 # 89 — Forge Claim and Lease Protocol
 
-**Status:** `ready`
+**Status:** `in-progress` — **Codex**
 **Tag:** `[structural]`
 
 ## Goal
