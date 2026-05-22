@@ -1,6 +1,6 @@
 # 48 — Prediction Error Heatmap (System Stress UI)
 
-**Status:** `ready`
+**Status:** `in-progress` — **Codex**
 
 ## Goal
 Replace the linear "Notification List" with a visual heatmap of "System Stress" (Prediction Errors) to focus maintainer attention.
