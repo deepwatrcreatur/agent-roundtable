@@ -1,0 +1,263 @@
+{
+  "source": {
+    "label": "GitHub source",
+    "url": "https://github.com/NixOS/nixpkgs",
+    "history_summary": {
+      "derived_signals": {
+        "contributor_concentration": "low",
+        "top_author_share": 0.3,
+        "commits_per_day_window": 8.0
+      },
+      "path_hotspots": [
+        {
+          "path": "pkgs/by-name/ra/radicle-desktop/package.nix",
+          "mentions": 1
+        },
+        {
+          "path": "pkgs/by-name/vi/visual-paradigm-ce/package.nix",
+          "mentions": 1
+        }
+      ],
+      "recent_commits": [
+        {
+          "author": "nixpkgs-ci[bot]",
+          "committed_at_unix": 1779455731,
+          "sha": "c88807e015bf54046bb787782420f39211a47435"
+        },
+        {
+          "author": "Maximilian Bosch",
+          "committed_at_unix": 1779455664,
+          "sha": "fbeb6bc885a7ad588d536f7ba43ef74bdc27646c"
+        },
+        {
+          "author": "Pol Dellaiera",
+          "committed_at_unix": 1779454670,
+          "sha": "8651b53717f9609e39e71eba22660033922bc415"
+        },
+        {
+          "author": "Pol Dellaiera",
+          "committed_at_unix": 1779454255,
+          "sha": "4fc0c18e2093788c78e9b55c72d0f88c7f0d2be4"
+        },
+        {
+          "author": "Eli Saado",
+          "committed_at_unix": 1779454002,
+          "sha": "d0eb512214da0b36bb89b999165069b0988ea38d"
+        },
+        {
+          "author": "Felix Bargfeldt",
+          "committed_at_unix": 1779453655,
+          "sha": "647cb4a3404e373589f539610f95151bdaee51eb"
+        },
+        {
+          "author": "nixpkgs-ci[bot]",
+          "committed_at_unix": 1779452134,
+          "sha": "b322daaffa33f48a5f9964f6d3246ba39373d48b"
+        },
+        {
+          "author": "Adam C. Stephens",
+          "committed_at_unix": 1779452058,
+          "sha": "48296da27144b72a326e7a2cb5c31d8e291494f7"
+        }
+      ],
+      "top_contributors": [
+        {
+          "author": "R. Ryantm",
+          "commits": 729,
+          "email": "ryantm-bot@ryantm.com"
+        },
+        {
+          "author": "nixpkgs-ci[bot]",
+          "commits": 417,
+          "email": "190413589+nixpkgs-ci[bot]@users.noreply.github.com"
+        },
+        {
+          "author": "Sandro",
+          "commits": 129,
+          "email": "sandro.jaeckel@gmail.com"
+        },
+        {
+          "author": "Fabian Affolter",
+          "commits": 100,
+          "email": "mail@fabian-affolter.ch"
+        },
+        {
+          "author": "Peder Bergebakken Sundt",
+          "commits": 97,
+          "email": "pbsds@hotmail.com"
+        }
+      ],
+      "sampled_commit_count": 4280,
+      "sample_depth": 20,
+      "contributor_count": 531
+    },
+    "slug": "NixOS/nixpkgs",
+    "clone_url": "https://github.com/NixOS/nixpkgs.git",
+    "refs": [
+      {
+        "ref": "HEAD",
+        "sha": "c88807e015bf54046bb787782420f39211a47435"
+      },
+      {
+        "ref": "refs/heads/master",
+        "sha": "c88807e015bf54046bb787782420f39211a47435"
+      }
+    ],
+    "tracked_ref": "refs/heads/master"
+  },
+  "demo": {
+    "id": "nixpkgs",
+    "name": "NixOS/nixpkgs",
+    "teaser": "Massive infra codebase with broad subsystem ownership and frequent coordination churn."
+  },
+  "generated_at": "2026-05-22T13:33:18.110355Z",
+  "dashboard": {
+    "metrics": [
+      {
+        "label": "Maintainer concentration",
+        "value": "0.61",
+        "note": "Top 5 maintainers touch 61% of critical platform paths."
+      },
+      {
+        "label": "Contributor expertise signals",
+        "value": "14",
+        "note": "Fourteen contributors show repeated authorship in networking, NixOS modules, and release plumbing."
+      },
+      {
+        "label": "Subsystem hotspots",
+        "value": "3",
+        "note": "Networking, stdenv, and module evaluation dominate recent coordination cost."
+      }
+    ],
+    "headline": "Operational complexity with concentrated review bottlenecks.",
+    "narrative": "Vaglio highlights which maintainers absorb the coordination load, where routing and platform changes pile up, and how much of the rollout reasoning is already captured versus still trapped in chat.",
+    "stress": {
+      "history": [
+        {
+          "note": "Routing and DNS changes begin to overlap in the same rollout slice.",
+          "pressure": "Escalating coordination",
+          "window": "T-21d"
+        },
+        {
+          "note": "Evaluation failures and rollback planning stack on the same branch.",
+          "pressure": "Peak contention",
+          "window": "T-7d"
+        },
+        {
+          "note": "Operational notes land, but a few high-cost review surfaces remain contested.",
+          "pressure": "Partial stabilization",
+          "window": "T-1d"
+        }
+      ],
+      "metrics": [
+        {
+          "label": "Branch stress",
+          "value": "0.78",
+          "note": "The HA router rollout branch bundles multiple tightly coupled infra surfaces."
+        },
+        {
+          "label": "History heat",
+          "value": "3 peaks",
+          "note": "Networking, module evaluation, and release plumbing each show repeated stress spikes."
+        },
+        {
+          "label": "Active-inference confidence",
+          "value": "medium",
+          "note": "Enough structured evidence exists to rank hotspots, but not yet enough provenance to collapse uncertainty."
+        }
+      ],
+      "headline": "Prediction error clusters around infra-wide rollout paths.",
+      "narrative": "The first-pass stress model treats contested, high-blast-radius paths as high prediction error and stable, well-vouched paths as low prediction error. It complements raw churn by showing where coordination pressure is compounding rather than merely changing.",
+      "hotspots": [
+        {
+          "title": "router failover path",
+          "stress": "high",
+          "heat": "0.86",
+          "detail": "High precision operators disagree across firewall, DHCP, and DNS coupling, so contention remains costly even when code size is modest."
+        },
+        {
+          "title": "module evaluation path",
+          "stress": "high",
+          "heat": "0.81",
+          "detail": "Repeated evaluation regressions signal unresolved model mismatch rather than one-off patch churn."
+        },
+        {
+          "title": "release plumbing path",
+          "stress": "medium",
+          "heat": "0.63",
+          "detail": "Rollout notes and provenance reduce surprise, but the path still spikes when fixes arrive under time pressure."
+        }
+      ]
+    },
+    "hotspots": [
+      {
+        "signal": "Cross-host change coupling",
+        "area": "Networking / routers",
+        "note": "Changes to HA failover, firewalling, and DNS overlap across multiple machines."
+      },
+      {
+        "signal": "Review latency",
+        "area": "Module evaluation",
+        "note": "High reviewer load spikes when infra-wide options change."
+      },
+      {
+        "signal": "Escalating rollback cost",
+        "area": "Release plumbing",
+        "note": "Operational fixes often need provenance and rollout notes, not just code diffs."
+      }
+    ],
+    "expertise_signals": [
+      {
+        "title": "Infrastructure stewards",
+        "detail": "Repeat edits across router, secrets, and NixOS module surfaces signal high operational context."
+      },
+      {
+        "title": "Evaluation specialists",
+        "detail": "A smaller group consistently resolves failures tied to module graph and build-system edges."
+      }
+    ],
+    "provenance": [
+      {
+        "title": "Deliberation overlay",
+        "detail": "Link HA router changes to the exact roundtable discussions and rollout rationale that shaped them."
+      },
+      {
+        "title": "JJ-native review layer",
+        "detail": "Keep Git/Forgejo at the edge while preserving `jj`-level change identity for agent-heavy work."
+      }
+    ]
+  },
+  "imported_repo": {
+    "repo_url": "https://codeberg.org/vaglio-demos/nixpkgs",
+    "base_url": "https://codeberg.org",
+    "slug": "vaglio-demos/nixpkgs",
+    "tree_url": "https://codeberg.org/vaglio-demos/nixpkgs/src/branch/master"
+  },
+  "shell_inputs": {
+    "default_branch": "master",
+    "base_url": "https://codeberg.org",
+    "repo_slug": "vaglio-demos/nixpkgs",
+    "commit_sha": "deadbeef",
+    "head_ref": "feature/ha-router-rollout",
+    "merge_strategy": "rebase",
+    "pull_number": 1204,
+    "pull_title": "HA router and DNS failover hardening"
+  },
+  "import_steps": [
+    {
+      "status": "done",
+      "step": "Import public source",
+      "detail": "Mirror NixOS/nixpkgs into a Forgejo-hosted demo namespace without bespoke setup."
+    },
+    {
+      "status": "done",
+      "step": "Translate Git edge to jj semantics",
+      "detail": "Project refs, pull requests, and merges through the Git↔jj gateway before analysis."
+    },
+    {
+      "status": "done",
+      "step": "Render investor dashboard",
+      "detail": "Expose maintainer concentration, expertise signals, hotspots, provenance overlays, and the first stress/heat surface on the same host."
+    }
+  ]
+}
