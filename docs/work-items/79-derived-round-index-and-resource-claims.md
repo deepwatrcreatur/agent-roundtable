@@ -1,6 +1,6 @@
 # 79 — Derived Round Index and Resource Claim Fields
 
-**Status:** `ready`
+**Status:** `done` — **Codex**
 **Tag:** `[structural]`
 
 ## Goal
@@ -44,3 +44,22 @@ board model with explicit resource-claim fields for contention control.
   - `round-74-natural-repo-knowledge-base.md`
   - `round-88-agent-resource-contention.md`
 
+## Outcome
+
+- Added [docs/design/ROUND_METADATA_INDEX.md](../design/ROUND_METADATA_INDEX.md)
+  as the derived round metadata extraction spec.
+- Defined a concrete extracted record shape for round metadata, including:
+  - round number
+  - title
+  - tags
+  - status
+  - related rounds
+- Specified the board-side resource-claim fields directly in
+  `BOARD_EXECUTION_MODEL.md`, including:
+  - `contention_class`
+  - `resource_scope`
+  - `exclusive_lease_required`
+- Made the authority split explicit:
+  - markdown is canonical design memory
+  - the round index is a derived query surface
+  - board tables are operational enforcement state
