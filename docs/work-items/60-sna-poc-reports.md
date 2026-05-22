@@ -1,6 +1,6 @@
 # 60 — Public Repo SNA Reports (PoC)
 
-**Status:** `ready`
+**Status:** `in-progress` — **Codex**
 **Tag:** `[market]`
 
 ## Goal

@@ -1,0 +1,307 @@
+{
+  "source": {
+    "label": "GitHub source",
+    "url": "https://github.com/kubernetes/kubernetes",
+    "history_summary": {
+      "derived_signals": {
+        "contributor_concentration": "medium",
+        "top_author_share": 0.45,
+        "commits_per_day_window": 12.0
+      },
+      "path_hotspots": [
+        {
+          "path": "pkg/registry/resource/resourcepoolstatusrequest/strategy.go",
+          "mentions": 2
+        },
+        {
+          "path": "staging/src/k8s.io/apiserver/pkg/features/kube_features.go",
+          "mentions": 2
+        },
+        {
+          "path": "staging/src/k8s.io/apiserver/pkg/registry/rest/validate.go",
+          "mentions": 2
+        },
+        {
+          "path": "staging/src/k8s.io/apiserver/pkg/registry/rest/validate_test.go",
+          "mentions": 2
+        },
+        {
+          "path": "hack/golangci-hints.yaml",
+          "mentions": 1
+        },
+        {
+          "path": "hack/golangci.yaml",
+          "mentions": 1
+        },
+        {
+          "path": "hack/kube-api-linter/exceptions.yaml",
+          "mentions": 1
+        },
+        {
+          "path": "pkg/api/testing/validation.go",
+          "mentions": 1
+        }
+      ],
+      "recent_commits": [
+        {
+          "author": "Kubernetes Prow Robot",
+          "committed_at_unix": 1779407083,
+          "sha": "e136f39334a72b7d35069a97d373ccaa0211dcae"
+        },
+        {
+          "author": "Kubernetes Prow Robot",
+          "committed_at_unix": 1779403608,
+          "sha": "bfd1c1d5900231a9ff308b3fe5e489fcbbd80207"
+        },
+        {
+          "author": "Kubernetes Prow Robot",
+          "committed_at_unix": 1779398691,
+          "sha": "96914184bc3fe6d3c0195b5828c07a821ca6e093"
+        },
+        {
+          "author": "Kubernetes Prow Robot",
+          "committed_at_unix": 1779398683,
+          "sha": "323e89513a2083dcb41e55762c1c9ee666dbe73b"
+        },
+        {
+          "author": "Deepak Anand",
+          "committed_at_unix": 1779396469,
+          "sha": "ef0f2288631fec8b9b109428a1df36cfb86ca336"
+        },
+        {
+          "author": "Kubernetes Prow Robot",
+          "committed_at_unix": 1779392929,
+          "sha": "441eccd7e56fad199921c2843014970d2c85b8bd"
+        },
+        {
+          "author": "Yongrui Lin",
+          "committed_at_unix": 1779389456,
+          "sha": "6bf5c1bf6c5c4db9b4dbdd986a43259bf0022918"
+        },
+        {
+          "author": "Yongrui Lin",
+          "committed_at_unix": 1779389453,
+          "sha": "dd66e21dad399d9e2d52b5bc08a1dd1da7aa5c8f"
+        },
+        {
+          "author": "Kubernetes Prow Robot",
+          "committed_at_unix": 1779381526,
+          "sha": "f176c7f2692e00503d39c84e06e9cf27b9294150"
+        },
+        {
+          "author": "Kubernetes Prow Robot",
+          "committed_at_unix": 1779374690,
+          "sha": "963c3107f8c360538169ce9f32251a6d1d4c2022"
+        },
+        {
+          "author": "Kubernetes Prow Robot",
+          "committed_at_unix": 1779369408,
+          "sha": "ea692abff6bb8ed2b7e20d7e27de76f77bf083d6"
+        },
+        {
+          "author": "Ismail Alidzhikov",
+          "committed_at_unix": 1779366029,
+          "sha": "400f43e79b8dc9a5de7dcd9b6f7aa07d2084a162"
+        }
+      ],
+      "top_contributors": [
+        {
+          "author": "Kubernetes Prow Robot",
+          "commits": 3296,
+          "email": "20407524+k8s-ci-robot@users.noreply.github.com"
+        },
+        {
+          "author": "Patrick Ohly",
+          "commits": 345,
+          "email": "patrick.ohly@intel.com"
+        },
+        {
+          "author": "Davanum Srinivas",
+          "commits": 147,
+          "email": "davanum@gmail.com"
+        },
+        {
+          "author": "Joe Betz",
+          "commits": 127,
+          "email": "jpbetz@google.com"
+        },
+        {
+          "author": "yongruilin",
+          "commits": 116,
+          "email": "yongrlin@outlook.com"
+        }
+      ],
+      "sampled_commit_count": 8400,
+      "sample_depth": 40,
+      "contributor_count": 680
+    },
+    "slug": "kubernetes/kubernetes",
+    "clone_url": "https://github.com/kubernetes/kubernetes.git",
+    "refs": [
+      {
+        "ref": "HEAD",
+        "sha": "e136f39334a72b7d35069a97d373ccaa0211dcae"
+      },
+      {
+        "ref": "refs/heads/master",
+        "sha": "e136f39334a72b7d35069a97d373ccaa0211dcae"
+      }
+    ],
+    "tracked_ref": "refs/heads/master"
+  },
+  "demo": {
+    "id": "kubernetes",
+    "name": "kubernetes/kubernetes",
+    "teaser": "Large-scale upstream project with many subsystems, strong reviewer specialization, and obvious hotspot surfaces."
+  },
+  "generated_at": "2026-05-22T13:32:48.893689Z",
+  "dashboard": {
+    "metrics": [
+      {
+        "label": "Maintainer concentration",
+        "value": "0.47",
+        "note": "Top maintainers are less dominant overall, but critical subsystems still hinge on a narrow review core."
+      },
+      {
+        "label": "Contributor expertise signals",
+        "value": "21",
+        "note": "A deep bench exists, but expertise is partitioned by subsystem."
+      },
+      {
+        "label": "Subsystem hotspots",
+        "value": "4",
+        "note": "API machinery, controllers, test-infra, and release tooling dominate coordination heat."
+      }
+    ],
+    "headline": "Subsystem sprawl with highly specialized reviewer clusters.",
+    "narrative": "The investor story is not just repo analytics. Vaglio shows where controller, API machinery, and release engineering knowledge is concentrated, and where agent output needs durable provenance to stay governable.",
+    "stress": {
+      "history": [
+        {
+          "note": "Independent changes appear safe locally but begin to accumulate cross-cutting review cost.",
+          "pressure": "Subsystem drift",
+          "window": "T-30d"
+        },
+        {
+          "note": "Schema, controller, and release concerns converge on the same merge window.",
+          "pressure": "Compatibility crunch",
+          "window": "T-10d"
+        },
+        {
+          "note": "A small reviewer set absorbs most of the remaining uncertainty before release.",
+          "pressure": "Review compression",
+          "window": "T-2d"
+        }
+      ],
+      "metrics": [
+        {
+          "label": "Branch stress",
+          "value": "0.69",
+          "note": "Cross-SIG changes amplify review contention even when overall ownership is broad."
+        },
+        {
+          "label": "History heat",
+          "value": "4 peaks",
+          "note": "API machinery, controllers, release tooling, and test-infra recur as pressure zones."
+        },
+        {
+          "label": "Active-inference confidence",
+          "value": "high",
+          "note": "Maintainer specialization patterns are strong enough to make the hotspot ranking legible."
+        }
+      ],
+      "headline": "Stress concentrates where subsystem specialization meets release obligations.",
+      "narrative": "The active-inference view highlights controller and API machinery paths where small contributor pools must absorb high ambiguity under strong compatibility constraints.",
+      "hotspots": [
+        {
+          "title": "api machinery path",
+          "stress": "high",
+          "heat": "0.84",
+          "detail": "Compatibility obligations create repeated prediction error whenever controller-facing schema assumptions move."
+        },
+        {
+          "title": "controller logic path",
+          "stress": "high",
+          "heat": "0.79",
+          "detail": "Fast-moving control loops create dense change history, but only some of that churn resolves underlying uncertainty."
+        },
+        {
+          "title": "release tooling path",
+          "stress": "medium",
+          "heat": "0.66",
+          "detail": "Stress rises when release readiness depends on a narrow operational review core."
+        }
+      ]
+    },
+    "hotspots": [
+      {
+        "signal": "Architectural blast radius",
+        "area": "API machinery",
+        "note": "Schema and compatibility changes ripple across client, server, and docs surfaces."
+      },
+      {
+        "signal": "High churn density",
+        "area": "Controllers",
+        "note": "Frequent logic changes make ownership continuity especially valuable."
+      },
+      {
+        "signal": "Human bottleneck",
+        "area": "Release tooling",
+        "note": "Investor-facing story: Vaglio shortens the path from change to trustworthy rollout narrative."
+      }
+    ],
+    "expertise_signals": [
+      {
+        "title": "SIG-aligned expertise",
+        "detail": "Contributor clusters map cleanly to subsystem-specific knowledge pockets."
+      },
+      {
+        "title": "Reviewer continuity",
+        "detail": "A small set of people repeatedly stabilizes the same risky surfaces across release cycles."
+      }
+    ],
+    "provenance": [
+      {
+        "title": "Roundtable-backed triage",
+        "detail": "Attach decision history to high-blast-radius changes before they reach release coordination."
+      },
+      {
+        "title": "Lossy Git merge surfacing",
+        "detail": "Show where squash/rebase hides lineage so reviewers know when extra explanation is required."
+      }
+    ]
+  },
+  "imported_repo": {
+    "repo_url": "https://codeberg.org/vaglio-demos/kubernetes",
+    "base_url": "https://codeberg.org",
+    "slug": "vaglio-demos/kubernetes",
+    "tree_url": "https://codeberg.org/vaglio-demos/kubernetes/src/branch/master"
+  },
+  "shell_inputs": {
+    "default_branch": "master",
+    "base_url": "https://codeberg.org",
+    "repo_slug": "vaglio-demos/kubernetes",
+    "commit_sha": "cafebabe",
+    "head_ref": "feature/controller-observability",
+    "merge_strategy": "squash",
+    "pull_number": 884,
+    "pull_title": "Controller observability and ownership tracing"
+  },
+  "import_steps": [
+    {
+      "status": "done",
+      "step": "Import public source",
+      "detail": "Mirror kubernetes/kubernetes into a Forgejo-hosted demo namespace without bespoke setup."
+    },
+    {
+      "status": "done",
+      "step": "Translate Git edge to jj semantics",
+      "detail": "Project refs, pull requests, and merges through the Git↔jj gateway before analysis."
+    },
+    {
+      "status": "done",
+      "step": "Render investor dashboard",
+      "detail": "Expose maintainer concentration, expertise signals, hotspots, provenance overlays, and the first stress/heat surface on the same host."
+    }
+  ]
+}

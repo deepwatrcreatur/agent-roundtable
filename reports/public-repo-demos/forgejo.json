@@ -1,0 +1,319 @@
+{
+  "source": {
+    "label": "Codeberg source",
+    "url": "https://codeberg.org/forgejo/forgejo",
+    "history_summary": {
+      "derived_signals": {
+        "contributor_concentration": "medium",
+        "top_author_share": 0.5,
+        "commits_per_day_window": 12.0
+      },
+      "path_hotspots": [
+        {
+          "path": "options/locale_next/locale_en-US.json",
+          "mentions": 6
+        },
+        {
+          "path": "go.sum",
+          "mentions": 5
+        },
+        {
+          "path": "go.mod",
+          "mentions": 5
+        },
+        {
+          "path": "package-lock.json",
+          "mentions": 4
+        },
+        {
+          "path": "routers/web/web.go",
+          "mentions": 4
+        },
+        {
+          "path": "package.json",
+          "mentions": 3
+        },
+        {
+          "path": "templates/user/settings/authorized_integrations.tmpl",
+          "mentions": 3
+        },
+        {
+          "path": "tests/e2e/user-settings.test.e2e.ts",
+          "mentions": 3
+        }
+      ],
+      "recent_commits": [
+        {
+          "author": "B0sh",
+          "committed_at_unix": 1779448842,
+          "sha": "e49cb9e772798d674d369f85ccbe7860eee14d24"
+        },
+        {
+          "author": "hwipl",
+          "committed_at_unix": 1779446300,
+          "sha": "1ea5605eaeff4b601c1aeda7fd696ba2b5c0a6d0"
+        },
+        {
+          "author": "Renovate Bot",
+          "committed_at_unix": 1779442736,
+          "sha": "7054075be5af7b13f5e2339610579ea48f76d5ce"
+        },
+        {
+          "author": "Renovate Bot",
+          "committed_at_unix": 1779441202,
+          "sha": "ede3bbe670d58181dc09e9e9ef43e9388e5c43b3"
+        },
+        {
+          "author": "Maxim Cournoyer",
+          "committed_at_unix": 1779440951,
+          "sha": "8dd01fa86119e1af27d5a3ffd709feebd239f32a"
+        },
+        {
+          "author": "Gusted",
+          "committed_at_unix": 1779439228,
+          "sha": "4131cc4159e6134854a1d2485dc931320ce4ed5b"
+        },
+        {
+          "author": "Renovate Bot",
+          "committed_at_unix": 1779417493,
+          "sha": "294952b7746ddba6d3858b34e4203bdcd242ed27"
+        },
+        {
+          "author": "Shiny Nematoda",
+          "committed_at_unix": 1779394865,
+          "sha": "9ba57d587937c43b9b3ce0cb87464c024822cc1a"
+        },
+        {
+          "author": "guillermodotn",
+          "committed_at_unix": 1779393154,
+          "sha": "93638e11cc928461073b71d643b744156f74853c"
+        },
+        {
+          "author": "famfo",
+          "committed_at_unix": 1779392713,
+          "sha": "b87dfe1370ed7cc262b3f4dffc8ed4cfe7f31eaf"
+        },
+        {
+          "author": "Robert Wolff",
+          "committed_at_unix": 1779383420,
+          "sha": "96b31a9a9f2633f3c061e10a5824c8ba07cf9dcd"
+        },
+        {
+          "author": "Renovate Bot",
+          "committed_at_unix": 1779383340,
+          "sha": "7d0bac4b75863cd2a8fdb149601a5f32d19ac8aa"
+        }
+      ],
+      "top_contributors": [
+        {
+          "author": "Renovate Bot",
+          "commits": 12,
+          "email": "bot@kriese.eu"
+        },
+        {
+          "author": "Mathieu Fenniak",
+          "commits": 5,
+          "email": "mathieu@fenniak.net"
+        },
+        {
+          "author": "Robert Wolff",
+          "commits": 3,
+          "email": "mahlzahn@posteo.de"
+        },
+        {
+          "author": "Shiny Nematoda",
+          "commits": 3,
+          "email": "snematoda.751k2@aleeas.com"
+        },
+        {
+          "author": "Gusted",
+          "commits": 2,
+          "email": "postmaster@gusted.xyz"
+        }
+      ],
+      "sampled_commit_count": 40,
+      "sample_depth": 40,
+      "contributor_count": 19
+    },
+    "slug": "forgejo/forgejo",
+    "clone_url": "https://codeberg.org/forgejo/forgejo.git",
+    "refs": [
+      {
+        "ref": "HEAD",
+        "sha": "e49cb9e772798d674d369f85ccbe7860eee14d24"
+      },
+      {
+        "ref": "refs/heads/forgejo",
+        "sha": "e49cb9e772798d674d369f85ccbe7860eee14d24"
+      },
+      {
+        "ref": "refs/pull/2477/HEAD",
+        "sha": "633b9601f6b5bf6d8bf348eaa29499147ece57f0"
+      },
+      {
+        "ref": "refs/pull/4313/HEAD",
+        "sha": "741191a498f56cafcb267baa52eb2610032d0359"
+      },
+      {
+        "ref": "refs/pull/4320/HEAD",
+        "sha": "3eb178db497d255509cdc442664f674afaf51939"
+      }
+    ],
+    "tracked_ref": "refs/heads/forgejo"
+  },
+  "demo": {
+    "id": "forgejo",
+    "name": "forgejo/forgejo",
+    "teaser": "A self-hosted forge codebase that makes the product boundary itself easy to demonstrate."
+  },
+  "generated_at": "2026-05-22T13:32:20.821248Z",
+  "dashboard": {
+    "metrics": [
+      {
+        "label": "Maintainer concentration",
+        "value": "0.54",
+        "note": "A modest core still anchors critical forge workflows."
+      },
+      {
+        "label": "Contributor expertise signals",
+        "value": "9",
+        "note": "UI, auth, federation, and actions each show repeat expert contributors."
+      },
+      {
+        "label": "Subsystem hotspots",
+        "value": "3",
+        "note": "Web UI, repository APIs, and actions runners drive most coordination cost."
+      }
+    ],
+    "headline": "Product dogfooding story: Forgejo shell outside, Vaglio semantics inside.",
+    "narrative": "This demo makes the platform story concrete: repository browsing and account UX stay Forgejo-native while Vaglio adds semantic change tracking, provenance, and analysis surfaces beside it.",
+    "stress": {
+      "history": [
+        {
+          "note": "The shell can demo well before the semantic boundary is fully explained.",
+          "pressure": "Prototype ambiguity",
+          "window": "T-14d"
+        },
+        {
+          "note": "Separating Forgejo-native and Vaglio-native surfaces reduces confusion and lowers stress.",
+          "pressure": "Boundary clarification",
+          "window": "T-5d"
+        },
+        {
+          "note": "The remaining heat sits in policy and provenance, not basic routing or host availability.",
+          "pressure": "Governance follow-through",
+          "window": "T-1d"
+        }
+      ],
+      "metrics": [
+        {
+          "label": "Branch stress",
+          "value": "0.58",
+          "note": "Most uncertainty is architectural rather than operational: where should the semantic boundary live?"
+        },
+        {
+          "label": "History heat",
+          "value": "3 peaks",
+          "note": "Repository APIs, web UI, and actions automation carry most of the integration pressure."
+        },
+        {
+          "label": "Active-inference confidence",
+          "value": "medium-high",
+          "note": "Boundary clarity reduces stress faster than raw code churn reduction in this demo."
+        }
+      ],
+      "headline": "Product-boundary stress is lowest where Forgejo stays native and Vaglio stays semantic.",
+      "narrative": "This demo frames stress as the cost of forcing one layer to impersonate the other. Heat is highest where repository APIs, UI expectations, and automation governance overlap.",
+      "hotspots": [
+        {
+          "title": "repository api path",
+          "stress": "high",
+          "heat": "0.74",
+          "detail": "Heat appears where Git-facing expectations must be translated into a richer internal model without confusing operators."
+        },
+        {
+          "title": "web shell path",
+          "stress": "medium",
+          "heat": "0.61",
+          "detail": "UI reuse is valuable, but stress rises if product boundaries are hidden instead of made explicit."
+        },
+        {
+          "title": "actions governance path",
+          "stress": "medium",
+          "heat": "0.64",
+          "detail": "Agent-scale automation needs provenance and policy hooks or the apparent convenience becomes latent operational debt."
+        }
+      ]
+    },
+    "hotspots": [
+      {
+        "signal": "Compatibility surface",
+        "area": "Repository APIs",
+        "note": "This is where Git-shaped clients meet a more expressive internal model."
+      },
+      {
+        "signal": "Product leverage",
+        "area": "Web UI",
+        "note": "UI chrome can be reused while Vaglio adds differentiated analysis."
+      },
+      {
+        "signal": "Automation governance",
+        "area": "Actions / runners",
+        "note": "A natural place to show agent-scale provenance and control loops."
+      }
+    ],
+    "expertise_signals": [
+      {
+        "title": "Self-hosting credibility",
+        "detail": "Investors can see the product demonstrated on the very kind of platform it complements."
+      },
+      {
+        "title": "Boundary clarity",
+        "detail": "The shell shows which features remain Forgejo-native versus which become Vaglio-native."
+      }
+    ],
+    "provenance": [
+      {
+        "title": "Imported source + local semantics",
+        "detail": "Public upstream stays recognizable while imported analysis preserves a `jj`-first internal history."
+      },
+      {
+        "title": "Decision traceability",
+        "detail": "Overlay roundtable and review context on top of Forgejo pull-request flows."
+      }
+    ]
+  },
+  "imported_repo": {
+    "repo_url": "https://codeberg.org/vaglio-demos/forgejo",
+    "base_url": "https://codeberg.org",
+    "slug": "vaglio-demos/forgejo",
+    "tree_url": "https://codeberg.org/vaglio-demos/forgejo/src/branch/forgejo"
+  },
+  "shell_inputs": {
+    "default_branch": "forgejo",
+    "base_url": "https://codeberg.org",
+    "repo_slug": "vaglio-demos/forgejo",
+    "commit_sha": "8badf00d",
+    "head_ref": "feature/vaglio-shell",
+    "merge_strategy": "merge",
+    "pull_number": 66,
+    "pull_title": "Vaglio shell integration"
+  },
+  "import_steps": [
+    {
+      "status": "done",
+      "step": "Import public source",
+      "detail": "Mirror forgejo/forgejo into a Forgejo-hosted demo namespace without bespoke setup."
+    },
+    {
+      "status": "done",
+      "step": "Translate Git edge to jj semantics",
+      "detail": "Project refs, pull requests, and merges through the Git↔jj gateway before analysis."
+    },
+    {
+      "status": "done",
+      "step": "Render investor dashboard",
+      "detail": "Expose maintainer concentration, expertise signals, hotspots, provenance overlays, and the first stress/heat surface on the same host."
+    }
+  ]
+}
