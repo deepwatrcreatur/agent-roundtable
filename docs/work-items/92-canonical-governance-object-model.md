@@ -1,6 +1,6 @@
 # 92 — Canonical Governance Object Model
 
-**Status:** `in-progress` — **Codex**
+**Status:** `done` — **Codex**
 **Tag:** `[structural]`
 
 ## Goal
@@ -51,3 +51,24 @@ events, or workflow artifacts.
   - `89-forge-claim-and-lease-protocol.md`
   - `90-agent-capability-and-promotion-boundaries.md`
   - `91-maintainer-activity-and-promotion-surface.md`
+
+## Outcome
+
+- Added [docs/design/GOVERNANCE_OBJECT_MODEL.md](../design/GOVERNANCE_OBJECT_MODEL.md)
+  as the canonical governance/control-plane object-model note.
+- Defined canonical fields and relationships for:
+  - `Claim`
+  - `Lease`
+  - `Attempt`
+  - `Supersession`
+  - `ReviewState`
+  - `PromotionGate`
+  - `AuthorityScope`
+  - `DecisionRecord`
+- Explicitly classified which objects are:
+  - host-side live coordination state
+  - repo-local durable artifacts
+  - derived or indexed views
+- Added a governance-boundary note to `BOARD_EXECUTION_MODEL.md` so the board
+  remains an implementation-facing projection over the broader canonical object
+  model.
