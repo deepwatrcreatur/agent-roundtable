@@ -26,5 +26,6 @@ defmodule RoundtableWeb.Router do
     end
 
     live("/forgejo-shell", ForgejoShellLive)
+    live("/forgejo-shell/reports", ForgejoShellReportsLive)
   end
 end

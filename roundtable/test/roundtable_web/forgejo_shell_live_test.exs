@@ -26,6 +26,7 @@ defmodule RoundtableWeb.ForgejoShellLiveTest do
     assert html =~ "Forgejo Code Server Shell"
     assert html =~ "Public demo shell"
     assert html =~ "Start with this demo"
+    assert html =~ "Open snapshot reports"
     assert html =~ "Recommended first view"
     assert html =~ "Recommended first click"
     assert html =~ "Curated Investor Demos"
