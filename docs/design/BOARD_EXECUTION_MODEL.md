@@ -230,6 +230,21 @@ This project should treat `host:vaglio` as the canonical example:
 This keeps branch-parallelism intact while making resource-level leases a
 first-class board concern rather than a future prose-only reminder.
 
+The forge-native coordination layer should also distinguish:
+
+- `Claim`
+  - logical work ownership
+- `Lease`
+  - bounded shared-resource mutation authority
+- `Attempt`
+  - append-only execution lineage under a claim
+- `ReviewState`
+  - human-visible promotion or rejection checkpoint
+
+The board model can still store these in implementation-shaped tables, but the
+protocol-level distinction should remain visible so duplicate task work and
+shared-resource mutation are not collapsed into one state machine.
+
 ---
 
 ## 4. Work-item lifecycle

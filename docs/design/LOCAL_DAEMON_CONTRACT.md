@@ -190,6 +190,18 @@ branches of the same repo while still being unsafe to run `nixos-rebuild
 switch`, `systemctl restart`, or cache-warming jobs against the same host at
 the same time.
 
+The daemon should therefore be capable of interacting with two distinct host
+coordination concepts:
+
+- `Claim`
+  - "I own this logical work item"
+- `Lease`
+  - "I currently hold mutation authority for this shared resource scope"
+
+Those should not be treated as synonyms. A daemon may hold a claim without
+holding any live-resource lease, and it should acquire/renew/release leases only
+for the scopes that actually need mutation authority.
+
 ---
 
 ## 7. Attempt event model

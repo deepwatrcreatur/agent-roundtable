@@ -1,6 +1,6 @@
 # 89 — Forge Claim and Lease Protocol
 
-**Status:** `ready`
+**Status:** `done` — **Codex**
 **Tag:** `[structural]`
 
 ## Goal
@@ -47,3 +47,25 @@ than on a full workflow engine.
   - `74-local-daemon-lease-contract.md`
   - `78-resource-contention-and-single-writer-policy.md`
   - `79-derived-round-index-and-resource-claims.md`
+
+## Outcome
+
+- Added [docs/design/FORGE_CLAIM_LEASE_PROTOCOL.md](../design/FORGE_CLAIM_LEASE_PROTOCOL.md)
+  as the dedicated protocol note.
+- Defined canonical forge-native coordination objects for:
+  - `Claim`
+  - `Lease`
+  - `Attempt`
+  - `ReviewState`
+- Defined lease lifecycle semantics for:
+  - acquire
+  - renew / heartbeat
+  - expiry
+  - takeover
+  - operator override
+- Made the protocol explicitly distinguish:
+  - duplicate logical task work
+  - conflicting shared-resource mutation
+  - publish / promotion collisions
+- Updated board/daemon design docs so claim-vs-lease semantics are visible in
+  the existing execution model.

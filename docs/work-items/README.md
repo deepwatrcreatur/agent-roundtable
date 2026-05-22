@@ -63,7 +63,7 @@ The important rule is action class plus resource class:
 88. [`86-untrusted-contribution-trust-tiers.md`](./86-untrusted-contribution-trust-tiers.md) — `ready` — `[security]` Untrusted contribution trust tiers
 89. [`87-safe-default-cache-trust-boundaries.md`](./87-safe-default-cache-trust-boundaries.md) — `ready` — `[security]` Safe-by-default cache trust boundaries
 90. [`88-zero-config-trusted-publishing-ux.md`](./88-zero-config-trusted-publishing-ux.md) — `ready` — `[product]` Zero-config trusted publishing UX
-91. [`89-forge-claim-and-lease-protocol.md`](./89-forge-claim-and-lease-protocol.md) — `ready` — `[structural]` Forge claim and lease protocol
+91. [`89-forge-claim-and-lease-protocol.md`](./89-forge-claim-and-lease-protocol.md) — `done` — **Codex** — `[structural]` Forge claim and lease protocol
 92. [`90-agent-capability-and-promotion-boundaries.md`](./90-agent-capability-and-promotion-boundaries.md) — `ready` — `[security]` Agent capability and promotion boundaries
 93. [`91-maintainer-activity-and-promotion-surface.md`](./91-maintainer-activity-and-promotion-surface.md) — `ready` — `[product]` Maintainer activity and promotion surface
 94. [`92-canonical-governance-object-model.md`](./92-canonical-governance-object-model.md) — `ready` — `[structural]` Canonical governance object model
