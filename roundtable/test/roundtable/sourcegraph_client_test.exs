@@ -242,4 +242,19 @@ defmodule Roundtable.Sourcegraph.ClientTest do
     assert get_in(brief_input, [:source_evidence, :summary]) == "Refresh flow context"
     assert brief_input.evidence_records == [evidence]
   end
+
+  test "treats graphql errors as authoritative even when data is present" do
+    request_fun = fn _opts ->
+      {:ok,
+       %{
+         "data" => %{"search" => %{"results" => %{"results" => []}}},
+         "errors" => [%{"message" => "partial failure"}]
+       }}
+    end
+
+    assert {:error, {:sourcegraph_errors, [%{"message" => "partial failure"}]}} =
+             Client.semantic_search("acme/auth-service", "refs/heads/main", "src/auth", "token refresh",
+               request_fun: request_fun
+             )
+  end
 end

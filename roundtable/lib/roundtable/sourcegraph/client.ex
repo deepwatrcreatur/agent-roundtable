@@ -136,12 +136,15 @@ defmodule Roundtable.Sourcegraph.Client do
       |> Enum.reject(& &1.is_directory)
       |> Enum.take(read_limit)
 
-    Enum.reduce_while(files, {:ok, []}, fn file, {:ok, acc} ->
-      case read_file(repo, revision, file.path, opts) do
-        {:ok, body} -> {:cont, {:ok, acc ++ [body]}}
-        {:error, _reason} = error -> {:halt, error}
-      end
-    end)
+    case Enum.reduce_while(files, [], fn file, acc ->
+           case read_file(repo, revision, file.path, opts) do
+             {:ok, body} -> {:cont, [body | acc]}
+             {:error, _reason} = error -> {:halt, error}
+           end
+         end) do
+      {:error, _reason} = error -> error
+      bodies -> {:ok, Enum.reverse(bodies)}
+    end
   end
 
   defp search(repo, revision, path_scope, query, mode, opts) do
@@ -162,14 +165,11 @@ defmodule Roundtable.Sourcegraph.Client do
     request_fun = Keyword.get(opts, :request_fun, &default_request/1)
 
     case request_fun.(request_options(query, variables, opts)) do
+      {:ok, %{"errors" => errors}} when is_list(errors) and errors != [] ->
+        {:error, {:sourcegraph_errors, errors}}
+
       {:ok, %{"data" => data}} ->
         {:ok, data}
-
-      {:ok, %{"errors" => errors}} ->
-        {:error, {:sourcegraph_errors, errors}}
-
-      {:ok, %{"data" => _data, "errors" => errors}} when is_list(errors) and errors != [] ->
-        {:error, {:sourcegraph_errors, errors}}
 
       {:ok, other} ->
         {:error, {:unexpected_sourcegraph_response, other}}
