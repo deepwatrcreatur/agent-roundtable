@@ -1012,3 +1012,16 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  pretending there is one default “load-balanced IPv6 multi-WAN” answer. The
  maintained line was: keep IPv4 multi-WAN productized around failover, and make
  IPv6 multi-WAN a supportable toolbox guided by an explicit decision ladder.
+
+## Round 126: Elixir Is Plausible for `router-clat`, but the Contract Must Freeze Before the Boundary Does
+**Consensus:** The panel converged that Elixir is a credible fit for the
+ `router-clat` control plane, and that the system should not become
+ Tayga-shaped: the repo needs a backend-neutral control-plane contract,
+ preserved-behavior testing from day one, and a clean split where
+ `nix-router-optimized` remains the declarative host-integration layer. The
+ real disagreement was timing: Codex and Copilot argued for building the Elixir
+ path in-repo first and extracting only after parity and contract stability,
+ while Gemini and DeepSeek argued that a separate repo now would force better
+ product discipline. The maintained line was: freeze the behavior and testing
+ contract first, then let repo structure follow proven boundaries rather than
+ substitute for them.
