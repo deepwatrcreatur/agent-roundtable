@@ -1,6 +1,6 @@
 # 93 — Backend Adapter and Performance-Tier Contract
 
-**Status:** `ready`
+**Status:** `in-progress` — **Codex**
 **Tag:** `[hosting]`
 
 ## Goal
