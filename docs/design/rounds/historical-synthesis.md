@@ -972,3 +972,18 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  outward via adapters. The first local runner should therefore speak the
  Vaglio-native contract directly, and a Buildkite subscription should wait until
  the native contract and local executor path are proven.
+
+## Round 123: Token Credits Are Subsidized Vendor Financing, Not Runway-Equivalent Cash
+**Consensus:** The panel converged that the reported OpenAI/YC `$2M` token offer
+ is not economically equivalent to a `$2M` cash investment. It is better
+ understood as a restricted vendor-financing or capex/R&D subsidy that can
+ rationally be spent more aggressively than cash only in narrow cases where it
+ substitutes for scarce engineering time or unlocks high-value learning that
+ would otherwise be skipped. The strongest critique was that the structure can
+ manufacture subsidy-shaped progress, weak token-efficiency discipline, hidden
+ future gross-margin collapse, and provider lock-in, while still allowing
+ OpenAI to capture meaningful equity upside through the uncapped SAFE. The
+ strongest defense was that a real compute subsidy can accelerate exploration of
+ genuinely model-native product categories. The maintained line was: treat the
+ credits as constrained strategic fuel, preserve portability, and model the
+ business at unsubsidized rates the entire time.
