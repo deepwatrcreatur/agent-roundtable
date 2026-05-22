@@ -186,7 +186,7 @@ defmodule Roundtable.PublicRepoDemo do
     with {:ok, demo} <- InvestorDemo.import(demo_summary.id, base_url: base_url),
          snapshot when snapshot != :miss <- read_cached_report_snapshot(cache_root, demo_summary.id) do
       %{
-        demo: demo,
+        demo: Map.merge(demo_summary, demo),
         source: snapshot.source,
         imported_repo: snapshot.imported_repo,
         cache_status: :cached,

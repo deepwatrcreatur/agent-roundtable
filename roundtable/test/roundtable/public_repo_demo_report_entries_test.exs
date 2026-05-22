@@ -64,6 +64,7 @@ defmodule Roundtable.PublicRepoDemoReportEntriesTest do
     forgejo = Enum.find(entries, &(&1.demo.id == "forgejo"))
 
     assert forgejo.cache_status == :cached
+    assert forgejo.demo.source_label == "Codeberg source"
     assert forgejo.source.slug == "forgejo/forgejo"
     assert forgejo.source.history_summary.sampled_commit_count == 40
   end
