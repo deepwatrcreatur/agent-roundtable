@@ -191,6 +191,33 @@ Reusable policy bundles referenced by `work_items.workflow_ref`.
 
 ---
 
+## 3.7 Future resource-claim extension
+
+Current board leases attach to work attempts. That is necessary, but it is not
+enough to prevent two runtimes from mutating the same live resource at once.
+
+The next board-side step should treat resource affinity and contention as
+structured data on the work item or workflow, not only as prose in queue docs.
+The expected fields are:
+
+| Field | Meaning |
+|---|---|
+| `contention_class` | Resource class such as `branch_workspace`, `read_only_shared`, `mutable_live_host`, `shared_data_plane`, or `control_plane` |
+| `resource_scope` | Concrete target such as `host:vaglio`, `cache:public-repo-demo`, `db:board-main`, or `branch:feature-x` |
+| `exclusive_lease_required` | Whether mutation of that scope must be single-writer |
+| `concurrent_read_safe` | Whether read-only actions on the same scope may proceed in parallel |
+
+This project should treat `host:vaglio` as the canonical example:
+
+- read-only preflight and inspection may run concurrently
+- `nixos-rebuild switch`, service restarts, and cache warm jobs on the same host
+  should require exclusive ownership
+
+This keeps branch-parallelism intact while giving the board a path toward
+resource-level leases in addition to work-item leases.
+
+---
+
 ## 4. Work-item lifecycle
 
 The board state machine should be explicit.

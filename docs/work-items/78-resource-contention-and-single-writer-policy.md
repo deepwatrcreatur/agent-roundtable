@@ -1,6 +1,6 @@
 # 78 — Resource Contention and Single-Writer Policy
 
-**Status:** `in-progress` — **Codex**
+**Status:** `done` — **Codex**
 **Tag:** `[structural]`
 
 ## Goal
@@ -43,3 +43,15 @@ read-only analysis.
 
 - Primary design source: `docs/design/rounds/round-88-agent-resource-contention.md`
 - This item is about coordination semantics, not broad host-wide locking.
+
+## Outcome
+
+- Added a resource-class table to `docs/work-items/README.md` that distinguishes
+  concurrent-safe actions from exclusive actions.
+- Codified the `vaglio` rule as a live-resource mutation lock rather than a
+  blanket host lock.
+- Added explicit future resource-claim / resource-lease notes to:
+  - `docs/design/BOARD_EXECUTION_MODEL.md`
+  - `docs/design/LOCAL_DAEMON_CONTRACT.md`
+- Updated adjacent `vaglio` deployment items to use the narrower
+  live-resource-mutation wording.
