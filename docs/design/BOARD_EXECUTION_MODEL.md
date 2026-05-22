@@ -100,6 +100,10 @@ One row per dispatchable unit of work.
 | `retry_policy` | json | Max attempts, backoff, retryable failures |
 | `timeout_policy` | json | Soft / hard timeout and timeout action |
 | `hitl_policy` | json nullable | Approval / escalation / review gate configuration |
+| `contention_class` | text nullable | Resource class such as `branch_workspace`, `read_only_shared`, or `mutable_live_host` |
+| `resource_scope` | text nullable | Concrete scope such as `host:vaglio`, `cache:public-repo-demo`, or `branch:feature-x` |
+| `exclusive_lease_required` | boolean | Whether mutating this scope requires a single current owner |
+| `concurrent_read_safe` | boolean | Whether read-only actions on this scope may proceed in parallel |
 | `created_at` | timestamp | Creation time |
 | `updated_at` | timestamp | Last mutation |
 | `closed_at` | timestamp nullable | Terminal completion time |
@@ -186,19 +190,21 @@ Reusable policy bundles referenced by `work_items.workflow_ref`.
 | `timeout_policy_json` | json nullable | Reusable timeout policy defaults |
 | `hitl_policy_json` | json nullable | Reusable human-gate defaults |
 | `resume_policy_json` | json nullable | Reusable post-approval resume defaults |
+| `default_contention_class` | text nullable | Default resource class for tasks using this workflow |
+| `default_resource_scope_template` | text nullable | Templated resource scope such as `host:{host_label}` or `cache:{dataset}` |
+| `default_exclusive_lease_required` | boolean nullable | Whether the workflow normally requires a single-writer mutation lease |
 | `created_at` | timestamp | Creation time |
 | `updated_at` | timestamp | Last mutation |
 
 ---
 
-## 3.7 Future resource-claim extension
+## 3.7 Resource-claim fields and authority split
 
-Current board leases attach to work attempts. That is necessary, but it is not
-enough to prevent two runtimes from mutating the same live resource at once.
+Current board leases attach to work attempts. That remains necessary, but it is
+not enough to prevent two runtimes from mutating the same live resource at once.
 
-The next board-side step should treat resource affinity and contention as
-structured data on the work item or workflow, not only as prose in queue docs.
-The expected fields are:
+The board should therefore treat resource affinity and contention as structured
+data on the work item or workflow, not only as prose in queue docs.
 
 | Field | Meaning |
 |---|---|
@@ -207,14 +213,22 @@ The expected fields are:
 | `exclusive_lease_required` | Whether mutation of that scope must be single-writer |
 | `concurrent_read_safe` | Whether read-only actions on the same scope may proceed in parallel |
 
+These fields are operational state, not memory/archive state.
+
+The authority split should remain:
+
+- markdown rounds describe the policy and rationale
+- the derived round index exposes those rounds for search/query
+- board tables enforce the live resource claim semantics
+
 This project should treat `host:vaglio` as the canonical example:
 
 - read-only preflight and inspection may run concurrently
 - `nixos-rebuild switch`, service restarts, and cache warm jobs on the same host
   should require exclusive ownership
 
-This keeps branch-parallelism intact while giving the board a path toward
-resource-level leases in addition to work-item leases.
+This keeps branch-parallelism intact while making resource-level leases a
+first-class board concern rather than a future prose-only reminder.
 
 ---
 
