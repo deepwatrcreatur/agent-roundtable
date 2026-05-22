@@ -987,3 +987,16 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  genuinely model-native product categories. The maintained line was: treat the
  credits as constrained strategic fuel, preserve portability, and model the
  business at unsubsidized rates the entire time.
+
+## Round 124: NetBox Is a UI Reference, Not a New Inventory Authority
+**Consensus:** The panel converged that the right move is to build a
+ browse-only inventory surface inside the same main Vaglio / board shell, not a
+ separate mutable app and not a second source of truth. NetBox is worth copying
+ mainly for its list/detail navigation, filters, badges, cross-links,
+ breadcrumbs, and prefix/device-style detail composition. But the project should
+ reject NetBox's database-first authority model, CRUD forms, and broad
+ enterprise taxonomy unless the declarative repo data actually warrants those
+ layers. The maintained line is: derive inventory read models from repo-native
+ host/network metadata, make provenance and read-only status explicit on every
+ page, and ship a small first slice centered on host browsing plus prefixes
+ rather than reimplementing a full CMDB/IPAM tool.
