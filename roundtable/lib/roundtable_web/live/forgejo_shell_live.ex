@@ -742,15 +742,14 @@ defmodule RoundtableWeb.ForgejoShellLive do
 
   defp derived_history_entry(_), do: nil
 
-  defp heatmap_cells(%{dashboard: %{stress: %{hotspots: hotspots}}} = demo) when is_list(hotspots) do
+  defp heatmap_cells(demo) when is_map(demo) do
     curated_cells =
-      hotspots
+      (get_in(demo, [:dashboard, :stress, :hotspots]) || [])
       |> Enum.map(&curated_heatmap_cell/1)
 
     derived_cells =
       demo
-      |> Map.get(:source, %{})
-      |> Map.get(:history_summary)
+      |> get_in([:source, :history_summary])
       |> derived_heatmap_cells()
 
     (curated_cells ++ derived_cells)
@@ -779,6 +778,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
       hotspots
       |> Enum.map(& &1.mentions)
       |> Enum.max(fn -> 1 end)
+      |> max(1)
 
     hotspots
     |> Enum.take(3)
@@ -856,9 +856,14 @@ defmodule RoundtableWeb.ForgejoShellLive do
   defp heatmap_tone_border(:contested), do: "#59343b"
   defp heatmap_tone_border("contested"), do: "#59343b"
 
-  defp heatmap_cell_fill(%{tone: :settled}), do: "rgba(31, 111, 67, 0.18)"
-  defp heatmap_cell_fill(%{tone: :watch}), do: "rgba(107, 82, 33, 0.24)"
-  defp heatmap_cell_fill(%{tone: :contested}), do: "rgba(89, 52, 59, 0.3)"
+  defp heatmap_cell_fill(%{tone: tone}) when tone in [:settled, "settled"],
+    do: "rgba(31, 111, 67, 0.18)"
+
+  defp heatmap_cell_fill(%{tone: tone}) when tone in [:watch, "watch"],
+    do: "rgba(107, 82, 33, 0.24)"
+
+  defp heatmap_cell_fill(%{tone: tone}) when tone in [:contested, "contested"],
+    do: "rgba(89, 52, 59, 0.3)"
 
   defp demo_card_style(true) do
     "display: block; text-decoration: none; text-align: left; background: #1f2937; border: 1px solid #58a6ff; border-radius: 8px; padding: 1rem;"
