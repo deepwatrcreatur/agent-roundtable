@@ -36,6 +36,24 @@ Do not work on an item already marked `in-progress` by another agent.
 - Do not treat a live-resource lock as a general ban on all work related to that
   repo or host.
 
+## Resource classes
+
+| Resource type | Examples | Concurrent-safe actions | Exclusive actions |
+|---|---|---|---|
+| Branch-local workspace | `jj` change, git branch, local patch queue, isolated temp checkout | edit code, run local tests, generate docs, compare branches | force-push / rewrite on the same shared branch, destructive cleanup of another agent's workspace |
+| Read-only shared resource | logs, config snapshots, status endpoints, board records, repo inspection | `journalctl`, `curl`, `git show`, `gh pr view`, metrics inspection | rate-limited or operator-declared fragile probes |
+| Append-only shared state | work-attempt events, report exports, immutable artifacts, discussion transcripts | append events, add reports, record observations | destructive compaction, retroactive mutation, schema-breaking rewrites |
+| Mutable live service host / VM | `vaglio`, staging VM, long-lived NixOS target | read-only preflight, status checks, smoke probes | `nixos-rebuild switch`, service restart, runtime override edit, cache warm, mutable deploy hooks |
+| Shared service data plane | cache namespace, warmed snapshot store, database schema, live queue backend | read-only queries, export, verification | migrations, invalidation, reindex, cache purge, warm jobs with shared side effects |
+| Risky control-plane target | DNS cutover, failover drill, power state, network identity promotion | dry-run planning, read-only validation | failover, power cycle, role promotion, identity reassignment |
+
+The important rule is action class plus resource class:
+
+- read-only work on a host is often concurrent-safe
+- branch-local code work is concurrent-safe by default
+- mutating actions on the same live resource require a single current owner
+- `vaglio` is therefore a live-resource mutation lock, not a general branch-work lock
+
 ## Queue
 
 84. [`82-hosted-analysis-provider-contract.md`](./82-hosted-analysis-provider-contract.md) — `ready` — `[product]` Hosted analysis provider contract
@@ -172,7 +190,7 @@ Do not work on an item already marked `in-progress` by another agent.
 ### Prediction Calibration & Resource Coordination (Rounds 87-88)
 
 66. [`77-jj-prediction-calibration-protocol.md`](./77-jj-prediction-calibration-protocol.md) — `ready` — `[integrity]` `jj` prediction metadata and outcome-linked calibration
-67. [`78-resource-contention-and-single-writer-policy.md`](./78-resource-contention-and-single-writer-policy.md) — `ready` — `[structural]` Resource classes and live mutation single-writer policy
+67. [`78-resource-contention-and-single-writer-policy.md`](./78-resource-contention-and-single-writer-policy.md) — `done` — **Codex** — `[structural]` Resource classes and live mutation single-writer policy
 
 ### Canonical Markdown + Derived Structure (Round 89)
 

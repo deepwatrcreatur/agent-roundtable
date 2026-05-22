@@ -170,6 +170,26 @@ This prevents “ghost ownership” when:
 - the daemon crashes
 - network connectivity is lost
 
+### Future resource-level lease note
+
+Work-item leases are not the full contention model. The daemon and board should
+eventually understand whether a claim is:
+
+- branch-local and safe to run in parallel
+- read-only against a shared target
+- mutating a live resource that requires exclusivity
+
+The expected future inputs are resource-oriented rather than repo-oriented:
+
+- `contention_class`
+- `resource_scope`
+- `exclusive_lease_required`
+
+That distinction matters because two agents can safely work on unrelated
+branches of the same repo while still being unsafe to run `nixos-rebuild
+switch`, `systemctl restart`, or cache-warming jobs against the same host at
+the same time.
+
 ---
 
 ## 7. Attempt event model
