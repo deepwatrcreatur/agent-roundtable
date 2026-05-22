@@ -1,6 +1,6 @@
 # 81 — Sourcegraph Thin Adapter Implementation
 
-**Status:** `ready`
+**Status:** `in-progress` — **Codex**
 **Tag:** `[tools]`
 
 ## Goal
