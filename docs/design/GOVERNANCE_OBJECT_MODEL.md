@@ -339,6 +339,9 @@ Unacceptable collapse:
 - “the CI job is the only attempt record”
 - “the backend branch lock is the only lease”
 
+For the adapter contract that preserves this boundary, see
+`docs/design/BACKEND_ADAPTER_CONTRACT.md`.
+
 Provider-native objects may be mirrors or transport hooks, not the sole
 authority.
 
