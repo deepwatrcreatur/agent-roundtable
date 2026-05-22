@@ -198,6 +198,31 @@ Reusable policy bundles referenced by `work_items.workflow_ref`.
 
 ---
 
+## 3.6.1 Canonical governance boundary
+
+The board execution model is one implementation-facing view over a broader
+canonical governance object model.
+
+At minimum, the governance layer should keep the following distinctions visible:
+
+- `Claim`
+  - logical work ownership
+- `Lease`
+  - bounded mutation authority over a contested resource
+- `Attempt`
+  - append-only execution lineage
+- `ReviewState`
+  - human review/promotion checkpoint
+- `PromotionGate`
+  - explicit merge/publish/deploy boundary
+- `AuthorityScope`
+  - who may do what, where
+
+Board tables may implement or derive from these objects, but should not erase
+the protocol-level distinction between them.
+
+---
+
 ## 3.7 Resource-claim fields and authority split
 
 Current board leases attach to work attempts. That remains necessary, but it is
