@@ -223,6 +223,26 @@ defmodule RoundtableWeb.ForgejoShellLive do
           <.metric_card :for={metric <- @demo.dashboard.stress.metrics} metric={metric} accent={:heat} />
         </div>
 
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+          <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.75rem;">
+            <div>
+              <h3 style="margin: 0; color: #f0f6fc; font-size: 0.95rem;">Project Mind Heatmap</h3>
+              <p style="margin: 0.35rem 0 0; color: #8b949e; line-height: 1.5; max-width: 54rem;">
+                Modules with low prediction error read as settled. Repeated coordination pressure, concentrated authorship, and hot paths rise into contested zones.
+              </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <.heatmap_legend tone="settled" />
+              <.heatmap_legend tone="watch" />
+              <.heatmap_legend tone="contested" />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.75rem;">
+            <.heatmap_cell :for={cell <- heatmap_cells(@demo)} cell={cell} />
+          </div>
+        </div>
+
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem; margin-bottom: 0.75rem;">
           <.stress_hotspot_card :for={hotspot <- @demo.dashboard.stress.hotspots} hotspot={hotspot} />
           <.stress_hotspot_card :if={derived_hotspot(@demo)} hotspot={derived_hotspot(@demo)} />
@@ -565,6 +585,35 @@ defmodule RoundtableWeb.ForgejoShellLive do
     """
   end
 
+  defp heatmap_legend(assigns) do
+    ~H"""
+    <div style="display: inline-flex; align-items: center; gap: 0.4rem; color: #8b949e; font-size: 0.78rem;">
+      <span style={"display: inline-block; width: 0.75rem; height: 0.75rem; border-radius: 999px; background: #{heatmap_tone_color(@tone)}; border: 1px solid #{heatmap_tone_border(@tone)};"}></span>
+      <span>{heatmap_tone_label(@tone)}</span>
+    </div>
+    """
+  end
+
+  defp heatmap_cell(assigns) do
+    ~H"""
+    <div style={"background: linear-gradient(180deg, #{heatmap_cell_fill(@cell)} 0%, rgba(22,27,34,0.96) 100%); border: 1px solid #{heatmap_tone_border(@cell.tone)}; border-radius: 10px; padding: 0.95rem;"}>
+      <div style="display: flex; justify-content: space-between; gap: 0.75rem; align-items: baseline;">
+        <div style="color: #f0f6fc; font-weight: 600; line-height: 1.35;">{@cell.title}</div>
+        <span style={"color: #{heatmap_tone_color(@cell.tone)}; font-size: 0.74rem; text-transform: uppercase;"}>{heatmap_tone_label(@cell.tone)}</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.55rem;">
+        <span style="color: #58a6ff; font-size: 0.76rem;">{@cell.surface}</span>
+        <span style="color: #8b949e; font-size: 0.76rem;">Stress {@cell.stress}</span>
+        <span style="color: #8b949e; font-size: 0.76rem;">Heat {@cell.heat_label}</span>
+      </div>
+      <div style="margin-top: 0.7rem; color: #c9d1d9; font-size: 0.82rem; line-height: 1.45;">{@cell.note}</div>
+      <div style="margin-top: 0.7rem; color: #8b949e; font-size: 0.76rem;">
+        Appraisal value: <span style="color: #f0f6fc;">{@cell.appraisal}</span>
+      </div>
+    </div>
+    """
+  end
+
   defp history_heat_row(assigns) do
     ~H"""
     <div style="display: grid; grid-template-columns: 90px minmax(0, 180px) minmax(0, 1fr); gap: 0.75rem; align-items: start; border-top: 1px solid #21262d; padding-top: 0.6rem;">
@@ -692,6 +741,129 @@ defmodule RoundtableWeb.ForgejoShellLive do
   end
 
   defp derived_history_entry(_), do: nil
+
+  defp heatmap_cells(demo) when is_map(demo) do
+    curated_cells =
+      (get_in(demo, [:dashboard, :stress, :hotspots]) || [])
+      |> Enum.map(&curated_heatmap_cell/1)
+
+    derived_cells =
+      demo
+      |> get_in([:source, :history_summary])
+      |> derived_heatmap_cells()
+
+    (curated_cells ++ derived_cells)
+    |> Enum.take(6)
+  end
+
+  defp heatmap_cells(_), do: []
+
+  defp curated_heatmap_cell(hotspot) do
+    heat = parse_heat_value(Map.get(hotspot, :heat))
+    tone = tone_for_stress(Map.get(hotspot, :stress), heat)
+
+    %{
+      title: Map.get(hotspot, :title, "hotspot"),
+      surface: "Curated subsystem",
+      stress: Map.get(hotspot, :stress, "medium"),
+      heat_label: format_heat_label(heat),
+      note: Map.get(hotspot, :detail, ""),
+      tone: tone,
+      appraisal: appraisal_value(tone, heat)
+    }
+  end
+
+  defp derived_heatmap_cells(%{path_hotspots: hotspots} = history_summary) when is_list(hotspots) do
+    max_mentions =
+      hotspots
+      |> Enum.map(& &1.mentions)
+      |> Enum.max(fn -> 1 end)
+      |> max(1)
+
+    hotspots
+    |> Enum.take(3)
+    |> Enum.map(fn hotspot ->
+      normalized_heat = hotspot.mentions / max_mentions
+      stress = derived_path_stress(normalized_heat, history_summary)
+      tone = tone_for_stress(stress, normalized_heat)
+
+      %{
+        title: hotspot.path,
+        surface: "Sampled branch path",
+        stress: stress,
+        heat_label: format_heat_label(normalized_heat),
+        note:
+          "#{hotspot.mentions} mentions in the sampled branch window. This is where recent change energy and maintainer attention are likely to collide first.",
+        tone: tone,
+        appraisal: appraisal_value(tone, normalized_heat)
+      }
+    end)
+  end
+
+  defp derived_heatmap_cells(_), do: []
+
+  defp parse_heat_value(value) when is_float(value), do: value
+
+  defp parse_heat_value(value) when is_binary(value) do
+    case Float.parse(value) do
+      {parsed, _rest} -> parsed
+      :error -> 0.5
+    end
+  end
+
+  defp parse_heat_value(_), do: 0.5
+
+  defp format_heat_label(value) when is_float(value), do: Float.to_string(Float.round(value, 2))
+  defp format_heat_label(value), do: to_string(value)
+
+  defp derived_path_stress(normalized_heat, %{derived_signals: %{contributor_concentration: "high"}})
+       when normalized_heat >= 0.66,
+       do: "high"
+
+  defp derived_path_stress(normalized_heat, _) when normalized_heat >= 0.85, do: "high"
+  defp derived_path_stress(normalized_heat, _) when normalized_heat >= 0.45, do: "medium"
+  defp derived_path_stress(_, _), do: "low"
+
+  defp tone_for_stress("high", _heat), do: :contested
+  defp tone_for_stress("medium", heat) when heat >= 0.7, do: :contested
+  defp tone_for_stress("medium", _heat), do: :watch
+  defp tone_for_stress("low", heat) when heat <= 0.35, do: :settled
+  defp tone_for_stress("low", _heat), do: :watch
+  defp tone_for_stress(_, _), do: :watch
+
+  defp appraisal_value(:contested, _heat), do: "Investigate and adversarially review"
+  defp appraisal_value(:watch, _heat), do: "Track and gather more evidence"
+  defp appraisal_value(:settled, _heat), do: "Low urgency, preserve context"
+
+  defp heatmap_tone_label(:settled), do: "Settled"
+  defp heatmap_tone_label("settled"), do: "Settled"
+  defp heatmap_tone_label(:watch), do: "Watch"
+  defp heatmap_tone_label("watch"), do: "Watch"
+  defp heatmap_tone_label(:contested), do: "Contested"
+  defp heatmap_tone_label("contested"), do: "Contested"
+
+  defp heatmap_tone_color(:settled), do: "#3fb950"
+  defp heatmap_tone_color("settled"), do: "#3fb950"
+  defp heatmap_tone_color(:watch), do: "#d29922"
+  defp heatmap_tone_color("watch"), do: "#d29922"
+  defp heatmap_tone_color(:contested), do: "#ff7b72"
+  defp heatmap_tone_color("contested"), do: "#ff7b72"
+
+  defp heatmap_tone_border(:settled), do: "#1f6f43"
+  defp heatmap_tone_border("settled"), do: "#1f6f43"
+  defp heatmap_tone_border(:watch), do: "#6b5221"
+  defp heatmap_tone_border("watch"), do: "#6b5221"
+  defp heatmap_tone_border(:contested), do: "#59343b"
+  defp heatmap_tone_border("contested"), do: "#59343b"
+
+  defp heatmap_cell_fill(%{tone: tone}) when tone in [:settled, "settled"],
+    do: "rgba(31, 111, 67, 0.18)"
+
+  defp heatmap_cell_fill(%{tone: tone}) when tone in [:watch, "watch"],
+    do: "rgba(107, 82, 33, 0.24)"
+
+  defp heatmap_cell_fill(%{tone: tone}) when tone in [:contested, "contested"],
+    do: "rgba(89, 52, 59, 0.3)"
 
   defp demo_card_style(true) do
     "display: block; text-decoration: none; text-align: left; background: #1f2937; border: 1px solid #58a6ff; border-radius: 8px; padding: 1rem;"
