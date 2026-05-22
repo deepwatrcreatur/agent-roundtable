@@ -94,6 +94,7 @@ defmodule RoundtableWeb.ForgejoShellLive do
             <a href={"#demo-#{@selected_demo}"} style={cta_style(:primary)}>Start with this demo</a>
             <a :if={@demo} href={@demo.source.url} style={cta_style(:secondary)}>Open public source</a>
             <a :if={@demo} href={@demo.imported_repo.repo_url} style={cta_style(:secondary)}>Open imported Forgejo target</a>
+            <a href="/forgejo-shell/reports" style={cta_style(:secondary)}>Open snapshot reports</a>
           </div>
         </div>
 

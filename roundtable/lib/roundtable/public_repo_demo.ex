@@ -12,6 +12,13 @@ defmodule Roundtable.PublicRepoDemo do
   alias Roundtable.{InvestorDemo, SystemCmdRunner}
 
   @type options :: keyword()
+  @type report_entry :: %{
+          demo: map(),
+          source: map() | nil,
+          imported_repo: map() | nil,
+          cache_status: :cached | :fallback,
+          generated_at: String.t() | nil
+        }
 
   @spec snapshot(String.t(), options()) :: {:ok, map()} | {:error, term()}
   def snapshot(id, opts \\ []) do
@@ -83,6 +90,12 @@ defmodule Roundtable.PublicRepoDemo do
           end
       end
     end
+  end
+
+  @spec report_entries(options()) :: [report_entry()]
+  def report_entries(opts \\ []) do
+    InvestorDemo.catalog()
+    |> Enum.map(&build_report_entry(&1, opts))
   end
 
   @spec export_snapshot(String.t(), options()) :: {:ok, Path.t()} | {:error, term()}
@@ -163,6 +176,39 @@ defmodule Roundtable.PublicRepoDemo do
 
       {:error, _reason} = error ->
         error
+    end
+  end
+
+  defp build_report_entry(demo_summary, opts) do
+    base_url = Keyword.get(opts, :base_url, "https://codeberg.org")
+    cache_root = Keyword.get(opts, :cache_root, default_cache_root())
+
+    with {:ok, demo} <- InvestorDemo.import(demo_summary.id, base_url: base_url),
+         snapshot when snapshot != :miss <- read_cached_report_snapshot(cache_root, demo_summary.id) do
+      %{
+        demo: demo,
+        source: snapshot.source,
+        imported_repo: snapshot.imported_repo,
+        cache_status: :cached,
+        generated_at: snapshot.generated_at
+      }
+    else
+      _ ->
+        %{
+          demo: demo_summary,
+          source: nil,
+          imported_repo: nil,
+          cache_status: :fallback,
+          generated_at: nil
+        }
+    end
+  end
+
+  defp read_cached_report_snapshot(cache_root, id) do
+    case read_cached_snapshot(cache_path(cache_root, id), 365 * 24 * 60 * 60 * 1_000) do
+      {:ok, snapshot} -> snapshot
+      {:stale, snapshot} -> snapshot
+      :miss -> :miss
     end
   end
 
