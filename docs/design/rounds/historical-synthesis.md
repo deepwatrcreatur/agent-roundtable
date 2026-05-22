@@ -1000,3 +1000,15 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
  host/network metadata, make provenance and read-only status explicit on every
  page, and ship a small first slice centered on host browsing plus prefixes
  rather than reimplementing a full CMDB/IPAM tool.
+
+## Round 125: IPv4 Multi-WAN Should Be a Product; IPv6 Multi-WAN Should Be a Toolbox
+**Consensus:** The panel converged that `nix-router-optimized` should not
+ present IPv4 and IPv6 multi-WAN as symmetrical features. For IPv4, the
+ first-class offering should remain failover / prioritized uplinks with health
+ checks and clear policy-routing escape hatches, while any future balancing or
+ ECMP-style behavior should stay advanced and narrowly framed. For IPv6, the
+ repo should present a deliberate choice among native multi-prefix/PvD,
+ source-aware policy routing, NPTv6, and NAT66 as last resort, rather than
+ pretending there is one default “load-balanced IPv6 multi-WAN” answer. The
+ maintained line was: keep IPv4 multi-WAN productized around failover, and make
+ IPv6 multi-WAN a supportable toolbox guided by an explicit decision ladder.
