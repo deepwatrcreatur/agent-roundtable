@@ -1,6 +1,6 @@
 # 78 — Resource Contention and Single-Writer Policy
 
-**Status:** `ready`
+**Status:** `in-progress` — **Codex**
 **Tag:** `[structural]`
 
 ## Goal
@@ -43,4 +43,3 @@ read-only analysis.
 
 - Primary design source: `docs/design/rounds/round-88-agent-resource-contention.md`
 - This item is about coordination semantics, not broad host-wide locking.
-

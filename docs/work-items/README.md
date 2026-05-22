@@ -172,7 +172,7 @@ Do not work on an item already marked `in-progress` by another agent.
 ### Prediction Calibration & Resource Coordination (Rounds 87-88)
 
 66. [`77-jj-prediction-calibration-protocol.md`](./77-jj-prediction-calibration-protocol.md) — `ready` — `[integrity]` `jj` prediction metadata and outcome-linked calibration
-67. [`78-resource-contention-and-single-writer-policy.md`](./78-resource-contention-and-single-writer-policy.md) — `ready` — `[structural]` Resource classes and live mutation single-writer policy
+67. [`78-resource-contention-and-single-writer-policy.md`](./78-resource-contention-and-single-writer-policy.md) — `in-progress` — **Codex** — `[structural]` Resource classes and live mutation single-writer policy
 
 ### Canonical Markdown + Derived Structure (Round 89)
 
