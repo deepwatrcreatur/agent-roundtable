@@ -1,6 +1,6 @@
 # 92 — Canonical Governance Object Model
 
-**Status:** `ready`
+**Status:** `in-progress` — **Codex**
 **Tag:** `[structural]`
 
 ## Goal
