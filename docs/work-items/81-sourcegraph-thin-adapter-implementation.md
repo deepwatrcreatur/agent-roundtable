@@ -1,6 +1,6 @@
 # 81 — Sourcegraph Thin Adapter Implementation
 
-**Status:** `in-progress` — **Codex**
+**Status:** `done` — **Codex**
 **Tag:** `[tools]`
 
 ## Goal
@@ -67,3 +67,27 @@ available as an input to subtree-brief generation.
 - Prior round source: `docs/design/rounds/round-90-sourcegraph-deep-search-and-jj-lineage.md`
 - This item is the first implementation slice only; richer brief synthesis and
   outcome linkage can follow separately.
+
+## Outcome
+
+- Added a thin Sourcegraph client in
+  `roundtable/lib/roundtable/sourcegraph/client.ex`.
+- Added a normalized local evidence record in
+  `roundtable/lib/roundtable/sourcegraph/evidence_record.ex`.
+- Added a subtree-brief bridge input helper in
+  `roundtable/lib/roundtable/sourcegraph/subtree_brief_input.ex`.
+- Implemented a bounded retrieval flow keyed by:
+  - `repo`
+  - `revision`
+  - `path_scope`
+- The bounded flow retrieves:
+  - semantic search context
+  - keyword search context
+  - file listing
+  - bounded file reads
+  - commit-oriented history search
+- Added focused tests in `roundtable/test/roundtable/sourcegraph_client_test.exs`
+  covering:
+  - normalized bounded-context evidence generation
+  - standalone file listing and file reads
+  - subtree-brief input generation from normalized evidence

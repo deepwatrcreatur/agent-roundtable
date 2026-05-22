@@ -199,4 +199,4 @@ The important rule is action class plus resource class:
 ### Sourcegraph Complementarity (Round 90)
 
 69. [`80-sourcegraph-lineage-integration-briefs.md`](./80-sourcegraph-lineage-integration-briefs.md) — `done` — `[product]` Sourcegraph MCP/API integration for lineage briefs and outcome links
-70. [`81-sourcegraph-thin-adapter-implementation.md`](./81-sourcegraph-thin-adapter-implementation.md) — `in-progress` — **Codex** — `[tools]` First thin Sourcegraph adapter and normalized evidence flow
+70. [`81-sourcegraph-thin-adapter-implementation.md`](./81-sourcegraph-thin-adapter-implementation.md) — `done` — **Codex** — `[tools]` First thin Sourcegraph adapter and normalized evidence flow
