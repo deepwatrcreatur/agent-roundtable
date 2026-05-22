@@ -194,7 +194,7 @@ The important rule is action class plus resource class:
 
 ### Canonical Markdown + Derived Structure (Round 89)
 
-68. [`79-derived-round-index-and-resource-claims.md`](./79-derived-round-index-and-resource-claims.md) — `ready` — `[structural]` Derived round metadata index and board resource-claim fields
+68. [`79-derived-round-index-and-resource-claims.md`](./79-derived-round-index-and-resource-claims.md) — `in-progress` — **Codex** — `[structural]` Derived round metadata index and board resource-claim fields
 
 ### Sourcegraph Complementarity (Round 90)
 

@@ -1,6 +1,6 @@
 # 79 — Derived Round Index and Resource Claim Fields
 
-**Status:** `ready`
+**Status:** `in-progress` — **Codex**
 **Tag:** `[structural]`
 
 ## Goal
@@ -43,4 +43,3 @@ board model with explicit resource-claim fields for contention control.
   - `round-73-deliberation-graph-index.md`
   - `round-74-natural-repo-knowledge-base.md`
   - `round-88-agent-resource-contention.md`
-
