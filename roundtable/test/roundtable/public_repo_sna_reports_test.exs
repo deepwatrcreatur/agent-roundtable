@@ -1,5 +1,5 @@
 defmodule Roundtable.PublicRepoSnaReportsTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias Roundtable.{PublicRepoDemo, PublicRepoSnaReports}
 
@@ -77,5 +77,42 @@ defmodule Roundtable.PublicRepoSnaReportsTest do
     assert File.exists?(Path.join(output_root, "kubernetes.md"))
     assert File.exists?(Path.join(output_root, "nixpkgs.md"))
     assert File.exists?(Path.join(snapshot_output_root, "forgejo.json"))
+  end
+
+  test "renders safely when sampled hotspots or contributors are empty" do
+    snapshot = %{
+      generated_at: "2026-05-22T13:00:00Z",
+      demo: %{id: "demo", name: "demo/repo"},
+      source: %{
+        history_summary: %{
+          sampled_commit_count: 0,
+          contributor_count: 0,
+          top_contributors: [],
+          path_hotspots: [],
+          recent_commits: [],
+          derived_signals: %{
+            contributor_concentration: "low",
+            top_author_share: 0.0
+          }
+        }
+      },
+      dashboard: %{
+        headline: "headline",
+        narrative: "narrative",
+        stress: %{
+          metrics: [
+            %{label: "Branch stress", value: "0.10"},
+            %{label: "History heat", value: "1 peak"},
+            %{label: "Active-inference confidence", value: "low"}
+          ],
+          hotspots: []
+        }
+      }
+    }
+
+    report = PublicRepoSnaReports.render_report(snapshot)
+
+    assert report =~ "no sampled hotspot"
+    assert report =~ "No dominant contributor"
   end
 end

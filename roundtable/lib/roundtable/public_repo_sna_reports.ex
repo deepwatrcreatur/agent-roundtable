@@ -68,8 +68,6 @@ defmodule Roundtable.PublicRepoSnaReports do
   end
 
   defp export_repo_reports(output_root, opts) do
-    opts = Keyword.put_new(opts, :output_root, "reports/public-repo-demos")
-
     report_exports =
       for demo <- demo_ids() do
         with {:ok, snapshot} <- PublicRepoDemo.snapshot(demo, opts),
@@ -136,14 +134,17 @@ defmodule Roundtable.PublicRepoSnaReports do
     signals = history_summary.derived_signals
     hotspot = List.first(history_summary.path_hotspots)
     contributor = List.first(history_summary.top_contributors)
+    contributor_name = if contributor, do: contributor.author, else: "No dominant contributor"
+    hotspot_path = if hotspot, do: hotspot.path, else: "no sampled hotspot"
+    hotspot_mentions = if hotspot, do: hotspot.mentions, else: 0
 
     [
       "- `", snapshot.demo.name, "` shows `", signals.contributor_concentration,
       "` sampled contributor concentration, with the top three authors accounting for ",
       percentage(signals.top_author_share), " of sampled commits.\n",
-      "- The hottest sampled path is `", hotspot.path, "` with `", to_string(hotspot.mentions),
+      "- The hottest sampled path is `", hotspot_path, "` with `", to_string(hotspot_mentions),
       "` mentions in the shallow branch window.\n",
-      "- `", contributor.author, "` leads the sampled window, indicating a repeat maintainer anchor rather than flatly distributed ownership.\n"
+      "- `", contributor_name, "` leads the sampled window, indicating a repeat maintainer anchor rather than flatly distributed ownership.\n"
     ]
   end
 
@@ -197,6 +198,8 @@ defmodule Roundtable.PublicRepoSnaReports do
     end)
   end
 
+  defp derived_heatmap_rows(_), do: ""
+
   defp contributor_rows(history_summary) do
     total = max(history_summary.sampled_commit_count, 1)
 
@@ -235,11 +238,13 @@ defmodule Roundtable.PublicRepoSnaReports do
     history_summary = snapshot.source.history_summary
     hotspot = List.first(history_summary.path_hotspots)
     contributor = List.first(history_summary.top_contributors)
+    contributor_name = if contributor, do: contributor.author, else: "no single maintainer anchor"
+    hotspot_path = if hotspot, do: hotspot.path, else: "no sampled hotspot"
 
     [
-      "- The strongest likely maintenance anchor in the sampled window is **", contributor.author,
+      "- The strongest likely maintenance anchor in the sampled window is **", contributor_name,
       "**, which makes continuity risk visible even before any explicit social graph is modeled.\n",
-      "- The hottest code surface is `", hotspot.path,
+      "- The hottest code surface is `", hotspot_path,
       "`, which is a plausible place to focus future vouch-graph or review-latency instrumentation.\n",
       "- This first PoC still uses sampled commit topology and concentration signals as a stand-in for a fuller vouch network; it is meant to be shareable now, not final theory-complete infrastructure.\n"
     ]
