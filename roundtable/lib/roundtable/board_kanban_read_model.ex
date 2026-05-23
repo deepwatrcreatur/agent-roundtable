@@ -6,7 +6,7 @@ defmodule Roundtable.BoardKanbanReadModel do
   attempt context without mutating or collapsing the underlying board lineage.
   """
 
-  alias Roundtable.{Board, InvestorDemo}
+  alias Roundtable.Board
 
   @queued_statuses ~w(queued retry_scheduled resumable)
   @active_statuses ~w(claimed running)
@@ -290,7 +290,7 @@ defmodule Roundtable.BoardKanbanReadModel do
   defp derive_evidence_links(item) do
     []
     |> Kernel.++(surface_links(item))
-    |> Kernel.++(demo_links(Map.get(item, :repo_ref)))
+    |> Kernel.++(declared_evidence_links(item))
     |> Enum.uniq_by(& &1.href)
   end
 
@@ -315,32 +315,55 @@ defmodule Roundtable.BoardKanbanReadModel do
   defp surface_label("/board"), do: "Open board"
   defp surface_label(path), do: "Open #{path}"
 
-  defp demo_links(nil), do: []
+  defp declared_evidence_links(item) do
+    input_payload = Map.get(item, :input_payload) || %{}
 
-  defp demo_links(repo_ref) do
-    public_demo_targets()
-    |> Enum.filter(fn target ->
-      repo_ref in [target.source_slug, target.import_slug]
-    end)
-    |> Enum.flat_map(fn target ->
-      [
-        %{label: "Open #{target.id} demo", href: "/forgejo-shell?demo=#{target.id}", kind: "demo"},
-        %{label: "Open #{target.id} report", href: "/forgejo-shell/reports#report-#{target.id}", kind: "report"}
-      ]
-    end)
+    explicit_links =
+      Map.get(input_payload, :evidence_links) ||
+        Map.get(input_payload, "evidence_links") ||
+        []
+
+    public_demo_id =
+      Map.get(input_payload, :public_demo_id) ||
+        Map.get(input_payload, "public_demo_id")
+
+    explicit_links(explicit_links) ++ public_demo_links(public_demo_id)
   end
 
-  defp public_demo_targets do
-    InvestorDemo.catalog()
-    |> Enum.map(fn summary ->
-      imported =
-        case InvestorDemo.import(summary.id) do
-          {:ok, demo} -> demo.imported_repo.slug
-          _ -> nil
-        end
+  defp explicit_links(links) when is_list(links) do
+    links
+    |> Enum.map(&normalize_explicit_link/1)
+    |> Enum.reject(&is_nil/1)
+  end
 
-      %{id: summary.id, source_slug: summary.source_slug, import_slug: imported}
-    end)
+  defp explicit_links(_links), do: []
+
+  defp normalize_explicit_link(%{href: href} = link) when is_binary(href) do
+    %{
+      label: Map.get(link, :label) || "Open evidence",
+      href: href,
+      kind: Map.get(link, :kind) || "evidence"
+    }
+  end
+
+  defp normalize_explicit_link(%{"href" => href} = link) when is_binary(href) do
+    %{
+      label: Map.get(link, "label") || "Open evidence",
+      href: href,
+      kind: Map.get(link, "kind") || "evidence"
+    }
+  end
+
+  defp normalize_explicit_link(_link), do: nil
+
+  defp public_demo_links(nil), do: []
+  defp public_demo_links(""), do: []
+
+  defp public_demo_links(demo_id) when is_binary(demo_id) do
+    [
+      %{label: "Open #{demo_id} demo", href: "/forgejo-shell?demo=#{demo_id}", kind: "demo"},
+      %{label: "Open #{demo_id} report", href: "/forgejo-shell/reports#report-#{demo_id}", kind: "report"}
+    ]
   end
 
   defp build_badges(item, attempt, runtime_status, gate_state, lease_state, alert_refs) do
