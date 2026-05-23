@@ -19,8 +19,9 @@ defmodule Roundtable.Vcs.Dolt do
   @impl true
   def current_head(branch, opts) when is_binary(branch) do
     with {:ok, repo_path} <- fetch_repo_path(opts),
-         {:ok, head} <- dolt(["rev-parse", branch], repo_path, opts) do
-      {:ok, String.trim(head)}
+         {:ok, output} <- dolt(["log", "-n", "1", "--oneline", branch], repo_path, opts),
+         {:ok, head} <- parse_log_head(output) do
+      {:ok, head}
     end
   end
 
@@ -30,10 +31,9 @@ defmodule Roundtable.Vcs.Dolt do
     # or if we are using it to version raw files (less common).
     # For now, we'll assume read_file for Dolt means reading a table as JSON/CSV.
     with {:ok, repo_path} <- fetch_repo_path(opts) do
-      revision = Keyword.get(opts, :revision, "HEAD")
       # Example: dolt sql -q "SELECT * FROM <table>"
       case dolt(
-             ["sql", "-r", revision, "-q", "SELECT * FROM `#{path}`", "-r", "json"],
+             ["sql", "-q", "SELECT * FROM `#{path}`", "-r", "json"],
              repo_path,
              opts
            ) do
@@ -59,15 +59,21 @@ defmodule Roundtable.Vcs.Dolt do
   @impl true
   def query(sql, opts) when is_binary(sql) do
     with {:ok, repo_path} <- fetch_repo_path(opts) do
-      revision = Keyword.get(opts, :revision, "HEAD")
-
-      case dolt(["sql", "-r", revision, "-q", sql, "-r", "json"], repo_path, opts) do
+      case dolt(["sql", "-q", sql, "-r", "json"], repo_path, opts) do
         {:ok, content} ->
-          case Jason.decode(content) do
-            {:ok, %{"rows" => rows}} -> {:ok, rows}
-            {:ok, []} -> {:ok, []}
-            {:ok, _} -> {:ok, []}
-            {:error, _} = err -> err
+          trimmed = String.trim(content)
+
+          cond do
+            trimmed == "" ->
+              {:ok, []}
+
+            true ->
+              case Jason.decode(trimmed) do
+                {:ok, %{"rows" => rows}} -> {:ok, rows}
+                {:ok, []} -> {:ok, []}
+                {:ok, _} -> {:ok, []}
+                {:error, _} = err -> err
+              end
           end
 
         {:error, _} = err ->
@@ -86,8 +92,7 @@ defmodule Roundtable.Vcs.Dolt do
     # We assume the caller has already performed SQL updates via a separate action.
     with {:ok, repo_path} <- fetch_repo_path(opts),
          {:ok, _} <- dolt(["add", "."], repo_path, opts),
-         {:ok, _} <- dolt(commit_args(params), repo_path, opts),
-         {:ok, commit_sha} <- current_head(branch, opts) do
+         {:ok, commit_sha} <- commit_or_current_head(repo_path, branch, params, opts) do
       {:ok, %{commit_id: commit_sha, change_id: nil, branch: branch}}
     end
   end
@@ -101,6 +106,30 @@ defmodule Roundtable.Vcs.Dolt do
 
   defp signing_args(%{sign?: true}), do: ["-S"]
   defp signing_args(_params), do: []
+
+  defp commit_or_current_head(repo_path, branch, params, opts) do
+    case dolt(commit_args(params), repo_path, opts) do
+      {:ok, _} ->
+        current_head(branch, opts)
+
+      {:error, {:command_failed, 1, output}} = err ->
+        if String.contains?(output, "no changes added to commit") do
+          current_head(branch, opts)
+        else
+          err
+        end
+
+      {:error, _} = err ->
+        err
+    end
+  end
+
+  defp parse_log_head(output) do
+    case output |> String.trim() |> String.split(~r/\s+/, parts: 2) do
+      [head | _rest] when head != "" -> {:ok, head}
+      _ -> {:error, {:unexpected_log_output, output}}
+    end
+  end
 
   defp fetch_repo_path(opts) do
     case Keyword.get(opts, :repo_path) do

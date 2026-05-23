@@ -44,6 +44,9 @@ defmodule RoundtableWeb.Layouts do
               <a href="/forgejo-shell" style="text-decoration: none; color: #c9d1d9; border: 1px solid #30363d; border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 0.82rem;">
                 Forgejo Demo Shell
               </a>
+              <a href="/board" style="text-decoration: none; color: #c9d1d9; border: 1px solid #30363d; border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 0.82rem;">
+                Board
+              </a>
               <a href="/roundtable" style="text-decoration: none; color: #c9d1d9; border: 1px solid #30363d; border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 0.82rem;">
                 Roundtable Ops
               </a>

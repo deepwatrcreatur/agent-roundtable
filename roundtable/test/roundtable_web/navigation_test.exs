@@ -20,9 +20,11 @@ defmodule RoundtableWeb.NavigationTest do
     assert html =~ "Deepwater Roundtable"
     assert html =~ "Vaglio Demo Home"
     assert html =~ "Forgejo Demo Shell"
+    assert html =~ "Board"
     assert html =~ "Roundtable Ops"
     assert html =~ "Forgejo outside."
     assert html =~ "Open Recommended Demo"
+    assert html =~ "href=\"/board\""
     assert html =~ "href=\"/forgejo-shell\""
   end
 
@@ -33,7 +35,9 @@ defmodule RoundtableWeb.NavigationTest do
     assert html =~ "Deepwater Roundtable"
     assert html =~ "Vaglio Demo Home"
     assert html =~ "Forgejo Demo Shell"
+    assert html =~ "Board"
     assert html =~ "Roundtable Ops"
+    assert html =~ "href=\"/board\""
     assert html =~ "Inject Question"
   end
 
@@ -44,7 +48,9 @@ defmodule RoundtableWeb.NavigationTest do
     assert html =~ "Deepwater Roundtable"
     assert html =~ "Vaglio Demo Home"
     assert html =~ "Forgejo Demo Shell"
+    assert html =~ "Board"
     assert html =~ "Roundtable Ops"
+    assert html =~ "href=\"/board\""
     assert html =~ "href=\"/roundtable\""
   end
 end
