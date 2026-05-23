@@ -46,6 +46,9 @@ defmodule Roundtable.BoardDemoSeedTest do
     assert Enum.any?(work_items, &(&1.id == "wk-queued" and &1.status == "queued"))
     assert Enum.any?(work_items, &(&1.id == "wk-gated" and &1.priority == 10))
     assert Enum.any?(work_items, &(&1.id == "wk-done" and &1.status == "succeeded"))
+    assert Enum.any?(work_items, &(&1.id == "wk-gated" and &1.surface_route == "/board"))
+    assert Enum.any?(work_items, &(&1.id == "wk-running" and List.first(&1.evidence_links).href == "/forgejo-shell/reports"))
+    assert Enum.any?(work_items, &(&1.id == "wk-done" and &1.public_demo_id == "kubernetes"))
 
     assert length(attempts) == 5
     assert Enum.any?(attempts, &(&1.id == "att-attention-1" and &1.status == "running"))
