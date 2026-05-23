@@ -359,6 +359,9 @@ This is why object boundaries must be explicit now. A future migration item can
 only work if these objects are clearly separable from provider-native hosting
 artifacts.
 
+For the migration/export package built on top of this model, see
+`docs/design/GOVERNANCE_STATE_EXPORT_AND_MIGRATION.md`.
+
 ---
 
 ## 7. Recommended operational split

@@ -1,6 +1,6 @@
 # 94 — Governance State Export and Backend Migration
 
-**Status:** `ready`
+**Status:** `done` — **Codex**
 **Tag:** `[integrity]`
 
 ## Goal
@@ -47,3 +47,20 @@ of decisions, supersession, review state, and promotion outcomes.
   - `79-derived-round-index-and-resource-claims.md`
   - `84-release-event-and-publish-authority-separation.md`
   - `92-canonical-governance-object-model.md`
+
+## Outcome
+
+- Added
+  [docs/design/GOVERNANCE_STATE_EXPORT_AND_MIGRATION.md](../design/GOVERNANCE_STATE_EXPORT_AND_MIGRATION.md)
+  as the canonical portability and migration note for governance state.
+- Defined the minimum portable migration package, including:
+  - canonical governance objects
+  - repo-linked durable artifact anchors
+  - identity and authority references
+  - attempt, supersession, review, and promotion lineage
+- Distinguished three export classes:
+  - lossless canonical export
+  - re-derivable views
+  - backend-local operational residue
+- Specified layered import semantics so canonical governance meaning restores
+  before backend rebinding or derived-view rebuild.
