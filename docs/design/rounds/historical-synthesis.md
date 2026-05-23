@@ -198,6 +198,16 @@ to copy those runtime controls now, benchmark against Alyx's free tier and a
 strong git baseline, and then run a reuse-oriented follow-up on public Arize
 repos, noting that adjacent code appears split between MIT-licensed repos such
 as `arize-skills` / `arize-harness-tracing` and `phoenix` under ELv2 rather
+
+## Round 127: Router Kea HA Direction After Fresh Live Evidence
+**Consensus:** The project should stop treating Kea HA restoration as the
+default next move for the current router pair. Fresh live evidence and current
+source state both show that the deployed system is intentionally non-HA:
+`router` serves DHCP alone, `router-backup` suppresses Kea, and no active Kea
+HA hook/control surface exists on either node. The honest next step is to
+standardize a single-active/manual-promotion model, update the incident and
+support boundary to reflect that truth, and only revisit DHCP HA under a fresh
+design item with a much stricter proof bar tied to this actual router pair.
 than a standalone open Alyx repository.
 
 ## Round 67: Moats for an Agent-First Forge
