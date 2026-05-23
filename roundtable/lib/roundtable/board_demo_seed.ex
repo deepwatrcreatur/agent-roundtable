@@ -123,7 +123,13 @@ defmodule Roundtable.BoardDemoSeed do
         source_ref: "round-103",
         title: "Review board repo bootstrap on vaglio",
         task_type: "code_change",
-        input_payload: %{pr: 103, surface: "/board"},
+        input_payload: %{
+          pr: 103,
+          surface: "/board",
+          evidence_links: [
+            %{label: "Open board", href: "/board", kind: "surface"}
+          ]
+        },
         desired_outcome: %{result: "board route stays live after switch"},
         status: "running",
         priority: 10,
@@ -143,7 +149,11 @@ defmodule Roundtable.BoardDemoSeed do
         source_ref: "round-88",
         title: "Repair stalled public repo cache warm path",
         task_type: "ops_repair",
-        input_payload: %{surface: "/forgejo-shell", concern: "cache warm"},
+        input_payload: %{
+          surface: "/forgejo-shell",
+          concern: "cache warm",
+          public_demo_id: "kubernetes"
+        },
         desired_outcome: %{result: "all demo caches hot"},
         status: "running",
         priority: 20,
@@ -163,7 +173,13 @@ defmodule Roundtable.BoardDemoSeed do
         source_ref: "round-102",
         title: "Polish browseable board surface for public demos",
         task_type: "ui_polish",
-        input_payload: %{route: "/board", audience: "operators"},
+        input_payload: %{
+          route: "/board",
+          audience: "operators",
+          evidence_links: [
+            %{label: "Open reports", href: "/forgejo-shell/reports", kind: "report"}
+          ]
+        },
         desired_outcome: %{result: "legible live board"},
         status: "running",
         priority: 30,
@@ -183,7 +199,13 @@ defmodule Roundtable.BoardDemoSeed do
         source_ref: "round-95",
         title: "Thread Sourcegraph evidence into subtree briefs",
         task_type: "analysis",
-        input_payload: %{adapter: "sourcegraph", surface: "subtree_brief"},
+        input_payload: %{
+          adapter: "sourcegraph",
+          surface: "subtree_brief",
+          evidence_links: [
+            %{label: "Open Forgejo shell", href: "/forgejo-shell", kind: "surface"}
+          ]
+        },
         desired_outcome: %{result: "bounded semantic evidence in brief"},
         status: "queued",
         priority: 40,
@@ -203,7 +225,7 @@ defmodule Roundtable.BoardDemoSeed do
         source_ref: "round-89",
         title: "Ship shareable public repo reports page",
         task_type: "deployment",
-        input_payload: %{route: "/forgejo-shell/reports"},
+        input_payload: %{route: "/forgejo-shell/reports", public_demo_id: "kubernetes"},
         desired_outcome: %{result: "public reports route live"},
         status: "succeeded",
         priority: 50,
@@ -224,7 +246,12 @@ defmodule Roundtable.BoardDemoSeed do
         source_ref: "round-78",
         title: "Stabilize overlapping host deploy attempts",
         task_type: "ops_policy",
-        input_payload: %{resource: "host:vaglio"},
+        input_payload: %{
+          resource: "host:vaglio",
+          evidence_links: [
+            %{label: "Open board", href: "/board", kind: "surface"}
+          ]
+        },
         desired_outcome: %{result: "single-writer deploy policy"},
         status: "failed",
         priority: 60,

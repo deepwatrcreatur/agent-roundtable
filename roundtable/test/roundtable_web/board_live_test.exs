@@ -18,7 +18,12 @@ defmodule RoundtableWeb.BoardLiveTest do
           source_ref: "round-1",
           title: "Queued card",
           task_type: "code_change",
-          input_payload: %{"surface" => "/forgejo-shell"},
+          input_payload: %{
+            "surface" => "/forgejo-shell",
+            "evidence_links" => [
+              %{"label" => "Open board evidence", "href" => "/board", "kind" => "surface"}
+            ]
+          },
           priority: 10,
           status: "queued",
           assignee_ref: "codex-queue",
@@ -27,12 +32,12 @@ defmodule RoundtableWeb.BoardLiveTest do
         },
         %{
           id: "wk-2",
-          repo_ref: "kubernetes/kubernetes",
+          repo_ref: "deepwatrcreatur/agent-roundtable",
           branch_ref: "feat/deploy",
           source_ref: "round-2",
           title: "Needs approval",
           task_type: "deploy",
-          input_payload: %{"route" => "/forgejo-shell/reports"},
+          input_payload: %{"route" => "/forgejo-shell/reports", "public_demo_id" => "kubernetes"},
           priority: 20,
           status: "awaiting_human_input",
           assignee_ref: "codex-review",
@@ -132,7 +137,7 @@ defmodule RoundtableWeb.BoardLiveTest do
     now = ~U[2026-05-23 01:00:00Z]
     {:ok, snapshot} = BoardKanbanReadModel.snapshot("/tmp/repo", board: FakeBoard, now: now)
 
-    cards = Enum.filter(snapshot.cards, &(&1.repo_ref == "kubernetes/kubernetes"))
+    cards = Enum.filter(snapshot.cards, &(&1.work_item_id == "wk-2"))
     card_ids = MapSet.new(Enum.map(cards, & &1.work_item_id))
     lanes =
       Enum.map(snapshot.lanes, fn lane ->
@@ -145,7 +150,7 @@ defmodule RoundtableWeb.BoardLiveTest do
       %{
         __changed__: %{},
         repo_path: "/tmp/repo",
-        params: %{"repo" => "kubernetes/kubernetes"},
+        params: %{"repo" => "deepwatrcreatur/agent-roundtable"},
         filters: snapshot.filters,
         counts: snapshot.counts,
         snapshot_generated_at: snapshot.generated_at,
