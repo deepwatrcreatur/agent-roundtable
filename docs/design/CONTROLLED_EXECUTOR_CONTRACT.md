@@ -105,14 +105,14 @@ operations.
 | Operation | Purpose |
 |---|---|
 | `accept_job` | Confirm the executor accepted a specific lease-backed job |
-| `start_job` | Report actual execution start |
+| `start_attempt` | Report actual execution start for the canonical attempt |
 | `heartbeat_job` | Renew liveness and carry progress metadata |
-| `append_job_log` | Stream structured log/progress slices |
+| `append_attempt_event` | Stream structured progress, log slices, warnings, or summaries |
 | `append_job_artifact` | Register output bundles, patches, reports, or test logs |
 | `return_attestation` | Return execution attestation/evidence summary |
 | `request_gate` | Ask the control plane for structured human or policy input |
-| `finish_job` | Report terminal success with outputs |
-| `fail_job` | Report terminal failure with machine-usable class |
+| `complete_attempt` | Report terminal success with outputs |
+| `fail_attempt` | Report terminal failure with machine-usable class |
 | `abort_job` | Acknowledge cancellation or lease revocation |
 
 The exact transport can vary. The semantic boundary should not.
@@ -197,7 +197,7 @@ Minimum classes:
 | Failure class | Meaning |
 |---|---|
 | `input_error` | Job envelope invalid or missing required context |
-| `executor_error` | Runner or wrapper failure |
+| `tool_error` | Runner, CLI, wrapper, or subprocess failure |
 | `runtime_disconnect` | Lost worker during execution |
 | `timeout` | Soft/hard timeout exceeded |
 | `policy_denied` | Scope or credential rule prevented action |
