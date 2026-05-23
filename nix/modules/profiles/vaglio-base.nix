@@ -41,6 +41,7 @@
     enable = true;
     enableTuiTooling = true;
     phoenixHost = "roundtable.deepwatercreature.com";
+    boardRepoPath = "/var/lib/roundtable/state/board-repo";
   };
 
   system.stateVersion = lib.mkDefault "25.11";

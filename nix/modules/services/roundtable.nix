@@ -8,6 +8,8 @@
 let
   cfg = config.services.roundtable;
   stateHome = "/var/lib/${cfg.stateDir}";
+  boardRepoPath =
+    if cfg.boardRepoPath != "" then cfg.boardRepoPath else "${stateHome}/board";
 
   credential =
     name: file:
@@ -75,6 +77,12 @@ in
       type = lib.types.str;
       default = "";
       description = "Optional local discussion repo path used for conflict inspection.";
+    };
+
+    boardRepoPath = lib.mkOption {
+      type = lib.types.str;
+      default = "";
+      description = "Optional local Dolt repo path used by the board surface and runtime state.";
     };
 
     stateDir = lib.mkOption {
@@ -170,11 +178,49 @@ in
         ++ cfg.extraPackages
       );
 
+    systemd.services.roundtable-init-board-repo = {
+      description = "Initialize the local Dolt repo used by the Vaglio board surface";
+      wantedBy = [ "multi-user.target" ];
+      before = [
+        "roundtable.service"
+        "roundtable-prewarm-public-repo-cache.service"
+      ];
+      path = with pkgs; [
+        coreutils
+        dolt
+      ];
+
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+      };
+
+      script = ''
+        set -eu
+
+        export HOME=${lib.escapeShellArg stateHome}
+        mkdir -p ${lib.escapeShellArg boardRepoPath}
+        cd ${lib.escapeShellArg boardRepoPath}
+
+        if ! dolt config --global --get user.name >/dev/null 2>&1; then
+          dolt config --global --add user.name "Roundtable"
+        fi
+
+        if ! dolt config --global --get user.email >/dev/null 2>&1; then
+          dolt config --global --add user.email "roundtable@localhost"
+        fi
+
+        if [ ! -d .dolt ]; then
+          dolt init -b main
+        fi
+      '';
+    };
+
     systemd.services.roundtable = {
       description = "Vaglio / roundtable discussion orchestrator";
       wantedBy = [ "multi-user.target" ];
-      after = [ "network-online.target" ];
-      wants = [ "network-online.target" ];
+      after = [ "network-online.target" "roundtable-init-board-repo.service" ];
+      wants = [ "network-online.target" "roundtable-init-board-repo.service" ];
       path = with pkgs; [
         coreutils
         openssl
@@ -209,6 +255,7 @@ in
             "OIDC_ISSUER_URL=${cfg.oidcIssuerUrl}"
             "ROUNDTABLE_REPO=${cfg.roundtableRepo}"
             "ROUNDTABLE_BRIEF=${cfg.roundtableBrief}"
+            "ROUNDTABLE_BOARD_REPO_PATH=${boardRepoPath}"
           ]
           ++ lib.optional (cfg.localPath != "") "ROUNDTABLE_LOCAL_PATH=${cfg.localPath}";
         ExecStart = pkgs.writeShellScript "roundtable-start" ''
@@ -243,8 +290,8 @@ in
     systemd.services.roundtable-prewarm-public-repo-cache = lib.mkIf cfg.prewarmPublicRepoCache.enable {
       description = "Warm cached public-repo snapshots for the roundtable demo";
       wantedBy = [ "multi-user.target" ];
-      after = [ "roundtable.service" ];
-      wants = [ "roundtable.service" ];
+      after = [ "roundtable-init-board-repo.service" "roundtable.service" ];
+      wants = [ "roundtable-init-board-repo.service" "roundtable.service" ];
       path = with pkgs; [
         coreutils
       ];
