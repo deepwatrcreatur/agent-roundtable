@@ -274,6 +274,9 @@ So this document is intentionally upstream of:
 - backend migration
 - multi-backend product posture
 
+For the portable migration package itself, see
+`docs/design/GOVERNANCE_STATE_EXPORT_AND_MIGRATION.md`.
+
 ---
 
 ## 10. Non-goals
