@@ -22,6 +22,9 @@ opaque server-side jobs pretending all providers are equal APIs.
 
 This contract makes that local-execution model explicit.
 
+For the broader execution-provider boundary that also covers Buildkite-like
+controlled workers, see `docs/design/CONTROLLED_EXECUTOR_CONTRACT.md`.
+
 ---
 
 ## 2. Terms

@@ -23,6 +23,9 @@ orchestration tools without reopening the architecture:
 
 This document turns that consensus into a concrete execution model.
 
+For the executor/provider edge that preserves this board authority while
+delegating compute, see `docs/design/CONTROLLED_EXECUTOR_CONTRACT.md`.
+
 ---
 
 ## 2. Boundary of responsibility
