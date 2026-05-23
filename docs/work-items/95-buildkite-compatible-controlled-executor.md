@@ -1,6 +1,6 @@
 # 95 — Buildkite-Compatible Controlled Executor
 
-**Status:** `ready`
+**Status:** `done` — **Codex**
 **Tag:** `[tools]`
 
 ## Goal
@@ -54,3 +54,16 @@ into GitHub Actions semantics.
   - `75-lightweight-workflow-definitions.md`
   - `89-forge-claim-and-lease-protocol.md`
   - `93-backend-adapter-and-performance-tier-contract.md`
+
+## Outcome
+
+- Added
+  [docs/design/CONTROLLED_EXECUTOR_CONTRACT.md](../design/CONTROLLED_EXECUTOR_CONTRACT.md)
+  as the narrow executor/provider contract note.
+- Defined the bounded job envelope and executor operations required to run
+  lease-backed work without moving claims, attempts, or promotion meaning into
+  the runner.
+- Specified lease, credential, artifact, attestation, failure, and gate
+  semantics for Buildkite-like controlled executors.
+- Kept the control plane authoritative for claims, leases, authority, trust,
+  and promotion while leaving compute and job launch to replaceable workers.
