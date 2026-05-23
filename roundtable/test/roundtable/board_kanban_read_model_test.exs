@@ -11,40 +11,52 @@ defmodule Roundtable.BoardKanbanReadModelTest do
            id: "wk-queued",
            repo_ref: "deepwatrcreatur/agent-roundtable",
            branch_ref: "feat/queued",
+           source_ref: "round-queued",
            title: "Queued work",
            task_type: "code_change",
            priority: 10,
            status: "queued",
+           assignee_ref: "codex-queued",
+           desired_outcome: %{"result" => "Queue should stay visible"},
            updated_at: "2026-05-23T00:00:00Z"
          },
          %{
            id: "wk-gated",
            repo_ref: "deepwatrcreatur/agent-roundtable",
            branch_ref: "feat/gated",
+           source_ref: "round-gated",
            title: "Needs approval",
            task_type: "deploy",
            priority: 20,
            status: "awaiting_human_input",
+           assignee_ref: "codex-review",
+           desired_outcome: %{"result" => "Ship after approval"},
            updated_at: "2026-05-23T00:05:00Z"
          },
          %{
            id: "wk-running",
            repo_ref: "deepwatrcreatur/agent-roundtable",
            branch_ref: "feat/running",
+           source_ref: "round-running",
            title: "Runtime drift",
            task_type: "benchmark",
            priority: 30,
            status: "running",
+           assignee_ref: "codex-bench",
+           desired_outcome: %{"result" => "Benchmarks complete"},
            updated_at: "2026-05-23T00:10:00Z"
          },
          %{
            id: "wk-done",
            repo_ref: "deepwatrcreatur/agent-roundtable",
            branch_ref: "feat/done",
+           source_ref: "round-done",
            title: "Completed work",
            task_type: "review",
            priority: 40,
            status: "succeeded",
+           assignee_ref: "codex-review",
+           desired_outcome: %{"result" => "Validation passes"},
            updated_at: "2026-05-23T00:20:00Z"
          }
        ]}
@@ -162,10 +174,15 @@ defmodule Roundtable.BoardKanbanReadModelTest do
     assert cards["wk-gated"].lane == "gated"
     assert cards["wk-gated"].gate_type == "approve"
     assert "gate:open" in cards["wk-gated"].badge_refs
+    assert cards["wk-gated"].owner_ref == "codex-review"
+    assert cards["wk-gated"].next_signal == "Ship this?"
+    assert cards["wk-gated"].freshness_state == "fresh"
 
     assert cards["wk-running"].lane == "attention"
     assert "runtime_offline" in cards["wk-running"].alert_refs
     assert "lease:expired" in cards["wk-running"].badge_refs
+    assert cards["wk-running"].next_signal == "Still running benchmarks"
+    assert cards["wk-running"].freshness_state == "fresh"
 
     assert cards["wk-done"].lane == "done"
     assert snapshot.counts["queued"] == 1

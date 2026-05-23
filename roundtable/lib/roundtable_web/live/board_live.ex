@@ -146,7 +146,15 @@ defmodule RoundtableWeb.BoardLive do
                   <div style="color: #8b949e; font-size: 0.78rem; white-space: nowrap;">{card.work_item_id}</div>
                 </div>
                 <div style="color: #58a6ff; font-size: 0.78rem; margin-bottom: 0.35rem;">{card.repo_ref}</div>
+                <div style="display: flex; gap: 0.45rem; flex-wrap: wrap; color: #8b949e; font-size: 0.76rem; margin-bottom: 0.35rem;">
+                  <span :if={card.owner_ref}>Owner {card.owner_ref}</span>
+                  <span :if={card.source_ref}>Source {card.source_ref}</span>
+                  <span>Freshness {freshness_label(card.freshness_state)}</span>
+                </div>
                 <div style="color: #8b949e; font-size: 0.83rem; line-height: 1.45; margin-bottom: 0.55rem;">{card.summary}</div>
+                <div :if={card.next_signal} style="color: #c9d1d9; font-size: 0.8rem; line-height: 1.4; margin-bottom: 0.55rem;">
+                  Next signal: {card.next_signal}
+                </div>
                 <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
                   <span :for={badge <- Enum.take(card.badge_refs, 4)} style={badge_style(badge)}>{badge}</span>
                 </div>
@@ -166,10 +174,28 @@ defmodule RoundtableWeb.BoardLive do
             <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; margin-bottom: 0.9rem;">
               <.detail_metric label="Lane" value={@selected_card.lane} />
               <.detail_metric label="Status" value={@selected_card.status} />
+              <.detail_metric label="Owner" value={@selected_card.owner_ref || "unassigned"} />
+              <.detail_metric label="Source" value={@selected_card.source_ref || "n/a"} />
               <.detail_metric label="Runtime" value={@selected_card.runtime_ref || "unassigned"} />
               <.detail_metric label="Lease" value={@selected_card.lease_state} />
               <.detail_metric label="Gate" value={@selected_card.gate_type || @selected_card.gate_state} />
               <.detail_metric label="Attempt" value={detail_attempt(@selected_card)} />
+              <.detail_metric label="Freshness" value={freshness_label(@selected_card.freshness_state)} />
+              <.detail_metric label="Updated" value={@selected_card.updated_at || "unknown"} />
+            </div>
+
+            <div style="margin-bottom: 0.9rem;">
+              <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase; margin-bottom: 0.4rem;">Next signal</div>
+              <div style="background: rgba(13,17,23,0.86); border: 1px solid #30363d; border-radius: 10px; padding: 0.75rem; color: #c9d1d9; font-size: 0.84rem; line-height: 1.5;">
+                {@selected_card.next_signal || "No immediate signal recorded"}
+              </div>
+            </div>
+
+            <div :if={@selected_card.desired_outcome} style="margin-bottom: 0.9rem;">
+              <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase; margin-bottom: 0.4rem;">Desired outcome</div>
+              <div style="background: rgba(13,17,23,0.86); border: 1px solid #30363d; border-radius: 10px; padding: 0.75rem; color: #c9d1d9; font-size: 0.84rem; line-height: 1.5;">
+                {@selected_card.desired_outcome}
+              </div>
             </div>
 
             <div style="margin-bottom: 0.9rem;">
@@ -362,4 +388,9 @@ defmodule RoundtableWeb.BoardLive do
   defp badge_style(_badge) do
     "display: inline-flex; align-items: center; background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.22); color: #8ec7ff; border-radius: 999px; padding: 0.18rem 0.45rem; font-size: 0.72rem;"
   end
+
+  defp freshness_label("fresh"), do: "Fresh"
+  defp freshness_label("watch"), do: "Watch"
+  defp freshness_label("stale"), do: "Stale"
+  defp freshness_label(_other), do: "Unknown"
 end

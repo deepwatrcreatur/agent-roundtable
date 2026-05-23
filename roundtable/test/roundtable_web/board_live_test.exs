@@ -11,27 +11,33 @@ defmodule RoundtableWeb.BoardLiveTest do
     def list_work_items(_repo_path, _opts) do
       {:ok,
        [
-         %{
-           id: "wk-1",
-           repo_ref: "deepwatrcreatur/agent-roundtable",
-           branch_ref: "feat/board",
-           title: "Queued card",
-           task_type: "code_change",
-           priority: 10,
-           status: "queued",
-           updated_at: "2026-05-23T00:00:00Z"
-         },
-         %{
-           id: "wk-2",
-           repo_ref: "deepwatrcreatur/unified-nix-configuration",
-           branch_ref: "feat/deploy",
-           title: "Needs approval",
-           task_type: "deploy",
-           priority: 20,
-           status: "awaiting_human_input",
-           updated_at: "2026-05-23T00:05:00Z"
-         }
-       ]}
+        %{
+          id: "wk-1",
+          repo_ref: "deepwatrcreatur/agent-roundtable",
+          branch_ref: "feat/board",
+          source_ref: "round-1",
+          title: "Queued card",
+          task_type: "code_change",
+          priority: 10,
+          status: "queued",
+          assignee_ref: "codex-queue",
+          desired_outcome: %{"result" => "Queue remains visible"},
+          updated_at: "2026-05-23T00:00:00Z"
+        },
+        %{
+          id: "wk-2",
+          repo_ref: "deepwatrcreatur/unified-nix-configuration",
+          branch_ref: "feat/deploy",
+          source_ref: "round-2",
+          title: "Needs approval",
+          task_type: "deploy",
+          priority: 20,
+          status: "awaiting_human_input",
+          assignee_ref: "codex-review",
+          desired_outcome: %{"result" => "Promote after approval"},
+          updated_at: "2026-05-23T00:05:00Z"
+        }
+      ]}
     end
 
     def list_attempts(_repo_path, "wk-1", _opts), do: {:ok, []}
@@ -111,6 +117,10 @@ defmodule RoundtableWeb.BoardLiveTest do
     assert html =~ "Needs approval"
     assert html =~ "Approval required"
     assert html =~ "Selected card"
+    assert html =~ "Owner codex-review"
+    assert html =~ "Source round-2"
+    assert html =~ "Next signal"
+    assert html =~ "Promote after approval"
   end
 
   test "render can show a pre-filtered repo slice" do

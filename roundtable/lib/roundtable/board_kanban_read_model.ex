@@ -52,6 +52,10 @@ defmodule Roundtable.BoardKanbanReadModel do
     runtime_status = derive_runtime_status(runtime)
     status_conflict? = status_conflict?(item, current_attempt)
     superseded? = superseded_attempt?(current_attempt)
+    owner_ref = derive_owner_ref(item, current_attempt)
+    desired_outcome = desired_outcome_summary(item)
+    next_signal = derive_next_signal(open_gate, recent_event, current_attempt, desired_outcome)
+    freshness_state = derive_freshness_state(item, current_attempt, open_gate, runtime, recent_event, now)
 
     alert_refs =
       []
@@ -77,6 +81,12 @@ defmodule Roundtable.BoardKanbanReadModel do
       task_type: item.task_type,
       priority: item.priority,
       status: item.status,
+      source_ref: item.source_ref,
+      owner_ref: owner_ref,
+      desired_outcome: desired_outcome,
+      next_signal: next_signal,
+      gate_prompt: open_gate && open_gate.prompt,
+      freshness_state: freshness_state,
       current_attempt_ref: current_attempt && current_attempt.id,
       attempt_number: current_attempt && current_attempt.attempt_number,
       attempt_status: current_attempt && current_attempt.status,
@@ -239,6 +249,42 @@ defmodule Roundtable.BoardKanbanReadModel do
     end
   end
 
+  defp derive_owner_ref(item, nil), do: item.assignee_ref
+
+  defp derive_owner_ref(item, attempt) do
+    Map.get(attempt, :agent_id) || item.assignee_ref
+  end
+
+  defp desired_outcome_summary(item) do
+    outcome = item.desired_outcome
+
+    cond do
+      is_map(outcome) and is_binary(outcome["result"]) -> outcome["result"]
+      is_map(outcome) and is_binary(outcome[:result]) -> outcome[:result]
+      is_binary(outcome) -> outcome
+      true -> nil
+    end
+  end
+
+  defp derive_next_signal(open_gate, recent_event, current_attempt, desired_outcome) do
+    cond do
+      open_gate && open_gate.prompt not in [nil, ""] ->
+        open_gate.prompt
+
+      recent_event && recent_event.summary not in [nil, ""] ->
+        recent_event.summary
+
+      current_attempt && Map.get(current_attempt, :error_excerpt) not in [nil, ""] ->
+        Map.get(current_attempt, :error_excerpt)
+
+      desired_outcome not in [nil, ""] ->
+        desired_outcome
+
+      true ->
+        nil
+    end
+  end
+
   defp build_badges(item, attempt, runtime_status, gate_state, lease_state, alert_refs) do
     []
     |> add_badge("priority:high", item.priority && item.priority <= 25)
@@ -266,6 +312,22 @@ defmodule Roundtable.BoardKanbanReadModel do
     ]
     |> Enum.reject(&is_nil/1)
     |> Enum.max(fn -> item.updated_at || item.created_at end)
+  end
+
+  defp derive_freshness_state(item, attempt, gate, runtime, recent_event, now) do
+    case freshness_timestamp(item, attempt, gate, runtime, recent_event) |> parse_datetime() do
+      nil ->
+        "unknown"
+
+      timestamp ->
+        age_seconds = DateTime.diff(now, timestamp, :second)
+
+        cond do
+          age_seconds <= 900 -> "fresh"
+          age_seconds <= 3600 -> "watch"
+          true -> "stale"
+        end
+    end
   end
 
   defp add_badge(list, _badge, false), do: list
@@ -322,8 +384,10 @@ defmodule Roundtable.BoardKanbanReadModel do
 
   defp parse_datetime(value) when is_binary(value) do
     case DateTime.from_iso8601(value) do
-      {:ok, dt, _offset} -> dt
+      {:ok, datetime, _offset} -> datetime
       _ -> nil
     end
   end
+
+  defp parse_datetime(_value), do: nil
 end
