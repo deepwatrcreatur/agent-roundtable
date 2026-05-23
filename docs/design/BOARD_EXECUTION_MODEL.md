@@ -304,6 +304,9 @@ queued
 The board should treat `work_attempts` as append-only lineage and
 `work_items.status` as the current summary view.
 
+For the browse-first kanban projection derived from these canonical tables, see
+`docs/design/BOARD_KANBAN_READ_MODEL.md`.
+
 ---
 
 ## 5. Retry, timeout, and replay policy

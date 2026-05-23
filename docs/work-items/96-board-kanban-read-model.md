@@ -1,6 +1,6 @@
 # 96 — Board Kanban Read Model
 
-**Status:** `ready`
+**Status:** `done` — **Codex**
 **Tag:** `[structural]`
 
 ## Goal
@@ -55,3 +55,20 @@ tables.
   - `75-lightweight-workflow-definitions.md`
   - `79-derived-round-index-and-resource-claims.md`
   - `91-maintainer-activity-and-promotion-surface.md`
+
+## Outcome
+
+- Added
+  [docs/design/BOARD_KANBAN_READ_MODEL.md](../design/BOARD_KANBAN_READ_MODEL.md)
+  as the canonical read-model note for browse-first board state.
+- Defined stable kanban lanes for:
+  - queued
+  - running
+  - gated
+  - attention
+  - done
+  - closed-with-issue
+- Specified deterministic lane, badge, alert, and current-attempt derivation
+  rules over canonical execution tables.
+- Defined a compact card projection shape so a UI can answer what is running,
+  blocked, stale, superseded, or failed without reading raw attempt logs.
