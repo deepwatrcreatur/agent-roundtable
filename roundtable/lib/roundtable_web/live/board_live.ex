@@ -155,6 +155,15 @@ defmodule RoundtableWeb.BoardLive do
                 <div :if={card.next_signal} style="color: #c9d1d9; font-size: 0.8rem; line-height: 1.4; margin-bottom: 0.55rem;">
                   Next signal: {card.next_signal}
                 </div>
+                <div :if={card.evidence_links != []} style="display: flex; gap: 0.45rem; flex-wrap: wrap; margin-bottom: 0.55rem;">
+                  <a
+                    :for={link <- Enum.take(card.evidence_links, 2)}
+                    href={link.href}
+                    style={evidence_link_style(link.kind)}
+                  >
+                    {link.label}
+                  </a>
+                </div>
                 <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
                   <span :for={badge <- Enum.take(card.badge_refs, 4)} style={badge_style(badge)}>{badge}</span>
                 </div>
@@ -195,6 +204,15 @@ defmodule RoundtableWeb.BoardLive do
               <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase; margin-bottom: 0.4rem;">Desired outcome</div>
               <div style="background: rgba(13,17,23,0.86); border: 1px solid #30363d; border-radius: 10px; padding: 0.75rem; color: #c9d1d9; font-size: 0.84rem; line-height: 1.5;">
                 {@selected_card.desired_outcome}
+              </div>
+            </div>
+
+            <div :if={@selected_card.evidence_links != []} style="margin-bottom: 0.9rem;">
+              <div style="color: #58a6ff; font-size: 0.78rem; text-transform: uppercase; margin-bottom: 0.4rem;">Related evidence</div>
+              <div style="display: flex; gap: 0.45rem; flex-wrap: wrap;">
+                <a :for={link <- @selected_card.evidence_links} href={link.href} style={evidence_link_style(link.kind)}>
+                  {link.label}
+                </a>
               </div>
             </div>
 
@@ -387,6 +405,18 @@ defmodule RoundtableWeb.BoardLive do
 
   defp badge_style(_badge) do
     "display: inline-flex; align-items: center; background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.22); color: #8ec7ff; border-radius: 999px; padding: 0.18rem 0.45rem; font-size: 0.72rem;"
+  end
+
+  defp evidence_link_style("report") do
+    "display: inline-flex; align-items: center; text-decoration: none; background: rgba(210,153,34,0.12); border: 1px solid rgba(210,153,34,0.3); color: #f2cc60; border-radius: 999px; padding: 0.22rem 0.55rem; font-size: 0.74rem;"
+  end
+
+  defp evidence_link_style("demo") do
+    "display: inline-flex; align-items: center; text-decoration: none; background: rgba(88,166,255,0.12); border: 1px solid rgba(88,166,255,0.28); color: #8ec7ff; border-radius: 999px; padding: 0.22rem 0.55rem; font-size: 0.74rem;"
+  end
+
+  defp evidence_link_style(_kind) do
+    "display: inline-flex; align-items: center; text-decoration: none; background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.28); color: #7ee787; border-radius: 999px; padding: 0.22rem 0.55rem; font-size: 0.74rem;"
   end
 
   defp freshness_label("fresh"), do: "Fresh"

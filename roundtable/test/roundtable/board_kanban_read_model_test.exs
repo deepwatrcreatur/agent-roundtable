@@ -14,6 +14,7 @@ defmodule Roundtable.BoardKanbanReadModelTest do
            source_ref: "round-queued",
            title: "Queued work",
            task_type: "code_change",
+           input_payload: %{"surface" => "/forgejo-shell"},
            priority: 10,
            status: "queued",
            assignee_ref: "codex-queued",
@@ -27,6 +28,7 @@ defmodule Roundtable.BoardKanbanReadModelTest do
            source_ref: "round-gated",
            title: "Needs approval",
            task_type: "deploy",
+           input_payload: %{"route" => "/forgejo-shell/reports"},
            priority: 20,
            status: "awaiting_human_input",
            assignee_ref: "codex-review",
@@ -40,6 +42,7 @@ defmodule Roundtable.BoardKanbanReadModelTest do
            source_ref: "round-running",
            title: "Runtime drift",
            task_type: "benchmark",
+           input_payload: %{"surface" => "/board"},
            priority: 30,
            status: "running",
            assignee_ref: "codex-bench",
@@ -48,13 +51,13 @@ defmodule Roundtable.BoardKanbanReadModelTest do
          },
          %{
            id: "wk-done",
-           repo_ref: "deepwatrcreatur/agent-roundtable",
+           repo_ref: "kubernetes/kubernetes",
            branch_ref: "feat/done",
            source_ref: "round-done",
            title: "Completed work",
            task_type: "review",
-           priority: 40,
-           status: "succeeded",
+            priority: 40,
+            status: "succeeded",
            assignee_ref: "codex-review",
            desired_outcome: %{"result" => "Validation passes"},
            updated_at: "2026-05-23T00:20:00Z"
@@ -177,14 +180,17 @@ defmodule Roundtable.BoardKanbanReadModelTest do
     assert cards["wk-gated"].owner_ref == "codex-review"
     assert cards["wk-gated"].next_signal == "Ship this?"
     assert cards["wk-gated"].freshness_state == "fresh"
+    assert Enum.any?(cards["wk-gated"].evidence_links, &(&1.href == "/forgejo-shell/reports"))
 
     assert cards["wk-running"].lane == "attention"
     assert "runtime_offline" in cards["wk-running"].alert_refs
     assert "lease:expired" in cards["wk-running"].badge_refs
     assert cards["wk-running"].next_signal == "Still running benchmarks"
     assert cards["wk-running"].freshness_state == "fresh"
+    assert Enum.any?(cards["wk-running"].evidence_links, &(&1.href == "/board"))
 
     assert cards["wk-done"].lane == "done"
+    assert Enum.any?(cards["wk-done"].evidence_links, &(&1.href == "/forgejo-shell?demo=kubernetes"))
     assert snapshot.counts["queued"] == 1
     assert snapshot.counts["gated"] == 1
     assert snapshot.counts["attention"] == 1

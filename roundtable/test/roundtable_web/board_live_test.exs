@@ -18,6 +18,7 @@ defmodule RoundtableWeb.BoardLiveTest do
           source_ref: "round-1",
           title: "Queued card",
           task_type: "code_change",
+          input_payload: %{"surface" => "/forgejo-shell"},
           priority: 10,
           status: "queued",
           assignee_ref: "codex-queue",
@@ -26,11 +27,12 @@ defmodule RoundtableWeb.BoardLiveTest do
         },
         %{
           id: "wk-2",
-          repo_ref: "deepwatrcreatur/unified-nix-configuration",
+          repo_ref: "kubernetes/kubernetes",
           branch_ref: "feat/deploy",
           source_ref: "round-2",
           title: "Needs approval",
           task_type: "deploy",
+          input_payload: %{"route" => "/forgejo-shell/reports"},
           priority: 20,
           status: "awaiting_human_input",
           assignee_ref: "codex-review",
@@ -121,13 +123,16 @@ defmodule RoundtableWeb.BoardLiveTest do
     assert html =~ "Source round-2"
     assert html =~ "Next signal"
     assert html =~ "Promote after approval"
+    assert html =~ "/forgejo-shell/reports"
+    assert html =~ "/forgejo-shell?demo=kubernetes"
+    assert html =~ "Related evidence"
   end
 
   test "render can show a pre-filtered repo slice" do
     now = ~U[2026-05-23 01:00:00Z]
     {:ok, snapshot} = BoardKanbanReadModel.snapshot("/tmp/repo", board: FakeBoard, now: now)
 
-    cards = Enum.filter(snapshot.cards, &(&1.repo_ref == "deepwatrcreatur/unified-nix-configuration"))
+    cards = Enum.filter(snapshot.cards, &(&1.repo_ref == "kubernetes/kubernetes"))
     card_ids = MapSet.new(Enum.map(cards, & &1.work_item_id))
     lanes =
       Enum.map(snapshot.lanes, fn lane ->
@@ -140,7 +145,7 @@ defmodule RoundtableWeb.BoardLiveTest do
       %{
         __changed__: %{},
         repo_path: "/tmp/repo",
-        params: %{"repo" => "deepwatrcreatur/unified-nix-configuration"},
+        params: %{"repo" => "kubernetes/kubernetes"},
         filters: snapshot.filters,
         counts: snapshot.counts,
         snapshot_generated_at: snapshot.generated_at,

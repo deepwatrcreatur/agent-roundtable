@@ -6,7 +6,7 @@ defmodule Roundtable.BoardKanbanReadModel do
   attempt context without mutating or collapsing the underlying board lineage.
   """
 
-  alias Roundtable.Board
+  alias Roundtable.{Board, InvestorDemo}
 
   @queued_statuses ~w(queued retry_scheduled resumable)
   @active_statuses ~w(claimed running)
@@ -56,6 +56,7 @@ defmodule Roundtable.BoardKanbanReadModel do
     desired_outcome = desired_outcome_summary(item)
     next_signal = derive_next_signal(open_gate, recent_event, current_attempt, desired_outcome)
     freshness_state = derive_freshness_state(item, current_attempt, open_gate, runtime, recent_event, now)
+    evidence_links = derive_evidence_links(item)
 
     alert_refs =
       []
@@ -87,6 +88,7 @@ defmodule Roundtable.BoardKanbanReadModel do
       next_signal: next_signal,
       gate_prompt: open_gate && open_gate.prompt,
       freshness_state: freshness_state,
+      evidence_links: evidence_links,
       current_attempt_ref: current_attempt && current_attempt.id,
       attempt_number: current_attempt && current_attempt.attempt_number,
       attempt_status: current_attempt && current_attempt.status,
@@ -283,6 +285,62 @@ defmodule Roundtable.BoardKanbanReadModel do
       true ->
         nil
     end
+  end
+
+  defp derive_evidence_links(item) do
+    []
+    |> Kernel.++(surface_links(item))
+    |> Kernel.++(demo_links(Map.get(item, :repo_ref)))
+    |> Enum.uniq_by(& &1.href)
+  end
+
+  defp surface_links(item) do
+    input_payload = Map.get(item, :input_payload) || %{}
+
+    [surface_link(Map.get(input_payload, :route) || Map.get(input_payload, "route")),
+     surface_link(Map.get(input_payload, :surface) || Map.get(input_payload, "surface"))]
+    |> Enum.reject(&is_nil/1)
+  end
+
+  defp surface_link(path) when is_binary(path) do
+    if String.starts_with?(path, "/") do
+      %{label: surface_label(path), href: path, kind: "surface"}
+    end
+  end
+
+  defp surface_link(_path), do: nil
+
+  defp surface_label("/forgejo-shell/reports"), do: "Open reports"
+  defp surface_label("/forgejo-shell"), do: "Open Forgejo shell"
+  defp surface_label("/board"), do: "Open board"
+  defp surface_label(path), do: "Open #{path}"
+
+  defp demo_links(nil), do: []
+
+  defp demo_links(repo_ref) do
+    public_demo_targets()
+    |> Enum.filter(fn target ->
+      repo_ref in [target.source_slug, target.import_slug]
+    end)
+    |> Enum.flat_map(fn target ->
+      [
+        %{label: "Open #{target.id} demo", href: "/forgejo-shell?demo=#{target.id}", kind: "demo"},
+        %{label: "Open #{target.id} report", href: "/forgejo-shell/reports#report-#{target.id}", kind: "report"}
+      ]
+    end)
+  end
+
+  defp public_demo_targets do
+    InvestorDemo.catalog()
+    |> Enum.map(fn summary ->
+      imported =
+        case InvestorDemo.import(summary.id) do
+          {:ok, demo} -> demo.imported_repo.slug
+          _ -> nil
+        end
+
+      %{id: summary.id, source_slug: summary.source_slug, import_slug: imported}
+    end)
   end
 
   defp build_badges(item, attempt, runtime_status, gate_state, lease_state, alert_refs) do
