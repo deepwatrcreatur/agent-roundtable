@@ -71,7 +71,7 @@ The important rule is action class plus resource class:
 96. [`94-governance-state-export-and-backend-migration.md`](./94-governance-state-export-and-backend-migration.md) — `done` — **Codex** — `[integrity]` Governance state export and backend migration
 97. [`95-buildkite-compatible-controlled-executor.md`](./95-buildkite-compatible-controlled-executor.md) — `done` — **Codex** — `[tools]` Buildkite-compatible controlled executor
 98. [`96-board-kanban-read-model.md`](./96-board-kanban-read-model.md) — `done` — **Codex** — `[structural]` Board kanban read model
-99. [`97-browseable-board-surface.md`](./97-browseable-board-surface.md) — `ready` — `[product]` Browseable board surface
+99. [`97-browseable-board-surface.md`](./97-browseable-board-surface.md) — `done` — **Codex** — `[product]` Browseable board surface
 
 ### Foundation (do first, in order)
 
