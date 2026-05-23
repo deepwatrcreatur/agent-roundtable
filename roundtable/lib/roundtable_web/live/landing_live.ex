@@ -37,6 +37,9 @@ defmodule RoundtableWeb.LandingLive do
             <a href={"/forgejo-shell?demo=#{@recommended_demo.id}"} style={cta_style(:primary)}>
               Open Recommended Demo
             </a>
+            <a href="/board" style={cta_style(:secondary)}>
+              Open Board
+            </a>
             <a href="/roundtable" style={cta_style(:secondary)}>
               Open Roundtable Ops
             </a>

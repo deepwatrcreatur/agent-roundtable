@@ -20,6 +20,7 @@ defmodule RoundtableWeb.Router do
     get("/auth/sign_out", AuthController, :sign_out)
 
     live("/", LandingLive)
+    live("/board", BoardLive)
 
     live_session :authenticated, on_mount: [{RoundtableWeb.UserAuth, :ensure_authenticated}] do
       live("/roundtable", DiscussionLive)

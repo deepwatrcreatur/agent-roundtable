@@ -1,6 +1,6 @@
 # 97 — Browseable Board Surface
 
-**Status:** `ready`
+**Status:** `done` — **Codex**
 **Tag:** `[product]`
 
 ## Goal
@@ -51,3 +51,17 @@ complete.
   - `57-agent-task-queue.md`
   - `73-board-work-item-schema.md`
   - `96-board-kanban-read-model.md`
+
+## Outcome
+
+- Added a real browse-first `/board` LiveView using the existing Phoenix web
+  surface instead of creating a separate dashboard.
+- Implemented
+  [Roundtable.BoardKanbanReadModel](../../roundtable/lib/roundtable/board_kanban_read_model.ex)
+  to derive current lanes, card summaries, alerts, and detail state from
+  canonical board tables.
+- Added card drill-down, read-only filters, runtime/gate visibility, and recent
+  attempt-event summaries so operators can browse board state without reading
+  raw rows or logs.
+- Linked the landing page to the new board surface and added focused tests for
+  both the read model and the LiveView.
