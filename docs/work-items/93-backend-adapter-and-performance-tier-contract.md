@@ -1,6 +1,6 @@
 # 93 — Backend Adapter and Performance-Tier Contract
 
-**Status:** `ready`
+**Status:** `done` — **Codex**
 **Tag:** `[hosting]`
 
 ## Goal
@@ -48,3 +48,17 @@ dependencies.
   - `67-git-jj-translation-gateway.md`
   - `69-jj-vs-git-infra-benchmark.md`
   - `82-hosted-analysis-provider-contract.md`
+
+## Outcome
+
+- Added [docs/design/BACKEND_ADAPTER_CONTRACT.md](../design/BACKEND_ADAPTER_CONTRACT.md)
+  as the backend adapter and performance-tier design note.
+- Defined three explicit layers:
+  - baseline portability contract
+  - optional optimization contract
+  - backend-specific extensions
+- Specified how the control plane degrades gracefully when higher-tier backend
+  features are unavailable.
+- Included one conventional Git-host example and one API-first backend example.
+- Linked the adapter contract back to the canonical governance object model so
+  backend features do not become canonical governance truth.
