@@ -56,7 +56,8 @@ to function on an ordinary Git-compatible host.
 |---|---|
 | Fetch repository refs and commits | anchor governance objects to real repo history |
 | Push or update refs through ordinary Git-compatible semantics | move reviewed changes through the baseline path |
-| Read repository contents by revision | inspect durable repo-local artifacts |
+| Read repository tree structure by revision | discover durable repo-local artifacts and scoped paths |
+| Read repository file/blob contents by revision | inspect durable repo-local artifacts, not just enumerate them |
 | Observe baseline repository state changes | notice merges, branch updates, or equivalent |
 | Resolve canonical repo identity | keep governance objects anchored to a stable repo |
 
@@ -69,12 +70,15 @@ The baseline backend adapter should expose at least:
 - `read_commit/2`
 - `list_refs/1`
 - `read_tree/3`
+- `read_blob/3`
 - `push_ref_update/4`
 - `observe_repo_events/1`
 
 The names are illustrative rather than mandatory. The important point is that
 these operations can be satisfied by ordinary Git-compatible hosting without
-special provider APIs.
+special provider APIs. `read_tree/3` and `read_blob/3` are intentionally
+separate because indexing or inspection work often needs both path discovery
+and direct content reads for repo-local durable artifacts.
 
 ### 3.3 What baseline correctness must support
 
