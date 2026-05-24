@@ -510,6 +510,34 @@ Use this workflow:
 
 This avoids overwriting unrelated local documentation or implementation work.
 
+### 10.1 Default and exception
+
+The default policy is still:
+
+- publish rounds from a clean branch/worktree
+- then merge into `main`
+
+This repo should **not** assume that discussion rounds are safe to push directly
+to `main` just because they are prose. The common failure mode is not code bugs;
+it is archive drift or mixed local state:
+
+- wrong roster claims
+- missing satisfaction markers
+- overstated consensus
+- incorrect round numbering
+- or mixing the new writeup with unrelated local edits
+
+Direct-to-`main` is allowed only as an explicit fast path when **all** of the
+following are true:
+
+1. the maintainer explicitly asked for direct push to `main`
+2. the checkout is clean before the round archive edits begin
+3. the change is limited to the intended round archive files
+4. the leader verified roster accuracy, satisfaction markers, and round
+   numbering before pushing
+
+If any of those are false, use the normal clean-branch publishing path.
+
 ---
 
 ## 11. Known pitfalls
