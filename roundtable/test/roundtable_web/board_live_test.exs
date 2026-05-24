@@ -18,12 +18,11 @@ defmodule RoundtableWeb.BoardLiveTest do
           source_ref: "round-1",
           title: "Queued card",
           task_type: "code_change",
-          input_payload: %{
-            "surface" => "/forgejo-shell",
-            "evidence_links" => [
-              %{"label" => "Open board evidence", "href" => "/board", "kind" => "surface"}
-            ]
-          },
+          input_payload: %{},
+          surface_route: "/forgejo-shell",
+          evidence_links: [
+            %{"label" => "Open board evidence", "href" => "/board", "kind" => "surface"}
+          ],
           priority: 10,
           status: "queued",
           assignee_ref: "codex-queue",
@@ -37,7 +36,9 @@ defmodule RoundtableWeb.BoardLiveTest do
           source_ref: "round-2",
           title: "Needs approval",
           task_type: "deploy",
-          input_payload: %{"route" => "/forgejo-shell/reports", "public_demo_id" => "kubernetes"},
+          input_payload: %{},
+          surface_route: "/forgejo-shell/reports",
+          public_demo_id: "kubernetes",
           priority: 20,
           status: "awaiting_human_input",
           assignee_ref: "codex-review",

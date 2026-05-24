@@ -255,6 +255,9 @@ defmodule Roundtable.Board do
       status = fetch_optional(attrs, :status, "queued")
       priority = fetch_optional(attrs, :priority, 100)
       input_payload = json_text(fetch_optional(attrs, :input_payload, %{}))
+      surface_route = fetch_optional(attrs, :surface_route, nil)
+      public_demo_id = fetch_optional(attrs, :public_demo_id, nil)
+      evidence_links_json = json_text_or_nil(fetch_optional(attrs, :evidence_links, nil))
       desired_outcome = json_text_or_nil(fetch_optional(attrs, :desired_outcome, nil))
       retry_policy = json_text_or_nil(fetch_optional(attrs, :retry_policy, nil))
       timeout_policy = json_text_or_nil(fetch_optional(attrs, :timeout_policy, nil))
@@ -264,13 +267,15 @@ defmodule Roundtable.Board do
        """
        REPLACE INTO work_items (
          id, repo_ref, branch_ref, source_ref, title, task_type, input_payload,
-         desired_outcome, status, priority, assignee_type, assignee_ref,
-         workflow_ref, retry_policy, timeout_policy, hitl_policy,
+         surface_route, public_demo_id, evidence_links_json, desired_outcome,
+         status, priority, assignee_type, assignee_ref, workflow_ref,
+         retry_policy, timeout_policy, hitl_policy,
          created_at, updated_at, closed_at
        ) VALUES (
          '#{escape_sql(id)}', '#{escape_sql(repo_ref)}', #{sql_text(fetch_optional(attrs, :branch_ref, nil))},
          #{sql_text(fetch_optional(attrs, :source_ref, nil))}, '#{escape_sql(title)}',
          '#{escape_sql(task_type)}', '#{escape_sql(input_payload)}',
+         #{sql_text(surface_route)}, #{sql_text(public_demo_id)}, #{sql_text(evidence_links_json)},
          #{sql_text(desired_outcome)}, '#{escape_sql(status)}', #{priority},
          #{sql_text(fetch_optional(attrs, :assignee_type, nil))},
          #{sql_text(fetch_optional(attrs, :assignee_ref, nil))},
@@ -367,9 +372,10 @@ defmodule Roundtable.Board do
   defp list_work_items_sql do
     """
     SELECT id, repo_ref, branch_ref, source_ref, title, task_type, input_payload,
-           desired_outcome, status, priority, assignee_type, assignee_ref,
-           workflow_ref, retry_policy, timeout_policy, hitl_policy,
-           created_at, updated_at, closed_at
+           surface_route, public_demo_id, evidence_links_json, desired_outcome,
+           status, priority, assignee_type, assignee_ref, workflow_ref,
+           retry_policy, timeout_policy, hitl_policy, created_at, updated_at,
+           closed_at
     FROM work_items
     ORDER BY priority ASC, created_at ASC;
     """
@@ -378,9 +384,10 @@ defmodule Roundtable.Board do
   defp get_work_item_sql(work_item_id) do
     """
     SELECT id, repo_ref, branch_ref, source_ref, title, task_type, input_payload,
-           desired_outcome, status, priority, assignee_type, assignee_ref,
-           workflow_ref, retry_policy, timeout_policy, hitl_policy,
-           created_at, updated_at, closed_at
+           surface_route, public_demo_id, evidence_links_json, desired_outcome,
+           status, priority, assignee_type, assignee_ref, workflow_ref,
+           retry_policy, timeout_policy, hitl_policy, created_at, updated_at,
+           closed_at
     FROM work_items
     WHERE id = '#{escape_sql(work_item_id)}'
     LIMIT 1;
@@ -467,6 +474,9 @@ defmodule Roundtable.Board do
       title: row["title"],
       task_type: row["task_type"],
       input_payload: decode_json(row["input_payload"], %{}),
+      surface_route: row["surface_route"],
+      public_demo_id: row["public_demo_id"],
+      evidence_links: decode_json(row["evidence_links_json"], []),
       desired_outcome: decode_json(row["desired_outcome"], nil),
       status: row["status"],
       priority: normalize_integer(row["priority"], 100),

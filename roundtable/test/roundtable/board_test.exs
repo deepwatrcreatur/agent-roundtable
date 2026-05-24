@@ -19,6 +19,10 @@ defmodule Roundtable.BoardTest do
                "title" => "Implement board schema",
                "task_type" => "code_change",
                "input_payload" => ~s({"issue":73}),
+               "surface_route" => "/forgejo-shell/reports",
+               "public_demo_id" => "forgejo",
+               "evidence_links_json" =>
+                 ~s([{"label":"Open board","href":"/board","kind":"surface"}]),
                "desired_outcome" => ~s({"tests":"green"}),
                "status" => "queued",
                "priority" => "10",
@@ -149,6 +153,9 @@ defmodule Roundtable.BoardTest do
                  title: "Implement board schema",
                  task_type: "code_change",
                  input_payload: %{issue: 73},
+                 surface_route: "/forgejo-shell/reports",
+                 public_demo_id: "forgejo",
+                 evidence_links: [%{label: "Open board", href: "/board", kind: "surface"}],
                  desired_outcome: %{tests: "green"},
                  status: "queued",
                  priority: 10,
@@ -170,6 +177,9 @@ defmodule Roundtable.BoardTest do
     assert insert_sql =~ "'wk-1'"
     assert insert_sql =~ "'code_change'"
     assert insert_sql =~ "\"issue\":73"
+    assert insert_sql =~ "'/forgejo-shell/reports'"
+    assert insert_sql =~ "'forgejo'"
+    assert insert_sql =~ "\"href\":\"/board\""
 
     assert_received {:commit, commit}
     assert commit.message =~ "create work item wk-1"
@@ -258,6 +268,9 @@ defmodule Roundtable.BoardTest do
     assert {:ok, [item]} = Board.list_work_items("/tmp/repo", dolt: FakeDolt)
     assert item.id == "wk-1"
     assert item.input_payload == %{"issue" => 73}
+    assert item.surface_route == "/forgejo-shell/reports"
+    assert item.public_demo_id == "forgejo"
+    assert item.evidence_links == [%{"label" => "Open board", "href" => "/board", "kind" => "surface"}]
     assert item.retry_policy == %{"max_attempts" => 3}
 
     assert {:ok, attempts} = Board.list_attempts("/tmp/repo", "wk-1", dolt: FakeDolt)

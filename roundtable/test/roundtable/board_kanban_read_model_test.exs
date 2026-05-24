@@ -14,12 +14,11 @@ defmodule Roundtable.BoardKanbanReadModelTest do
            source_ref: "round-queued",
            title: "Queued work",
            task_type: "code_change",
-           input_payload: %{
-             "surface" => "/forgejo-shell",
-             "evidence_links" => [
-               %{"label" => "Open queued evidence", "href" => "/board", "kind" => "surface"}
-             ]
-           },
+           input_payload: %{},
+           surface_route: "/forgejo-shell",
+           evidence_links: [
+             %{"label" => "Open queued evidence", "href" => "/board", "kind" => "surface"}
+           ],
            priority: 10,
            status: "queued",
            assignee_ref: "codex-queued",
@@ -33,7 +32,9 @@ defmodule Roundtable.BoardKanbanReadModelTest do
            source_ref: "round-gated",
            title: "Needs approval",
            task_type: "deploy",
-           input_payload: %{"route" => "/forgejo-shell/reports", "public_demo_id" => "forgejo"},
+           input_payload: %{},
+           surface_route: "/forgejo-shell/reports",
+           public_demo_id: "forgejo",
            priority: 20,
            status: "awaiting_human_input",
            assignee_ref: "codex-review",
@@ -47,7 +48,8 @@ defmodule Roundtable.BoardKanbanReadModelTest do
            source_ref: "round-running",
            title: "Runtime drift",
            task_type: "benchmark",
-           input_payload: %{"surface" => "/board"},
+           input_payload: %{},
+           surface_route: "/board",
            priority: 30,
            status: "running",
            assignee_ref: "codex-bench",
@@ -61,7 +63,8 @@ defmodule Roundtable.BoardKanbanReadModelTest do
            source_ref: "round-done",
            title: "Completed work",
            task_type: "review",
-           input_payload: %{"public_demo_id" => "kubernetes"},
+           input_payload: %{},
+           public_demo_id: "kubernetes",
            priority: 40,
            status: "succeeded",
            assignee_ref: "codex-review",
