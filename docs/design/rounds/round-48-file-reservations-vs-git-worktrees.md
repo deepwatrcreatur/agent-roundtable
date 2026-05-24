@@ -7,6 +7,11 @@
 
 ### First-pass convergence
 
+- **File reservations** in this context mean a lightweight coordination
+  mechanism where an agent declares intent to modify a file or file set before
+  editing it. The declaration can live in a queue system, database, lock file,
+  or orchestration service and is meant to signal "I am working here now" so
+  other agents can route around the same area.
 - `jj` does not remove the need for coordination; it changes reservations from
   correctness locks into scheduling / intent primitives.
 - Every agent should get a private ephemeral working copy (or the cheapest
@@ -69,5 +74,22 @@ Virtual worktrees are the right default, but only with:
 - promotion manifests
 - causal-overlap detection before expensive validation
 - an explicit arbitration lane for architectural conflict
+
+### Later-round clarification
+
+Rounds 129 and 130 did not reverse this position. They sharpened it.
+
+- file reservations are still useful for intent signaling, claims, leases, and
+  scheduling
+- file reservations are not the main safety boundary for concurrent edits in
+  one shared writable checkout
+- the real mutation boundary should still be a private worktree, sandbox, VM,
+  or other isolated execution space
+
+The updated interpretation is:
+
+- reservations help agents know who plans to touch what
+- isolated workspaces prevent those plans from turning into direct write
+  collisions
 
 `[satisfied]`
