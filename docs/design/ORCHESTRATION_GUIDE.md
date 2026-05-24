@@ -174,6 +174,19 @@ also valid here and has been successfully recovered in-session using:
 If you think a round would benefit from one extra experimental voice, check
 whether the local OpenCode/free-model path is actually usable before launch.
 
+Practical preflight in this environment:
+
+```bash
+opencode models
+```
+
+This prints the locally available provider/model IDs. In recent runs it exposed
+free or cheap enrichment candidates such as:
+
+- `opencode/nemotron-3-super-free`
+- `opencode/deepseek-v4-flash-free`
+- `opencode/big-pickle`
+
 Typical reasons to add it:
 
 - the topic is broad and would benefit from one more independent angle
@@ -191,6 +204,8 @@ So the rule is:
 
 - use them opportunistically when they enrich the round
 - but never count them as evidence that the main requested roster was satisfied
+- and if OpenCode itself fails, record that failure as enrichment-seat
+  unavailability rather than smoothing it over
 
 ### 4.3 Preflight failure policy
 
@@ -358,7 +373,40 @@ Operational lesson:
 - recover the seat honestly, then amend the round note rather than leaving a
   stale “DeepSeek unavailable” statement in the durable record
 
-## 6.4 Copilot
+## 6.4 Optional enrichment seat: OpenCode / free models
+
+Use the real CLI when you add this seat.
+
+Recommended discovery step:
+
+```bash
+opencode models
+```
+
+Recommended one-shot run pattern:
+
+```bash
+PROMPT="$(cat /tmp/round_prompt.txt)"
+opencode run -m opencode/nemotron-3-super-free "$PROMPT" \
+  > /tmp/opencode_round.txt
+```
+
+Notes:
+
+- this is an enrichment seat, not part of the mandatory serious quorum
+- save its output separately just like the primary seats
+- if a specific model fails, try a different model from the discovery list once
+  rather than pretending the enrichment voice was never requested
+- if the command returns only startup noise, inspect the saved file before
+  deciding whether the seat failed
+
+If the round topic explicitly evaluates harnesses, free-model access, or cheap
+extra dissent, record the seat concretely, for example:
+
+- `OpenCode free-model seat: substantive via opencode/nemotron-3-super-free`
+- `OpenCode free-model seat: unavailable after model/provider failure`
+
+## 6.5 Copilot
 
 Copilot should contribute an explicit fourth voice in the discussion leader's
 own synthesis process, not just summarize the others.
@@ -370,29 +418,11 @@ That means writing a real independent position answering the same prompt:
 - what Copilot would surface as the main failure mode
 - a satisfaction marker
 
-## 6.5 Optional enrichment seat: OpenCode / free models
+Valid markers are defined in `AGENTS.md` for this repo:
 
-If you add a free-model seat, do it intentionally rather than casually.
-
-Recommended use:
-
-- add **one** extra experimental seat
-- keep the same shared prompt
-- save the raw output separately
-- and record in the durable round note that it was an enrichment seat rather than
-  part of the mandatory core quorum
-
-Operational stance:
-
-- use it when it can make the round better
-- do not skip the chance reflexively
-- but do not let it blur the distinction between primary and experimental
-  evidence
-
-If the seat drifts, times out, or returns weak output, record that honestly and
-do not smooth it into the main consensus.
-
----
+- `[satisfied]`
+- `[satisfied-conditional: X]`
+- `[needs more evidence: X]`
 
 ## 7. Interpreting outputs
 
