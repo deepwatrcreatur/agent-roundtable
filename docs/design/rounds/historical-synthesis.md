@@ -36,6 +36,11 @@ head. To prevent stale-success promotion, each private change must carry enough
 metadata for the orchestrator to detect causal and architectural overlap before
 full revalidation. Architecturally incompatible but locally valid changes go to
 arbitration rather than “first to the gate wins.”
+**Clarification:** A file reservation is a lightweight declaration that an
+agent intends to edit a file or file set, usually so other agents can avoid the
+same area. Later rounds 129 and 130 strengthened the line that reservations are
+useful coordination metadata, but not a substitute for isolated mutation spaces
+such as worktrees, sandboxes, or per-agent VMs.
 
 ## Round 49: Controversial Open Source Figures as Case Studies
 **Consensus:** Vaglio must not score people directly. It should score contested
