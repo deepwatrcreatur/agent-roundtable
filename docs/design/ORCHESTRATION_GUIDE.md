@@ -395,8 +395,8 @@ Notes:
 
 - this is an enrichment seat, not part of the mandatory serious quorum
 - save its output separately just like the primary seats
-- if a specific model fails, try another listed OpenCode seat once rather than
-  pretending the enrichment voice was never requested
+- if a specific model fails, try a different model from the discovery list once
+  rather than pretending the enrichment voice was never requested
 - if the command returns only startup noise, inspect the saved file before
   deciding whether the seat failed
 
@@ -417,6 +417,12 @@ That means writing a real independent position answering the same prompt:
 - what Copilot disagrees with
 - what Copilot would surface as the main failure mode
 - a satisfaction marker
+
+Valid markers are defined in `AGENTS.md` for this repo:
+
+- `[satisfied]`
+- `[satisfied-conditional: X]`
+- `[needs more evidence: X]`
 
 ## 7. Interpreting outputs
 

@@ -252,6 +252,8 @@ The maintained line is:
 
 ### Satisfaction marker
 
+[satisfied]
+
 This round is satisfied if:
 
 - the project stops treating shared local checkouts as the normal concurrent
@@ -259,4 +261,3 @@ This round is satisfied if:
 - exe.dev is trialed soon for `vaglio` and router-test work
 - and future work on harnesses stays scoped to invocation ergonomics rather than
   pretending to replace isolation
-

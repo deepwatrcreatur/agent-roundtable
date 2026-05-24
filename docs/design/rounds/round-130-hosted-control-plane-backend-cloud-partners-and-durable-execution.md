@@ -265,6 +265,8 @@ That slice should:
 
 ### Satisfaction marker
 
+[satisfied]
+
 This round is satisfied if:
 
 - the project commits to the independent-control-plane boundary
@@ -274,4 +276,3 @@ This round is satisfied if:
   architecture dependency
 - and durable-execution dependencies stay deferred until the narrow hosted slice
   proves real pressure for them
-
