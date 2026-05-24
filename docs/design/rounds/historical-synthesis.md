@@ -2,10 +2,11 @@
 
 Browse-oriented HTML companion: [`historical-synthesis.html`](./historical-synthesis.html).
 
-These notes record genuine follow-up rounds run with the actual CLI agents
-(`codex` and `gemini`). Claude was not used in these closes because the round
-owner explicitly allowed proceeding without Claude and Claude CLI availability
-was rate-limited during this session.
+These notes record genuine follow-up rounds run with real agent/tool seats.
+Some earlier closes in this file were archived during a session where the round
+owner explicitly allowed proceeding without Claude, but later entries record the
+exact roster actually used for each round, including Claude, DeepSeek API, and
+OpenCode enrichment seats where applicable.
 
 ## Round 45-46: Subject Tags & Multidimensional Discovery
 **Consensus:** Tags are first-class architecture, not cosmetic labels. For v1,
@@ -1016,12 +1017,31 @@ bulletin board / daemon orchestration layer, not in prose docs alone.
 ## Round 126: Elixir Is Plausible for `router-clat`, but the Contract Must Freeze Before the Boundary Does
 **Consensus:** The panel converged that Elixir is a credible fit for the
  `router-clat` control plane, and that the system should not become
- Tayga-shaped: the repo needs a backend-neutral control-plane contract,
- preserved-behavior testing from day one, and a clean split where
- `nix-router-optimized` remains the declarative host-integration layer. The
- real disagreement was timing: Codex and Copilot argued for building the Elixir
- path in-repo first and extracting only after parity and contract stability,
- while Gemini and DeepSeek argued that a separate repo now would force better
- product discipline. The maintained line was: freeze the behavior and testing
- contract first, then let repo structure follow proven boundaries rather than
- substitute for them.
+Tayga-shaped: the repo needs a backend-neutral control-plane contract,
+preserved-behavior testing from day one, and a clean split where
+`nix-router-optimized` remains the declarative host-integration layer. The
+real disagreement was timing: Codex and Copilot argued for building the Elixir
+path in-repo first and extracting only after parity and contract stability,
+while Gemini and DeepSeek argued that a separate repo now would force better
+product discipline. The maintained line was: freeze the behavior and testing
+contract first, then let repo structure follow proven boundaries rather than
+substitute for them.
+
+## Round 129: Local Harness Collisions vs Isolated Cloud Sandboxes
+**Consensus:** Shared-checkout collisions are fundamentally a workspace-isolation
+problem, not a local-harness problem. Better harnesses can improve invocation
+and ergonomics, but they do not make one mutable checkout safe for concurrent
+agent writes. The near-term operating model should be tiered: local worktrees
+for low-risk serial work, exe.dev VMs for collision-prone and deployment work,
+and Replit treated primarily as a structurally informative hosted-task reference
+rather than the default architecture.
+
+## Round 130: Hosted Control Plane Backend, Cloud Partners, and Durable Execution
+**Consensus:** The project should build an independent narrow control plane
+above multiple possible execution substrates, rather than collapsing into either
+Replit's hosted product shape or a single-substrate design. exe.dev is the more
+aligned first substrate partner because it looks like agent-ready infrastructure
+rather than a bundled coordination product. Durable-execution ideas from DBOS
+and Temporal are useful, but the first serious backend slice should still be a
+boring hosted claim/lease/attempt-lineage service rather than a heavyweight
+workflow engine.
