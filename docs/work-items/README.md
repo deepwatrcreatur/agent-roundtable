@@ -56,8 +56,8 @@ The important rule is action class plus resource class:
 
 ## Queue
 
-84. [`82-hosted-analysis-provider-contract.md`](./82-hosted-analysis-provider-contract.md) — `ready` — `[product]` Hosted analysis provider contract
-85. [`83-hosted-analysis-release-gate.md`](./83-hosted-analysis-release-gate.md) — `ready` — `[integrity]` Hosted analysis release gate
+84. [`82-hosted-analysis-provider-contract.md`](./82-hosted-analysis-provider-contract.md) — `done` — **Claude Code** — `[product]` Hosted analysis provider contract
+85. [`83-hosted-analysis-release-gate.md`](./83-hosted-analysis-release-gate.md) — `done` — **Claude Code** — `[integrity]` Hosted analysis release gate
 86. [`84-release-event-and-publish-authority-separation.md`](./84-release-event-and-publish-authority-separation.md) — `ready` — `[integrity]` Release event and publish authority separation
 87. [`85-package-quarantine-and-revocation-graph.md`](./85-package-quarantine-and-revocation-graph.md) — `ready` — `[security]` Package quarantine and revocation graph
 88. [`86-untrusted-contribution-trust-tiers.md`](./86-untrusted-contribution-trust-tiers.md) — `ready` — `[security]` Untrusted contribution trust tiers

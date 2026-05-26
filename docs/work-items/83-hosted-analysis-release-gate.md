@@ -1,6 +1,6 @@
 # 83 — Hosted Analysis Release Gate
 
-**Status:** `ready`
+**Status:** `done` — **Claude Code**
 **Tag:** `[integrity]`
 
 ## Goal
