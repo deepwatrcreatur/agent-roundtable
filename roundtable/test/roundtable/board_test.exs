@@ -3,11 +3,80 @@ defmodule Roundtable.BoardTest do
 
   alias Roundtable.Board
 
+  @work_item_columns [
+    "id",
+    "repo_ref",
+    "branch_ref",
+    "source_ref",
+    "title",
+    "task_type",
+    "input_payload",
+    "surface_route",
+    "public_demo_id",
+    "evidence_links_json",
+    "desired_outcome",
+    "status",
+    "priority",
+    "assignee_type",
+    "assignee_ref",
+    "workflow_ref",
+    "retry_policy",
+    "timeout_policy",
+    "hitl_policy",
+    "created_at",
+    "updated_at",
+    "closed_at"
+  ]
+
+  @legacy_work_item_columns @work_item_columns --
+                              ["surface_route", "public_demo_id", "evidence_links_json"]
+
   defmodule FakeDolt do
+    @work_item_columns [
+      "id",
+      "repo_ref",
+      "branch_ref",
+      "source_ref",
+      "title",
+      "task_type",
+      "input_payload",
+      "surface_route",
+      "public_demo_id",
+      "evidence_links_json",
+      "desired_outcome",
+      "status",
+      "priority",
+      "assignee_type",
+      "assignee_ref",
+      "workflow_ref",
+      "retry_policy",
+      "timeout_policy",
+      "hitl_policy",
+      "created_at",
+      "updated_at",
+      "closed_at"
+    ]
+
     def query(sql, _opts) do
       send(self(), {:query, sql})
 
       cond do
+        String.contains?(sql, "DESCRIBE work_items") ->
+          columns = Process.get(:work_item_columns, @work_item_columns)
+          {:ok, Enum.map(columns, &%{"Field" => &1})}
+
+        String.contains?(sql, "ALTER TABLE work_items ADD COLUMN surface_route") ->
+          add_work_item_column("surface_route")
+          {:ok, []}
+
+        String.contains?(sql, "ALTER TABLE work_items ADD COLUMN public_demo_id") ->
+          add_work_item_column("public_demo_id")
+          {:ok, []}
+
+        String.contains?(sql, "ALTER TABLE work_items ADD COLUMN evidence_links_json") ->
+          add_work_item_column("evidence_links_json")
+          {:ok, []}
+
         String.contains?(sql, "SELECT id, repo_ref") ->
           {:ok,
            [
@@ -129,6 +198,11 @@ defmodule Roundtable.BoardTest do
       send(self(), {:commit, params})
       {:ok, %{commit_id: "abc123", branch: "main"}}
     end
+
+    defp add_work_item_column(column) do
+      columns = Process.get(:work_item_columns, @work_item_columns)
+      Process.put(:work_item_columns, Enum.uniq(columns ++ [column]))
+    end
   end
 
   test "schema SQL defines all board tables" do
@@ -172,6 +246,9 @@ defmodule Roundtable.BoardTest do
     assert_received {:query, schema_sql}
     assert schema_sql =~ "CREATE TABLE IF NOT EXISTS work_items"
 
+    assert_received {:query, describe_sql}
+    assert describe_sql =~ "DESCRIBE work_items"
+
     assert_received {:query, insert_sql}
     assert insert_sql =~ "REPLACE INTO work_items"
     assert insert_sql =~ "'wk-1'"
@@ -184,6 +261,33 @@ defmodule Roundtable.BoardTest do
     assert_received {:commit, commit}
     assert commit.message =~ "create work item wk-1"
     refute commit.sign?
+  end
+
+  test "ensure_schema repairs legacy work item columns and commits the schema upgrade" do
+    Process.put(:work_item_columns, @legacy_work_item_columns)
+
+    assert {:ok, %{repaired_columns: repaired_columns}} =
+             Board.ensure_schema("/tmp/repo", dolt: FakeDolt)
+
+    assert repaired_columns == ["surface_route", "public_demo_id", "evidence_links_json"]
+
+    assert_received {:query, schema_sql}
+    assert schema_sql =~ "CREATE TABLE IF NOT EXISTS work_items"
+
+    assert_received {:query, describe_sql}
+    assert describe_sql =~ "DESCRIBE work_items"
+
+    assert_received {:query, alter_surface_sql}
+    assert alter_surface_sql =~ "ALTER TABLE work_items ADD COLUMN surface_route"
+
+    assert_received {:query, alter_demo_sql}
+    assert alter_demo_sql =~ "ALTER TABLE work_items ADD COLUMN public_demo_id"
+
+    assert_received {:query, alter_evidence_sql}
+    assert alter_evidence_sql =~ "ALTER TABLE work_items ADD COLUMN evidence_links_json"
+
+    assert_received {:commit, schema_commit}
+    assert schema_commit.message =~ "repair schema columns surface_route, public_demo_id, evidence_links_json"
   end
 
   test "append_attempt and open_human_gate preserve retry lineage and structured gates" do
@@ -205,6 +309,9 @@ defmodule Roundtable.BoardTest do
 
     assert_received {:query, attempt_schema_sql}
     assert attempt_schema_sql =~ "CREATE TABLE IF NOT EXISTS work_attempts"
+
+    assert_received {:query, describe_attempt_schema_sql}
+    assert describe_attempt_schema_sql =~ "DESCRIBE work_items"
 
     assert_received {:query, attempt_sql}
     assert attempt_sql =~ "REPLACE INTO work_attempts"
@@ -231,6 +338,9 @@ defmodule Roundtable.BoardTest do
 
     assert_received {:query, gate_schema_sql}
     assert gate_schema_sql =~ "CREATE TABLE IF NOT EXISTS human_gates"
+
+    assert_received {:query, describe_gate_schema_sql}
+    assert describe_gate_schema_sql =~ "DESCRIBE work_items"
 
     assert_received {:query, gate_sql}
     assert gate_sql =~ "REPLACE INTO human_gates"
@@ -259,6 +369,9 @@ defmodule Roundtable.BoardTest do
 
     assert_received {:query, heartbeat_schema_sql}
     assert heartbeat_schema_sql =~ "CREATE TABLE IF NOT EXISTS runtime_heartbeats"
+
+    assert_received {:query, describe_heartbeat_schema_sql}
+    assert describe_heartbeat_schema_sql =~ "DESCRIBE work_items"
 
     assert_received {:query, heartbeat_sql}
     assert heartbeat_sql =~ "REPLACE INTO runtime_heartbeats"
@@ -289,6 +402,8 @@ defmodule Roundtable.BoardTest do
     assert item.id == "wk-1"
     assert_received {:query, get_item_schema_sql}
     assert get_item_schema_sql =~ "CREATE TABLE IF NOT EXISTS work_items"
+    assert_received {:query, get_item_describe_sql}
+    assert get_item_describe_sql =~ "DESCRIBE work_items"
     assert_received {:query, get_item_sql}
     assert get_item_sql =~ "FROM work_items"
 
@@ -296,6 +411,8 @@ defmodule Roundtable.BoardTest do
     assert attempt.id == "att-1"
     assert_received {:query, get_attempt_schema_sql}
     assert get_attempt_schema_sql =~ "CREATE TABLE IF NOT EXISTS work_attempts"
+    assert_received {:query, get_attempt_describe_sql}
+    assert get_attempt_describe_sql =~ "DESCRIBE work_items"
     assert_received {:query, get_attempt_sql}
     assert get_attempt_sql =~ "FROM work_attempts"
 
@@ -315,6 +432,9 @@ defmodule Roundtable.BoardTest do
 
     assert_received {:query, schema_sql}
     assert schema_sql =~ "CREATE TABLE IF NOT EXISTS work_attempt_events"
+
+    assert_received {:query, describe_event_schema_sql}
+    assert describe_event_schema_sql =~ "DESCRIBE work_items"
 
     assert_received {:query, event_sql}
 

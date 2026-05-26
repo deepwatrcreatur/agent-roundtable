@@ -16,6 +16,14 @@ defmodule Roundtable.Board do
 
   alias Roundtable.Vcs.Dolt
 
+  @schema_repairs %{
+    "work_items" => [
+      %{column: "surface_route", ddl: "ALTER TABLE work_items ADD COLUMN surface_route TEXT;"},
+      %{column: "public_demo_id", ddl: "ALTER TABLE work_items ADD COLUMN public_demo_id VARCHAR(255);"},
+      %{column: "evidence_links_json", ddl: "ALTER TABLE work_items ADD COLUMN evidence_links_json TEXT;"}
+    ]
+  }
+
   @schema_files [
     Application.app_dir(
       :roundtable,
@@ -46,7 +54,12 @@ defmodule Roundtable.Board do
   def ensure_schema(repo_path, opts) do
     dolt = Keyword.get(opts, :dolt, Dolt)
     query_opts = Keyword.drop(opts, [:dolt])
-    dolt.query(schema_sql(), [repo_path: repo_path] ++ query_opts)
+
+    with {:ok, _} <- dolt.query(schema_sql(), [repo_path: repo_path] ++ query_opts),
+         {:ok, repairs} <- apply_schema_repairs(dolt, repo_path, query_opts),
+         {:ok, _} <- commit_schema_repairs(dolt, repo_path, repairs, opts) do
+      {:ok, %{repaired_columns: repairs}}
+    end
   end
 
   @spec create_work_item(String.t() | nil, map(), keyword()) :: :ok | {:error, term()}
@@ -244,6 +257,80 @@ defmodule Roundtable.Board do
            ) do
       :ok
     end
+  end
+
+  defp apply_schema_repairs(dolt, repo_path, query_opts) do
+    Enum.reduce_while(@schema_repairs, {:ok, []}, fn {table, repairs}, {:ok, repaired_columns} ->
+      with {:ok, existing_columns} <- table_columns(dolt, repo_path, table, query_opts),
+           {:ok, table_repairs} <-
+             apply_missing_table_repairs(
+               dolt,
+               repo_path,
+               existing_columns,
+               repairs,
+               query_opts
+             ) do
+        {:cont, {:ok, repaired_columns ++ table_repairs}}
+      else
+        {:error, _} = error -> {:halt, error}
+      end
+    end)
+  end
+
+  defp table_columns(dolt, repo_path, table, query_opts) do
+    with {:ok, rows} <- dolt.query("DESCRIBE #{table};", [repo_path: repo_path] ++ query_opts) do
+      columns =
+        rows
+        |> Enum.map(&(Map.get(&1, "Field") || Map.get(&1, "field") || Map.get(&1, "COLUMN_NAME")))
+        |> Enum.reject(&is_nil/1)
+        |> MapSet.new()
+
+      {:ok, columns}
+    end
+  end
+
+  defp apply_missing_table_repairs(dolt, repo_path, existing_columns, repairs, query_opts) do
+    repairs
+    |> Enum.reject(&MapSet.member?(existing_columns, &1.column))
+    |> Enum.reduce_while({:ok, []}, fn repair, {:ok, applied_repairs} ->
+      case dolt.query(repair.ddl, [repo_path: repo_path] ++ query_opts) do
+        {:ok, _} ->
+          {:cont, {:ok, [repair.column | applied_repairs]}}
+
+        {:error, {:command_failed, _status, output}} ->
+          if duplicate_column_error?(output) do
+            {:cont, {:ok, applied_repairs}}
+          else
+            {:halt, {:error, {:schema_repair_failed, repair.column, output}}}
+          end
+
+        {:error, _} = error ->
+          {:halt, error}
+      end
+    end)
+    |> case do
+      {:ok, applied_repairs} -> {:ok, Enum.reverse(applied_repairs)}
+      {:error, _} = error -> error
+    end
+  end
+
+  defp commit_schema_repairs(_dolt, _repo_path, [], _opts), do: {:ok, :no_repairs}
+
+  defp commit_schema_repairs(dolt, repo_path, repaired_columns, opts) do
+    query_opts = Keyword.drop(opts, [:dolt])
+    sign? = Keyword.get(opts, :sign?, false)
+    signing_key = Keyword.get(opts, :signing_key, System.get_env("ROUNDTABLE_BOARD_SIGNING_KEY"))
+
+    dolt.write_files(
+      %{
+        message: schema_repair_commit_message(repaired_columns),
+        branch: "main",
+        changes: [],
+        sign?: sign?,
+        signing_key: signing_key
+      },
+      [repo_path: repo_path] ++ query_opts
+    )
   end
 
   defp work_item_upsert_sql(attrs) do
@@ -601,6 +688,10 @@ defmodule Roundtable.Board do
     "#{message}\n\n[board-schema: durable-execution]"
   end
 
+  defp schema_repair_commit_message(repaired_columns) do
+    "fix(board): repair schema columns #{Enum.join(repaired_columns, ", ")}\n\n[board-schema: durable-execution]"
+  end
+
   defp now_iso8601 do
     DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.to_iso8601()
   end
@@ -610,4 +701,11 @@ defmodule Roundtable.Board do
     |> to_string()
     |> String.replace("'", "''")
   end
+
+  defp duplicate_column_error?(output) when is_binary(output) do
+    String.contains?(output, "Duplicate column name") ||
+      String.contains?(output, "already exists")
+  end
+
+  defp duplicate_column_error?(_output), do: false
 end
