@@ -538,6 +538,77 @@ following are true:
 
 If any of those are false, use the normal clean-branch publishing path.
 
+### 10.2 Canonical archive destination vs staging surfaces
+
+The canonical repo destination for embedded rounds is:
+
+- `/home/deepwatrcreatur/flakes/agent-roundtable/docs/design/rounds/`
+
+But the round leader must distinguish that canonical destination from temporary
+staging surfaces such as:
+
+- round-specific worktrees under `~/flakes/agent-roundtable.*`
+- temporary worktrees under `/tmp/agent-roundtable-*`
+- or a dirty feature checkout that happens to have the repo open in a file browser
+
+Those staging surfaces are allowed for execution and drafting.
+They are **not** the final proof that a round has been integrated.
+
+Before calling the round done, verify that the durable file exists on a clean
+branch based on `origin/main` and is headed for the canonical
+`docs/design/rounds/` path there.
+
+### 10.3 Clean integration workflow for round publication
+
+The default safe pattern is:
+
+1. `git fetch origin`
+2. create a clean integration worktree from `origin/main`
+3. write the durable round note and any coupled synthesis/index updates there
+4. commit and push from that clean integration worktree
+5. merge or fast-forward `main`
+6. prune temporary round-specific worktrees and branches once the content is on
+   `main`
+
+This is intentionally stricter than “write the note wherever you already are.”
+The common failure mode is not losing the prose itself; it is losing track of
+which worktree or branch is actually authoritative.
+
+### 10.4 Do not force archival through a dirty visible checkout
+
+If the maintainer’s visible checkout at `~/flakes/agent-roundtable` is:
+
+- dirty
+- on a feature branch
+- or carrying unrelated untracked round files
+
+do **not** archive the new round there just so it appears in the file browser.
+
+Instead:
+
+- publish from the clean integration worktree
+- and, if local browsing matters, create or refresh a clean main-tracking
+  worktree such as `~/flakes/agent-roundtable.main`
+
+That keeps publication correct without mixing archival work into unrelated local
+state.
+
+### 10.5 If the visible checkout needs cleaning, preserve first
+
+Sometimes the maintainer wants the normal `~/flakes/agent-roundtable` checkout
+itself returned to a clean `main` after publication.
+
+If so:
+
+1. preserve the dirty state first
+   - stash it, or
+   - back it up into session artifacts / a patch / a recovery branch
+2. only then reset or repoint the visible checkout to `main`
+3. verify that the merged round files are visible there
+
+Do **not** destroy dirty local state just to make a file browser view line up
+with the newly published `main`.
+
 ---
 
 ## 11. Known pitfalls

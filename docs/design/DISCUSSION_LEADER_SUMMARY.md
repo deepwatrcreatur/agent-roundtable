@@ -173,6 +173,22 @@ Then update:
 Before declaring the round finished, commit and push the archival update unless
 the maintainer explicitly asked you to stop before publication.
 
+### 5.5 Archive from a clean integration worktree
+
+Do **not** treat a dirty visible checkout as the publication surface just because
+it is the repo you can see in the file browser.
+
+Default pattern:
+
+- create a clean worktree from `origin/main`
+- archive the round there
+- push from there
+- then refresh a clean local `main` view if the maintainer wants immediate file
+  browser visibility
+
+If the visible checkout itself must be cleaned afterward, preserve its dirty
+state first and only then repoint it to clean `main`.
+
 ---
 
 ## 6. Vaglio web app note
