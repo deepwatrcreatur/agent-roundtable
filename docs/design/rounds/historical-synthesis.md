@@ -1060,3 +1060,15 @@ rather than a bundled coordination product. Durable-execution ideas from DBOS
 and Temporal are useful, but the first serious backend slice should still be a
 boring hosted claim/lease/attempt-lineage service rather than a heavyweight
 workflow engine.
+
+## Round 133: AgentField / SWE-AF vs Our Control-Plane Boundary
+**Consensus:** `AgentField` validates the market need for an agent
+coordination/control plane, but its product scope is broader than the boundary
+maintained in the local design rounds. The strongest reusable overlaps are
+cryptographic identity, policy enforcement, and human-in-the-loop pause/resume
+semantics. `SWE-AF` is best read as a higher-order engineering-factory/runtime
+layer whose existence strengthens the case for a narrow governance/control plane
+beneath it rather than arguing that the local project should widen into a
+workflow engine. The maintained line is to reaffirm the current
+claims/leases/attempt-lineage/promotion boundary, add an explicit comparative
+design note, and borrow selectively without absorbing the broader runtime stack.
