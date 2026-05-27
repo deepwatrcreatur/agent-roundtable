@@ -1,6 +1,6 @@
 # 82 — Hosted Analysis Provider Contract
 
-**Status:** `ready`
+**Status:** `done` — **Claude Code**
 **Tag:** `[product]`
 
 ## Goal

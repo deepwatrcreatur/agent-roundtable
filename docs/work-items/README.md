@@ -56,16 +56,16 @@ The important rule is action class plus resource class:
 
 ## Queue
 
-84. [`82-hosted-analysis-provider-contract.md`](./82-hosted-analysis-provider-contract.md) — `ready` — `[product]` Hosted analysis provider contract
-85. [`83-hosted-analysis-release-gate.md`](./83-hosted-analysis-release-gate.md) — `ready` — `[integrity]` Hosted analysis release gate
-86. [`84-release-event-and-publish-authority-separation.md`](./84-release-event-and-publish-authority-separation.md) — `ready` — `[integrity]` Release event and publish authority separation
-87. [`85-package-quarantine-and-revocation-graph.md`](./85-package-quarantine-and-revocation-graph.md) — `ready` — `[security]` Package quarantine and revocation graph
-88. [`86-untrusted-contribution-trust-tiers.md`](./86-untrusted-contribution-trust-tiers.md) — `ready` — `[security]` Untrusted contribution trust tiers
-89. [`87-safe-default-cache-trust-boundaries.md`](./87-safe-default-cache-trust-boundaries.md) — `ready` — `[security]` Safe-by-default cache trust boundaries
-90. [`88-zero-config-trusted-publishing-ux.md`](./88-zero-config-trusted-publishing-ux.md) — `ready` — `[product]` Zero-config trusted publishing UX
+84. [`82-hosted-analysis-provider-contract.md`](./82-hosted-analysis-provider-contract.md) — `done` — **Claude Code** — `[product]` Hosted analysis provider contract
+85. [`83-hosted-analysis-release-gate.md`](./83-hosted-analysis-release-gate.md) — `done` — **Claude Code** — `[integrity]` Hosted analysis release gate
+86. [`84-release-event-and-publish-authority-separation.md`](./84-release-event-and-publish-authority-separation.md) — `done` — **Claude Code** — `[integrity]` Release event and publish authority separation
+87. [`85-package-quarantine-and-revocation-graph.md`](./85-package-quarantine-and-revocation-graph.md) — `done` — **Claude Code** — `[security]` Package quarantine and revocation graph
+88. [`86-untrusted-contribution-trust-tiers.md`](./86-untrusted-contribution-trust-tiers.md) — `done` — **Claude Code** — `[security]` Untrusted contribution trust tiers
+89. [`87-safe-default-cache-trust-boundaries.md`](./87-safe-default-cache-trust-boundaries.md) — `done` — **Claude Code** — `[security]` Safe-by-default cache trust boundaries
+90. [`88-zero-config-trusted-publishing-ux.md`](./88-zero-config-trusted-publishing-ux.md) — `done` — **Claude Code** — `[product]` Zero-config trusted publishing UX
 91. [`89-forge-claim-and-lease-protocol.md`](./89-forge-claim-and-lease-protocol.md) — `done` — **Codex** — `[structural]` Forge claim and lease protocol
-92. [`90-agent-capability-and-promotion-boundaries.md`](./90-agent-capability-and-promotion-boundaries.md) — `ready` — `[security]` Agent capability and promotion boundaries
-93. [`91-maintainer-activity-and-promotion-surface.md`](./91-maintainer-activity-and-promotion-surface.md) — `ready` — `[product]` Maintainer activity and promotion surface
+92. [`90-agent-capability-and-promotion-boundaries.md`](./90-agent-capability-and-promotion-boundaries.md) — `done` — **Claude Code** — `[security]` Agent capability and promotion boundaries
+93. [`91-maintainer-activity-and-promotion-surface.md`](./91-maintainer-activity-and-promotion-surface.md) — `done` — **Claude Code** — `[product]` Maintainer activity and promotion surface
 94. [`92-canonical-governance-object-model.md`](./92-canonical-governance-object-model.md) — `done` — **Codex** — `[structural]` Canonical governance object model
 95. [`93-backend-adapter-and-performance-tier-contract.md`](./93-backend-adapter-and-performance-tier-contract.md) — `done` — **Codex** — `[hosting]` Backend adapter and performance-tier contract
 96. [`94-governance-state-export-and-backend-migration.md`](./94-governance-state-export-and-backend-migration.md) — `done` — **Codex** — `[integrity]` Governance state export and backend migration

@@ -1,6 +1,6 @@
 # 85 — Package Quarantine and Revocation Graph
 
-**Status:** `ready`
+**Status:** `done` — **Claude Code**
 **Tag:** `[security]`
 
 ## Goal

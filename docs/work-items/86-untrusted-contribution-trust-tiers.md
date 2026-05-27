@@ -1,6 +1,6 @@
 # 86 — Untrusted Contribution Trust Tiers
 
-**Status:** `ready`
+**Status:** `done` — **Claude Code**
 **Tag:** `[security]`
 
 ## Goal

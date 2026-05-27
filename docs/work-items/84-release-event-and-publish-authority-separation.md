@@ -1,6 +1,6 @@
 # 84 — Release Event and Publish Authority Separation
 
-**Status:** `ready`
+**Status:** `done` — **Claude Code**
 **Tag:** `[integrity]`
 
 ## Goal
