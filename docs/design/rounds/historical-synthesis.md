@@ -1072,3 +1072,17 @@ beneath it rather than arguing that the local project should widen into a
 workflow engine. The maintained line is to reaffirm the current
 claims/leases/attempt-lineage/promotion boundary, add an explicit comparative
 design note, and borrow selectively without absorbing the broader runtime stack.
+
+## Round 134: VFS / Virtual Working Copies vs the `dmux` Wrapper Path
+**Consensus:** VFS-style workspace virtualization is mostly a solution to
+ checkout materialization and monorepo I/O problems, while the current local
+ failure mode is multi-agent ownership and coordination over mutable workspaces.
+ Microsoft’s VFSForGit -> Scalar evolution reinforces the local wrapper-first
+ line by showing even that domain converging toward thinner shells over native
+ Git features instead of a permanent heavy virtualization layer. Public `jj`
+ virtual-working-copy work remains interesting but too exploratory to replace
+ the already-maintained direction. The project should therefore continue with
+ the `dmux` wrapper path, make isolated mutation and preflight discipline
+ load-bearing, use optional Btrfs-backed worktrees only as a secondary upgrade,
+ and treat VFS as at most a background watch item unless measured
+ checkout/materialization costs later become the real bottleneck.
