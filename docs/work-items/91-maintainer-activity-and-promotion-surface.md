@@ -2,6 +2,7 @@
 
 **Status:** `done`
 **Tag:** `[product]`
+**Owner:** `Codex`
 
 ## Goal
 
@@ -39,6 +40,19 @@ experts.
   - reviewed work
   - promoted/publishable work
 - The design keeps human merge/promotion authority explicit.
+
+## Outcome
+
+Done in `docs/design/MAINTAINER_ACTIVITY_PROMOTION_SURFACE.md`.
+
+The resulting design:
+
+- defines a calm repo-level maintainer surface above board/execution details
+- maps protocol objects into forge-familiar states such as draft, proposed,
+  reviewed, and promoted
+- keeps promotion authority explicitly human
+- uses progressive disclosure so claim/lease internals stay available without
+  dominating the default view
 
 ## Notes
 
