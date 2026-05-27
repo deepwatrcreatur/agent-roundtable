@@ -64,8 +64,8 @@ The important rule is action class plus resource class:
 89. [`87-safe-default-cache-trust-boundaries.md`](./87-safe-default-cache-trust-boundaries.md) — `done` — **Claude Code** — `[security]` Safe-by-default cache trust boundaries
 90. [`88-zero-config-trusted-publishing-ux.md`](./88-zero-config-trusted-publishing-ux.md) — `done` — **Claude Code** — `[product]` Zero-config trusted publishing UX
 91. [`89-forge-claim-and-lease-protocol.md`](./89-forge-claim-and-lease-protocol.md) — `done` — **Codex** — `[structural]` Forge claim and lease protocol
-92. [`90-agent-capability-and-promotion-boundaries.md`](./90-agent-capability-and-promotion-boundaries.md) — `ready` — `[security]` Agent capability and promotion boundaries
-93. [`91-maintainer-activity-and-promotion-surface.md`](./91-maintainer-activity-and-promotion-surface.md) — `ready` — `[product]` Maintainer activity and promotion surface
+92. [`90-agent-capability-and-promotion-boundaries.md`](./90-agent-capability-and-promotion-boundaries.md) — `done` — **Claude Code** — `[security]` Agent capability and promotion boundaries
+93. [`91-maintainer-activity-and-promotion-surface.md`](./91-maintainer-activity-and-promotion-surface.md) — `done` — **Claude Code** — `[product]` Maintainer activity and promotion surface
 94. [`92-canonical-governance-object-model.md`](./92-canonical-governance-object-model.md) — `done` — **Codex** — `[structural]` Canonical governance object model
 95. [`93-backend-adapter-and-performance-tier-contract.md`](./93-backend-adapter-and-performance-tier-contract.md) — `done` — **Codex** — `[hosting]` Backend adapter and performance-tier contract
 96. [`94-governance-state-export-and-backend-migration.md`](./94-governance-state-export-and-backend-migration.md) — `done` — **Codex** — `[integrity]` Governance state export and backend migration

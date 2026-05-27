@@ -1,6 +1,6 @@
 # 90 — Agent Capability and Promotion Boundaries
 
-**Status:** `ready`
+**Status:** `done`
 **Tag:** `[security]`
 
 ## Goal
