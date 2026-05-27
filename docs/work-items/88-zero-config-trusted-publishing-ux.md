@@ -1,6 +1,6 @@
 # 88 — Zero-Config Trusted Publishing UX
 
-**Status:** `ready`
+**Status:** `done` — **Claude Code**
 **Tag:** `[product]`
 
 ## Goal

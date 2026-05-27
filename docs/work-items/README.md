@@ -58,11 +58,11 @@ The important rule is action class plus resource class:
 
 84. [`82-hosted-analysis-provider-contract.md`](./82-hosted-analysis-provider-contract.md) — `done` — **Claude Code** — `[product]` Hosted analysis provider contract
 85. [`83-hosted-analysis-release-gate.md`](./83-hosted-analysis-release-gate.md) — `done` — **Claude Code** — `[integrity]` Hosted analysis release gate
-86. [`84-release-event-and-publish-authority-separation.md`](./84-release-event-and-publish-authority-separation.md) — `ready` — `[integrity]` Release event and publish authority separation
-87. [`85-package-quarantine-and-revocation-graph.md`](./85-package-quarantine-and-revocation-graph.md) — `ready` — `[security]` Package quarantine and revocation graph
-88. [`86-untrusted-contribution-trust-tiers.md`](./86-untrusted-contribution-trust-tiers.md) — `ready` — `[security]` Untrusted contribution trust tiers
-89. [`87-safe-default-cache-trust-boundaries.md`](./87-safe-default-cache-trust-boundaries.md) — `ready` — `[security]` Safe-by-default cache trust boundaries
-90. [`88-zero-config-trusted-publishing-ux.md`](./88-zero-config-trusted-publishing-ux.md) — `ready` — `[product]` Zero-config trusted publishing UX
+86. [`84-release-event-and-publish-authority-separation.md`](./84-release-event-and-publish-authority-separation.md) — `done` — **Claude Code** — `[integrity]` Release event and publish authority separation
+87. [`85-package-quarantine-and-revocation-graph.md`](./85-package-quarantine-and-revocation-graph.md) — `done` — **Claude Code** — `[security]` Package quarantine and revocation graph
+88. [`86-untrusted-contribution-trust-tiers.md`](./86-untrusted-contribution-trust-tiers.md) — `done` — **Claude Code** — `[security]` Untrusted contribution trust tiers
+89. [`87-safe-default-cache-trust-boundaries.md`](./87-safe-default-cache-trust-boundaries.md) — `done` — **Claude Code** — `[security]` Safe-by-default cache trust boundaries
+90. [`88-zero-config-trusted-publishing-ux.md`](./88-zero-config-trusted-publishing-ux.md) — `done` — **Claude Code** — `[product]` Zero-config trusted publishing UX
 91. [`89-forge-claim-and-lease-protocol.md`](./89-forge-claim-and-lease-protocol.md) — `done` — **Codex** — `[structural]` Forge claim and lease protocol
 92. [`90-agent-capability-and-promotion-boundaries.md`](./90-agent-capability-and-promotion-boundaries.md) — `ready` — `[security]` Agent capability and promotion boundaries
 93. [`91-maintainer-activity-and-promotion-surface.md`](./91-maintainer-activity-and-promotion-surface.md) — `ready` — `[product]` Maintainer activity and promotion surface

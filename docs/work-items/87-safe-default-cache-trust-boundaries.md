@@ -1,6 +1,6 @@
 # 87 — Safe-by-Default Cache Trust Boundaries
 
-**Status:** `ready`
+**Status:** `done` — **Claude Code**
 **Tag:** `[security]`
 
 ## Goal
