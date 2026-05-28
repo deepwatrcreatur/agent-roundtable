@@ -1,8 +1,7 @@
 # 77 — `jj` Prediction Calibration Protocol
 
-**Status:** `done`
+**Status:** `done` — **Owner:** `Codex`
 **Tag:** `[integrity]`
-**Owner:** `Codex`
 
 ## Goal
 

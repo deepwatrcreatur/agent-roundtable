@@ -129,6 +129,7 @@ When later graph activity bears on an earlier prediction, link it explicitly:
 
 ```text
 Outcome-Link: pred-router-ha-001
+Outcome-Type: stabilized
 Outcome-Verdict: partially_confirmed
 Outcome-Notes: merge held, but stale lease ownership required follow-up repair
 Calibration-Delta: decrease confidence on lease safety, preserve confidence on secret handling
@@ -137,6 +138,7 @@ Calibration-Delta: decrease confidence on lease safety, preserve confidence on s
 Use these fields on later changes or linked records:
 
 - `Outcome-Link:`
+- `Outcome-Type:`
 - `Outcome-Verdict:`
 - `Outcome-Notes:`
 - `Calibration-Delta:`

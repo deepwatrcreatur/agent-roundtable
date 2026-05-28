@@ -1,6 +1,6 @@
 # `jj` Prediction Calibration Protocol
 
-**Status:** Drafted from Round 87  
+**Status:** Drafted from Round 87 [satisfied]
 **Purpose:** Define a concrete, auditable protocol for recording predictions in
 `jj` change metadata and later assessing those predictions against graph
 outcomes without creating person-level reputation scores.
@@ -135,6 +135,7 @@ Use these when recording a prediction on a change:
 Use these on later changes or follow-up records:
 
 - `Outcome-Link:`
+- `Outcome-Type:`
 - `Outcome-Verdict:`
 - `Outcome-Notes:`
 - `Calibration-Delta:`
@@ -317,6 +318,7 @@ A later change or structured record links:
 
 ```text
 Outcome-Link: pred-router-ha-001
+Outcome-Type: stabilized
 Outcome-Verdict: partially_confirmed
 Outcome-Notes: merge succeeded and secrets stayed out of store, but stale lease ownership required follow-up repair
 Calibration-Delta: increase confidence on secret-handling basis, decrease confidence on failover-lease basis
