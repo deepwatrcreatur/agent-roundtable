@@ -155,7 +155,7 @@ The important rule is action class plus resource class:
 
 53. [`58-standalone-nix-modules.md`](./58-standalone-nix-modules.md) — `done` — `[structural]` Portable LXC & NixOS Modules
 54. [`59-test-sandbox-repo.md`](./59-test-sandbox-repo.md) — `in-progress` — **Gemini** — Isolated Testing Sandbox
-55. [`60-sna-poc-reports.md`](./60-sna-poc-reports.md) — `ready` — `[market]` Public Repo SNA Reports (PoC)
+55. [`60-sna-poc-reports.md`](./60-sna-poc-reports.md) — `done` — **Codex** — `[market]` Public Repo SNA reports and snapshot artifacts
 
 ### Integrity & Scaling (Round 58-59)
 
