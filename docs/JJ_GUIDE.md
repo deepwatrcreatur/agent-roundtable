@@ -96,6 +96,63 @@ Active-Constraints: keep runtime secrets out of the Nix store
 Supersedes: abcdefghijkl
 ```
 
+### Prediction-bearing metadata for calibration
+
+When a change contains an explicit forward-looking claim, record that prediction
+in a structured way so later graph outcomes can assess it:
+
+```text
+Prediction-ID: pred-router-ha-001
+Scope: router/failover
+Risk-Class: operational
+Expected-Properties: no split-brain, bounded failover time
+Expected-Failure-Modes: stale lease ownership, dual-active drift
+Vouch-Basis: prior HA incident history and staging drill evidence
+Vouch-Expiry: 2026-07-01
+```
+
+Use these fields as the standard prediction surface:
+
+- `Prediction-ID:`
+- `Scope:`
+- `Risk-Class:`
+- `Expected-Properties:`
+- `Expected-Failure-Modes:`
+- `Vouch-Basis:`
+- `Vouch-Expiry:`
+
+These fields are for explicit predictions, not generic commentary.
+
+### Outcome-linking metadata for later assessment
+
+When later graph activity bears on an earlier prediction, link it explicitly:
+
+```text
+Outcome-Link: pred-router-ha-001
+Outcome-Type: stabilized
+Outcome-Verdict: partially_confirmed
+Outcome-Notes: merge held, but stale lease ownership required follow-up repair
+Calibration-Delta: decrease confidence on lease safety, preserve confidence on secret handling
+```
+
+Use these fields on later changes or linked records:
+
+- `Outcome-Link:`
+- `Outcome-Type:`
+- `Outcome-Verdict:`
+- `Outcome-Notes:`
+- `Calibration-Delta:`
+
+Allowed verdicts should stay narrow and auditable, for example:
+
+- `confirmed`
+- `partially_confirmed`
+- `violated`
+- `expired_unresolved`
+- `superseded_without_test`
+
+Do not use these fields to imply person-level rank or prestige.
+
 ### Conflict as durable state
 
 If a conflict reflects genuine design disagreement rather than a simple merge
