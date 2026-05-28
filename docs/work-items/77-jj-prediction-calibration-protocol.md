@@ -1,7 +1,8 @@
 # 77 — `jj` Prediction Calibration Protocol
 
-**Status:** `ready`
+**Status:** `done`
 **Tag:** `[integrity]`
+**Owner:** `Codex`
 
 ## Goal
 
@@ -47,6 +48,20 @@ outcomes without creating person-level reputation scores.
 - At least one sample end-to-end example is documented from prediction creation
   through later outcome assessment.
 
+## Outcome
+
+Done in:
+
+- `docs/design/JJ_PREDICTION_CALIBRATION_PROTOCOL.md`
+- `docs/JJ_GUIDE.md`
+
+The resulting protocol:
+
+- defines explicit prediction-bearing and outcome-linking `jj` metadata fields
+- distinguishes predictive, confirmatory, and coalitional vouches
+- links later graph outcomes back to earlier predictions with explicit verdicts
+- keeps all calibration local, scoped, recent-windowed, and non-prestige-bearing
+
 ## Notes
 
 - Primary design source: `docs/design/rounds/round-87-jj-graph-prediction-calibration.md`
@@ -54,4 +69,3 @@ outcomes without creating person-level reputation scores.
   - `45-vouch-anchoring.md`
   - `46-dolt-tag-schema.md`
   - `62-jj-high-velocity-ingest.md`
-
