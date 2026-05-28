@@ -1086,3 +1086,16 @@ design note, and borrow selectively without absorbing the broader runtime stack.
  load-bearing, use optional Btrfs-backed worktrees only as a secondary upgrade,
  and treat VFS as at most a background watch item unless measured
  checkout/materialization costs later become the real bottleneck.
+
+## Round 135: Greenfield Worktree+Btrfs Tool vs the `dmux` Efficient Frontier
+**Consensus:** A greenfield worktree+Btrfs tool could deliver a cleaner
+ lifecycle model, stronger invariants, and more first-class cleanup / rollback /
+ lease semantics in principle. But under the current local constraint set — one
+ maintainer, modest engineering time, and modest inference subscriptions — those
+ gains are not large enough to justify a full replacement project now. The
+ actual bottleneck is that the wrapper-first path has not yet been made
+ load-bearing enough in real daily use. The maintained line is therefore to stay
+ wrapper-first on upstream `dmux`, make isolated mutation and preflight
+ discipline the real default, add optional Btrfs-backed creation and explicit
+ cleanup helpers, and only introduce the narrowest possible lifecycle/lease
+ sidecar if measured wrapper use shows the `dmux` seam has hard limits.
