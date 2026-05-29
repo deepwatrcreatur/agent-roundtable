@@ -124,7 +124,7 @@ The important rule is action class plus resource class:
 36. [`44-provenance-visualization.md`](./44-provenance-visualization.md) — `done` — **GitHub Copilot** — Claim Basis & Provenance Badging
 37. [`45-vouch-anchoring.md`](./45-vouch-anchoring.md) — `done` — **GitHub Copilot** — Human Vouch Anchoring
 38. [`46-dolt-tag-schema.md`](./46-dolt-tag-schema.md) — `done` — **Gemini** — Multidimensional Tagging Schema (Dolt + jj)
-39. [`47-tag-based-context-pruning.md`](./47-tag-based-context-pruning.md) — `ready` — Tag-Based Context Pruning
+39. [`47-tag-based-context-pruning.md`](./47-tag-based-context-pruning.md) — `done` — **Claude Code** — Tag-Based Context Pruning
 40. [`48-prediction-error-heatmap.md`](./48-prediction-error-heatmap.md) — `ready` — Prediction Error Heatmap (System Stress UI)
 
 ### Infrastructure & Operations (Tagged Rounds 48-51)
