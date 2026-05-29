@@ -1113,3 +1113,22 @@ design note, and borrow selectively without absorbing the broader runtime stack.
  line is therefore to keep the `dmux` wrapper direction, define the backend
  abstraction around workspace lifecycle rather than filesystem brand, and keep
  claims/lease/orchestration policy above that backend layer.
+
+## Round 137: Hosted Web Surfaces vs Local Substrate Abstraction
+
+The discussion converged that Theo's complaint about source control requiring a
+"real OS + filesystem" should not push the project into a browser-first hosted
+IDE as its main shape. The complaint is best understood as a critique of
+workspace materialization and API exposure rather than a proof that local
+execution should disappear. Hosted environments like Codespaces and Replit are
+important substrate references because they offer strong isolation and
+ephemeral, reproducible execution, but they do not replace the need for clear
+ownership, capability, lease, and audit boundaries around mutable workspaces.
+
+The maintained direction remains a narrow hosted control plane above multiple
+execution substrates. Local CLI/TUI workflows should stay first-class, but local
+filesystems such as APFS, Btrfs, and ZFS should be treated as replaceable
+backends rather than architectural truth. The next move is to define the common
+workspace/execution contract clearly, keep the `dmux` wrapper path as the first
+local substrate beneath it, and later add hosted sandbox execution as a second
+substrate for risky, collision-prone, or highly parallel work.
