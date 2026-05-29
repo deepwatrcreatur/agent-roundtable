@@ -1,6 +1,6 @@
 # 47 — Tag-Based Context Pruning
 
-**Status:** `ready`
+**Status:** `done`
 
 ## Goal
 Improve token efficiency by pruning agent context windows based on subject tag overlap.
