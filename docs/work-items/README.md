@@ -136,7 +136,7 @@ The important rule is action class plus resource class:
 
 ### Local TUI & Subscription Optimization (Round 53)
 
-45. [`53-opencode-fork-rpc.md`](./53-opencode-fork-rpc.md) — `ready` — `[structural]` OpenCode Vaglio Proxy (Local RPC)
+45. [`53-opencode-fork-rpc.md`](./53-opencode-fork-rpc.md) — `done` — **Codex** — `[structural]` Local harness RPC contract and OpenCode bridge boundary
 46. [`54-dmux-vaglio-tui.md`](./54-dmux-vaglio-tui.md) — `ready` — `[tools]` Vaglio TUI (dmux Integration)
 47. [`55-local-subscription-harness.md`](./55-local-subscription-harness.md) — `done` — **Codex** — `[tools]` Local subscription harness contract and fallback policy
 
