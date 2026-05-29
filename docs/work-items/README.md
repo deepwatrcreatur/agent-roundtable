@@ -129,7 +129,7 @@ The important rule is action class plus resource class:
 
 ### Infrastructure & Operations (Tagged Rounds 48-51)
 
-41. [`49-virtual-working-copies.md`](./49-virtual-working-copies.md) — `ready` — `[structural]` Virtual Working Copies (jj)
+41. [`49-virtual-working-copies.md`](./49-virtual-working-copies.md) — `done` — **Codex** — `[structural]` Virtual working copy contract and conflict collection model
 42. [`50-hybrid-cloud.md`](./50-hybrid-cloud.md) — `ready` — `[hosting]` Hybrid Cloud Deployment (Railway)
 43. [`51-proxy-and-cache.md`](./51-proxy-and-cache.md) — `ready` — `[tools]` Agent-Proxy & Cache (OpenRouter + LiteLLM)
 44. [`52-selective-research.md`](./52-selective-research.md) — `ready` — `[tools]` Selective Web Research (Browserbase)
