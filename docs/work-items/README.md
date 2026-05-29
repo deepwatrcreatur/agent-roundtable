@@ -143,7 +143,7 @@ The important rule is action class plus resource class:
 ### Workflow & Task Delegation (Round 54)
 
 48. [`56-embedded-design-merge.md`](./56-embedded-design-merge.md) — `ready` — `[structural]` Design History Integration (Embedded Model)
-49. [`57-agent-task-queue.md`](./57-agent-task-queue.md) — `ready` — `[structural]` Autonomous Agent Task Delegation System
+49. [`57-agent-task-queue.md`](./57-agent-task-queue.md) — `done` — **Codex** — `[structural]` Autonomous agent task queue umbrella and synthesis
 
 ### Board Execution Contracts (Round 70)
 
