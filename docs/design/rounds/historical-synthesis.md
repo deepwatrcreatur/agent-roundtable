@@ -1099,3 +1099,17 @@ design note, and borrow selectively without absorbing the broader runtime stack.
  discipline the real default, add optional Btrfs-backed creation and explicit
  cleanup helpers, and only introduce the narrowest possible lifecycle/lease
  sidecar if measured wrapper use shows the `dmux` seam has hard limits.
+
+## Round 136: Cross-Platform Workspace Backends Beyond Btrfs
+**Consensus:** The project should not treat Btrfs itself as the portable
+ workspace abstraction. The right boundary is a capability-based managed
+ workspace backend whose minimum contract is isolated mutable roots plus explicit
+ creation, inspection, path resolution, and cleanup, with snapshots, writable
+ clones, quotas/reserves, and rollback exposed only where the backend can
+ support them honestly. Btrfs remains the strongest Linux default, ZFS is the
+ clearest serious second Linux/backend-validation target, and APFS absolutely
+ belongs on the macOS shortlist — typically as a volume-per-workspace backend
+ with clonefile/tree-clone support as a lighter degraded mode. The maintained
+ line is therefore to keep the `dmux` wrapper direction, define the backend
+ abstraction around workspace lifecycle rather than filesystem brand, and keep
+ claims/lease/orchestration policy above that backend layer.
