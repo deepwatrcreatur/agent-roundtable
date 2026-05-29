@@ -1132,3 +1132,21 @@ backends rather than architectural truth. The next move is to define the common
 workspace/execution contract clearly, keep the `dmux` wrapper path as the first
 local substrate beneath it, and later add hosted sandbox execution as a second
 substrate for risky, collision-prone, or highly parallel work.
+
+## Round 138: Native Editor Clients over Hosted Multi-Agent Backends
+
+The discussion converged that the project should not insist on a browser-tab
+editor, but it should insist on a hosted backend that owns the correct workspace
+primitives: `jj`-aware working copies, isolated mutable roots, lease/capability
+control, snapshots, rollback, and clear mutation ownership. The durable center
+should therefore remain the backend protocol rather than any single client
+surface.
+
+VS Code was judged the strongest first editor client because its extension and
+remote-development model is mature enough to validate a thin vertical slice over
+a hosted backend. Zed was judged promising but farther away as a reference
+client today. Tools in the `cmux` / `t3code` class were treated as useful
+operator shells or orchestration surfaces for parallel agents, but not as
+replacements for the backend truth layer. The recommended next move is to define
+one backend/client contract and validate it simultaneously through a VS Code
+client and a `dmux`/zellij-like operator shell.
