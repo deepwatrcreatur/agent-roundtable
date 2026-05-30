@@ -1,6 +1,6 @@
 # 98 — Workspace Backend Capability Contract
 
-**Status:** `ready`
+**Status:** `done` — **Owner:** `Codex`
 **Tag:** `[structural]`
 
 ## Goal
@@ -59,3 +59,17 @@ the abstraction.
   - `74-local-daemon-lease-contract.md`
   - `89-forge-claim-and-lease-protocol.md`
   - `93-backend-adapter-and-performance-tier-contract.md`
+
+## Outcome
+
+- Added
+  [docs/design/WORKSPACE_BACKEND_CAPABILITY_CONTRACT.md](../design/WORKSPACE_BACKEND_CAPABILITY_CONTRACT.md)
+  as the maintained backend contract note.
+- Defined the backend abstraction around isolated mutable workspace lifecycle
+  rather than Btrfs-only naming.
+- Split the contract into:
+  - required baseline operations
+  - capability-gated optional operations
+  - operator-visible backend selection and diagnostics
+- Kept claim and lease policy explicitly above the backend layer so filesystem
+  isolation does not become orchestration authority.
