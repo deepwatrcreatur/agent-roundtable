@@ -1,7 +1,6 @@
 # 100 — APFS Workspace Backend and macOS Degraded Modes
 
-**Status:** `blocked`
-**Blocked on:** `98-workspace-backend-capability-contract.md`
+**Status:** `ready`
 **Tag:** `[tools]`
 
 ## Goal

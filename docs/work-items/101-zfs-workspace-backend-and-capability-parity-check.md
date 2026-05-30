@@ -1,7 +1,6 @@
 # 101 — ZFS Workspace Backend and Capability-Parity Check
 
-**Status:** `blocked`
-**Blocked on:** `98-workspace-backend-capability-contract.md`
+**Status:** `ready`
 **Tag:** `[hosting]`
 
 ## Goal
