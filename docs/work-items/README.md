@@ -159,7 +159,7 @@ The important rule is action class plus resource class:
 
 ### Integrity & Scaling (Round 58-59)
 
-56. [`61-slsa-attestation-hooks.md`](./61-slsa-attestation-hooks.md) — `ready` — `[integrity]` SLSA-Signed Integrity Hooks
+56. [`61-slsa-attestation-hooks.md`](./61-slsa-attestation-hooks.md) — `blocked` — `[integrity]` SLSA-Signed Integrity Hooks
 57. [`62-jj-high-velocity-ingest.md`](./62-jj-high-velocity-ingest.md) — `done` — **Codex** — `[structural]` Scalable jj ingestion layer and sieve-first traffic shaping
 
 ### Platform Evolution (JJ + Dolt + Provenance)
