@@ -1,7 +1,6 @@
 # 99 — Btrfs Workspace Backend and `dmux` Wiring
 
-**Status:** `blocked`
-**Blocked on:** `98-workspace-backend-capability-contract.md`
+**Status:** `done` — **Owner:** `Codex`
 **Tag:** `[tools]`
 
 ## Goal
@@ -42,3 +41,18 @@ wire it into the `dmux`-wrapper path as the strongest local backend.
 - Closely related work:
   - `54-dmux-vaglio-tui.md`
   - `74-local-daemon-lease-contract.md`
+
+## Outcome
+
+- Added
+  [docs/design/BTRFS_BACKEND_AND_DMUX_WRAPPER_MODEL.md](../design/BTRFS_BACKEND_AND_DMUX_WRAPPER_MODEL.md)
+  as the maintained first Linux backend model.
+- Kept the implementation line wrapper-first on upstream `dmux` rather than
+  escalating immediately to a fork.
+- Defined:
+  - Btrfs subvolume-backed workspace creation
+  - snapshot and writable clone mapping
+  - fallback order when Btrfs is unavailable
+  - operator-visible backend diagnostics and cleanup semantics
+- Kept claim and lease policy above the backend so filesystem lifecycle does not
+  become orchestration authority.
