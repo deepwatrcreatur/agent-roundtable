@@ -1,6 +1,6 @@
 # 100 — APFS Workspace Backend and macOS Degraded Modes
 
-**Status:** `ready`
+**Status:** `done` — **Owner:** `Codex`
 **Tag:** `[tools]`
 
 ## Goal
@@ -41,3 +41,15 @@ than hand-waving them as equivalent.
 - Closely related work:
   - `98-workspace-backend-capability-contract.md`
   - `99-btrfs-workspace-backend-and-dmux-wiring.md`
+
+## Outcome
+
+- Added
+  [docs/design/APFS_BACKEND_AND_MACOS_DEGRADED_MODES.md](../design/APFS_BACKEND_AND_MACOS_DEGRADED_MODES.md)
+  as the maintained macOS backend note.
+- Defined:
+  - strong `apfs_volume` mode
+  - degraded `apfs_clone` mode
+  - explicit capability and diagnostic differences between them
+- Kept APFS as a real first serious macOS backend while avoiding false claims of
+  parity with Btrfs subvolume semantics.
