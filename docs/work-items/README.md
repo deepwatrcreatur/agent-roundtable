@@ -206,4 +206,4 @@ The important rule is action class plus resource class:
 71. [`98-workspace-backend-capability-contract.md`](./98-workspace-backend-capability-contract.md) — `done` — **Codex** — `[structural]` Capability-based workspace backend lifecycle contract
 72. [`99-btrfs-workspace-backend-and-dmux-wiring.md`](./99-btrfs-workspace-backend-and-dmux-wiring.md) — `done` — **Codex** — `[tools]` Btrfs backend and `dmux` wrapper implementation model
 73. [`100-apfs-workspace-backend-and-macos-degraded-modes.md`](./100-apfs-workspace-backend-and-macos-degraded-modes.md) — `done` — **Codex** — `[tools]` APFS backend and explicit macOS degraded modes
-74. [`101-zfs-workspace-backend-and-capability-parity-check.md`](./101-zfs-workspace-backend-and-capability-parity-check.md) — `ready` — `[hosting]` ZFS backend and capability-parity check
+74. [`101-zfs-workspace-backend-and-capability-parity-check.md`](./101-zfs-workspace-backend-and-capability-parity-check.md) — `done` — **Codex** — `[hosting]` ZFS backend and capability-parity check
