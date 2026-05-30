@@ -1,6 +1,6 @@
 # 101 — ZFS Workspace Backend and Capability-Parity Check
 
-**Status:** `ready`
+**Status:** `done` — **Owner:** `Codex`
 **Tag:** `[hosting]`
 
 ## Goal
@@ -39,3 +39,22 @@ details.
 - Closely related work:
   - `93-backend-adapter-and-performance-tier-contract.md`
   - `98-workspace-backend-capability-contract.md`
+
+## Outcome
+
+- Added
+  [docs/design/ZFS_BACKEND_AND_CAPABILITY_PARITY_CHECK.md](../design/ZFS_BACKEND_AND_CAPABILITY_PARITY_CHECK.md)
+  as the maintained parity-check note.
+- Verified that the common workspace contract maps cleanly to:
+  - ZFS datasets
+  - snapshots
+  - writable clones
+  - quota and reservation controls
+- Added an explicit parity matrix for:
+  - Btrfs
+  - ZFS
+  - APFS strong mode
+  - APFS degraded mode
+  - reflink/copy fallbacks
+- Concluded that no contract change is required beyond keeping capability
+  reporting explicit at the wrapper layer.
