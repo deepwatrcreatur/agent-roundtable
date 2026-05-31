@@ -70,11 +70,33 @@ defmodule Roundtable.BoardKanbanReadModelTest do
            assignee_ref: "codex-review",
            desired_outcome: %{"result" => "Validation passes"},
            updated_at: "2026-05-23T00:20:00Z"
+         },
+         %{
+           id: "wk-nested",
+           repo_ref: "deepwatrcreatur/agent-roundtable",
+           branch_ref: "feat/nested",
+           source_ref: "round-nested",
+           title: "Nested evidence metadata",
+           task_type: "analysis",
+           input_payload: %{
+             "route" => "/forgejo-shell/reports",
+             "surface" => "/forgejo-shell",
+             "public_demo_id" => "nested-demo",
+             "evidence_links" => [
+               %{"label" => "Open nested evidence", "href" => "/nested", "kind" => "surface"}
+             ]
+           },
+           priority: 50,
+           status: "queued",
+           assignee_ref: "codex-nested",
+           desired_outcome: %{"result" => "Nested metadata should be readable"},
+           updated_at: "2026-05-23T00:25:00Z"
          }
        ]}
     end
 
     def list_attempts(_repo_path, "wk-queued", _opts), do: {:ok, []}
+    def list_attempts(_repo_path, "wk-nested", _opts), do: {:ok, []}
 
     def list_attempts(_repo_path, "wk-gated", _opts) do
       {:ok,
@@ -183,6 +205,7 @@ defmodule Roundtable.BoardKanbanReadModelTest do
     cards = Map.new(snapshot.cards, &{&1.work_item_id, &1})
 
     assert cards["wk-queued"].lane == "queued"
+    assert cards["wk-nested"].lane == "queued"
     assert cards["wk-gated"].lane == "gated"
     assert cards["wk-gated"].gate_type == "approve"
     assert "gate:open" in cards["wk-gated"].badge_refs
@@ -201,7 +224,11 @@ defmodule Roundtable.BoardKanbanReadModelTest do
 
     assert cards["wk-done"].lane == "done"
     assert Enum.any?(cards["wk-done"].evidence_links, &(&1.href == "/forgejo-shell?demo=kubernetes"))
-    assert snapshot.counts["queued"] == 1
+    assert Enum.any?(cards["wk-nested"].evidence_links, &(&1.href == "/forgejo-shell/reports"))
+    assert Enum.any?(cards["wk-nested"].evidence_links, &(&1.href == "/forgejo-shell"))
+    assert Enum.any?(cards["wk-nested"].evidence_links, &(&1.href == "/nested"))
+    assert Enum.any?(cards["wk-nested"].evidence_links, &(&1.href == "/forgejo-shell?demo=nested-demo"))
+    assert snapshot.counts["queued"] == 2
     assert snapshot.counts["gated"] == 1
     assert snapshot.counts["attention"] == 1
     assert snapshot.counts["done"] == 1

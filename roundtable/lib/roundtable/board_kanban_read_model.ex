@@ -295,7 +295,13 @@ defmodule Roundtable.BoardKanbanReadModel do
   end
 
   defp surface_links(item) do
-    [surface_link(Map.get(item, :surface_route) || Map.get(item, "surface_route"))]
+    input_payload = Map.get(item, :input_payload) || Map.get(item, "input_payload") || %{}
+
+    [
+      surface_link(Map.get(item, :surface_route) || Map.get(item, "surface_route")),
+      surface_link(Map.get(input_payload, :route) || Map.get(input_payload, "route")),
+      surface_link(Map.get(input_payload, :surface) || Map.get(input_payload, "surface"))
+    ]
     |> Enum.reject(&is_nil/1)
   end
 
@@ -313,8 +319,20 @@ defmodule Roundtable.BoardKanbanReadModel do
   defp surface_label(path), do: "Open #{path}"
 
   defp declared_evidence_links(item) do
-    explicit_links = Map.get(item, :evidence_links) || Map.get(item, "evidence_links") || []
-    public_demo_id = Map.get(item, :public_demo_id) || Map.get(item, "public_demo_id")
+    input_payload = Map.get(item, :input_payload) || Map.get(item, "input_payload") || %{}
+
+    explicit_links =
+      Map.get(item, :evidence_links) ||
+        Map.get(item, "evidence_links") ||
+        Map.get(input_payload, :evidence_links) ||
+        Map.get(input_payload, "evidence_links") ||
+        []
+
+    public_demo_id =
+      Map.get(item, :public_demo_id) ||
+        Map.get(item, "public_demo_id") ||
+        Map.get(input_payload, :public_demo_id) ||
+        Map.get(input_payload, "public_demo_id")
 
     explicit_links(explicit_links) ++ public_demo_links(public_demo_id)
   end

@@ -44,11 +44,33 @@ defmodule RoundtableWeb.BoardLiveTest do
           assignee_ref: "codex-review",
           desired_outcome: %{"result" => "Promote after approval"},
           updated_at: "2026-05-23T00:05:00Z"
+        },
+        %{
+          id: "wk-3",
+          repo_ref: "deepwatrcreatur/agent-roundtable",
+          branch_ref: "feat/nested",
+          source_ref: "round-3",
+          title: "Nested evidence card",
+          task_type: "analysis",
+          input_payload: %{
+            "surface" => "/forgejo-shell",
+            "route" => "/forgejo-shell/reports",
+            "public_demo_id" => "nested-demo",
+            "evidence_links" => [
+              %{"label" => "Open nested evidence", "href" => "/nested", "kind" => "surface"}
+            ]
+          },
+          priority: 30,
+          status: "queued",
+          assignee_ref: "codex-nested",
+          desired_outcome: %{"result" => "Nested metadata renders evidence"},
+          updated_at: "2026-05-23T00:06:00Z"
         }
       ]}
     end
 
     def list_attempts(_repo_path, "wk-1", _opts), do: {:ok, []}
+    def list_attempts(_repo_path, "wk-3", _opts), do: {:ok, []}
 
     def list_attempts(_repo_path, "wk-2", _opts) do
       {:ok,
@@ -122,6 +144,7 @@ defmodule RoundtableWeb.BoardLiveTest do
     assert html =~ "Queued"
     assert html =~ "Gated"
     assert html =~ "Queued card"
+    assert html =~ "Nested evidence card"
     assert html =~ "Needs approval"
     assert html =~ "Approval required"
     assert html =~ "Selected card"
@@ -165,5 +188,32 @@ defmodule RoundtableWeb.BoardLiveTest do
 
     assert html =~ "Needs approval"
     refute html =~ "Queued card"
+  end
+
+  test "render shows nested evidence metadata when that card is selected" do
+    now = ~U[2026-05-23 01:00:00Z]
+
+    {:ok, snapshot} = BoardKanbanReadModel.snapshot("/tmp/repo", board: FakeBoard, now: now)
+    selected = Enum.find(snapshot.cards, &(&1.work_item_id == "wk-3"))
+
+    html =
+      %{
+        __changed__: %{},
+        repo_path: "/tmp/repo",
+        params: %{},
+        filters: snapshot.filters,
+        counts: snapshot.counts,
+        snapshot_generated_at: snapshot.generated_at,
+        error: nil,
+        cards: snapshot.cards,
+        lanes: snapshot.lanes,
+        selected_card: selected
+      }
+      |> BoardLive.render()
+      |> rendered_to_string()
+
+    assert html =~ "Nested evidence card"
+    assert html =~ "/nested"
+    assert html =~ "/forgejo-shell?demo=nested-demo"
   end
 end
