@@ -207,3 +207,7 @@ The important rule is action class plus resource class:
 72. [`99-btrfs-workspace-backend-and-dmux-wiring.md`](./99-btrfs-workspace-backend-and-dmux-wiring.md) — `done` — **Codex** — `[tools]` Btrfs backend and `dmux` wrapper implementation model
 73. [`100-apfs-workspace-backend-and-macos-degraded-modes.md`](./100-apfs-workspace-backend-and-macos-degraded-modes.md) — `done` — **Codex** — `[tools]` APFS backend and explicit macOS degraded modes
 74. [`101-zfs-workspace-backend-and-capability-parity-check.md`](./101-zfs-workspace-backend-and-capability-parity-check.md) — `done` — **Codex** — `[hosting]` ZFS backend and capability-parity check
+
+### Web Access Policy & Browser Escalation
+
+75. [`102-agent-web-access-and-browser-escalation-policy.md`](./102-agent-web-access-and-browser-escalation-policy.md) — `ready` — `[tools]` Agent web-access cascade and Browserbase/browser escalation policy
