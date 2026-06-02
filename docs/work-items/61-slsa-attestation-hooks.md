@@ -1,7 +1,6 @@
 # 61 — SLSA-Signed Integrity Hooks
 
-**Status:** `blocked`
-**Blocked on:** `39-deliberative-slsa.md`
+**Status:** `done`
 **Tag:** `[integrity]`
 
 ## Goal
