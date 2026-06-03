@@ -1,6 +1,6 @@
 # 102 — Agent Web Access and Browser Escalation Policy
 
-**Status:** `ready`
+**Status:** `done`
 **Tag:** `[tools]`
 
 ## Goal

@@ -210,4 +210,4 @@ The important rule is action class plus resource class:
 
 ### Web Access Policy & Browser Escalation
 
-75. [`102-agent-web-access-and-browser-escalation-policy.md`](./102-agent-web-access-and-browser-escalation-policy.md) — `ready` — `[tools]` Agent web-access cascade and Browserbase/browser escalation policy
+75. [`102-agent-web-access-and-browser-escalation-policy.md`](./102-agent-web-access-and-browser-escalation-policy.md) — `done` — `[tools]` Agent web-access cascade and Browserbase/browser escalation policy
