@@ -1,6 +1,6 @@
 # 26 — NixOS Service Module
 
-**Status:** `ready` (cross-repo: targets `unified-nix-configuration`)
+**Status:** `done` (cross-repo: targets `unified-nix-configuration`)
 **Assigned:** Gemini
 
 ## Scope

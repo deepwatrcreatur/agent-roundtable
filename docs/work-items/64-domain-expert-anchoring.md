@@ -1,7 +1,13 @@
 # 64 — Domain Expert Anchoring (Tag-Scoped Precision)
 
-**Status:** `ready`
+**Status:** `blocked` — simulated recovery-era item; requires genuine re-triage before claiming
 **Tag:** `[governance]`
+
+## Queue Note
+
+This item came from the Gemini simulation recovery window and is not part of
+the active ranked queue in `README.md`. Do not claim it as ordinary `ready`
+work until it is reintroduced through a genuine round and explicitly ranked.
 
 ## Goal
 Implement a system where domain experts (e.g., Accountants, Kernel Maintainers) can project their "taste" at scale by weighting their judgment on specific subject tags.

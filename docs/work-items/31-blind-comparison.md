@@ -1,7 +1,7 @@
 # 31 — Blind Comparison Interface
 
-**Status:** `ready`
-**Assigned:** Gemini
+**Status:** `done`
+**Assigned:** Codex
 **Source:** Q37 (Round 22)
 
 ## Scope

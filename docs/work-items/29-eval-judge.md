@@ -1,7 +1,7 @@
 # 29 — LLM-as-Judge: `Vaglio.Eval.Judge` + `Vaglio.Eval.Metrics`
 
-**Status:** `ready`
-**Assigned:** Gemini
+**Status:** `done`
+**Assigned:** Codex
 **Source:** Q37 (Round 22)
 
 ## Scope

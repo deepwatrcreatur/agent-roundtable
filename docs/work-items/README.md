@@ -73,6 +73,18 @@ The important rule is action class plus resource class:
 98. [`96-board-kanban-read-model.md`](./96-board-kanban-read-model.md) — `done` — **Codex** — `[structural]` Board kanban read model
 99. [`97-browseable-board-surface.md`](./97-browseable-board-surface.md) — `done` — **Codex** — `[product]` Browseable board surface
 
+## Queue Hygiene Note
+
+Some work-item files from the Gemini simulation recovery window still exist on
+disk for auditability but are not part of the active ranked queue.
+
+- `63-binary-blob-bailiff.md`
+- `64-domain-expert-anchoring.md`
+- `65-merit-registry-librarian.md`
+
+Treat those as blocked until a genuine round re-triages and explicitly ranks
+them again.
+
 ### Foundation (do first, in order)
 
 1. [`01-mix-scaffold.md`](./01-mix-scaffold.md) — `done` — **Codex**

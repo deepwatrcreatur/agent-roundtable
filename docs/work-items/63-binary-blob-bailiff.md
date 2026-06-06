@@ -1,7 +1,13 @@
 # 63 — Binary Blob & Build Script Bailiff (The "XZ Shield")
 
-**Status:** `ready`
+**Status:** `blocked` — simulated recovery-era item; requires genuine re-triage before claiming
 **Tag:** `[integrity]`
+
+## Queue Note
+
+This item came from the Gemini simulation recovery window and is not part of
+the active ranked queue in `README.md`. Do not claim it as ordinary `ready`
+work until it is reintroduced through a genuine round and explicitly ranked.
 
 ## Goal
 Implement an automated guardrail that flags the specific vectors used in the XZ attack (binary blobs and build script obfuscation).

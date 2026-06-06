@@ -1,7 +1,13 @@
 # 65 — The Librarian & Merit Manifest
 
-**Status:** `ready`
+**Status:** `blocked` — simulated recovery-era item; requires genuine re-triage before claiming
 **Tag:** `[tools]`
+
+## Queue Note
+
+This item came from the Gemini simulation recovery window and is not part of
+the active ranked queue in `README.md`. Do not claim it as ordinary `ready`
+work until it is reintroduced through a genuine round and explicitly ranked.
 
 ## Goal
 Prevent "DIY reinventing" and token waste by ensuring agents use high-quality existing tools and libraries.
