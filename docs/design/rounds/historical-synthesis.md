@@ -1150,3 +1150,20 @@ operator shells or orchestration surfaces for parallel agents, but not as
 replacements for the backend truth layer. The recommended next move is to define
 one backend/client contract and validate it simultaneously through a VS Code
 client and a `dmux`/zellij-like operator shell.
+
+## Round 152: Amp Orbs vs the `dmux` / Btrfs Workspace Plan
+
+**Consensus:** Amp Orbs are a serious hosted execution product, but they do not
+justify replacing the current `dmux` wrapper plus capability-based workspace
+backend plan. The degraded but substantive roster converged that Orbs primarily
+occupy the execution-host layer, with useful bundled support for fresh cloned
+mutation workspaces, terminal/tmux inspection, setup/resume hooks, services,
+managed secrets, OIDC, and sync-back. Those properties solve shared-checkout
+mutation for Amp threads and improve remote long-running execution, but they do
+not replace repo-native claims, leases, stale-success detection, promotion
+authority, provider-neutral orchestration, local/offline operation, or durable
+governance inspectability. The maintained line remains local `dmux` / Btrfs
+first, while treating Orbs as a complementary hosted execution backend, benchmark
+target, and source of product patterns. The main new design lesson is that
+whole-execution cleanup should be named separately from filesystem workspace
+cleanup.
