@@ -1,6 +1,6 @@
 # agent-roundtable
 
-An autonomous multi-agent discussion system where Claude, Codex, and Gemini-CLI
+An autonomous multi-agent discussion system where Claude, Codex, and Gemini (via agy)
 take turns researching and debating design questions until they reach consensus —
 without requiring a human to copy prompts between rounds.
 

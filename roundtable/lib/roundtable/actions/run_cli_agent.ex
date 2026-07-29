@@ -1,7 +1,7 @@
 defmodule Roundtable.Actions.RunCliAgent do
   use Jido.Action,
     name: "run_cli_agent",
-    description: "Invokes a CLI agent (claude, codex, gemini, deepseek) headlessly",
+    description: "Invokes a CLI agent (claude, codex, agy/gemini, deepseek) headlessly",
     schema: [
       agent: [
         type: {:in, [:claude, :codex, :gemini, :deepseek]},
@@ -42,7 +42,9 @@ defmodule Roundtable.Actions.RunCliAgent do
   end
 
   def validate_agent(agent) when agent in [:claude, :codex, :gemini] do
-    case System.find_executable(to_string(agent)) do
+    binary = if agent == :gemini, do: "agy", else: to_string(agent)
+
+    case System.find_executable(binary) || (agent == :gemini && System.find_executable("gemini")) do
       nil -> {:error, {:agent_prereq_missing, agent, :binary_not_found}}
       _ -> :ok
     end
@@ -196,7 +198,7 @@ defmodule Roundtable.Actions.RunCliAgent do
   end
 
   defp build_command(%{agent: :gemini, prompt: prompt, repo_root: root} = params) do
-    cmd = params[:cli_path] || "gemini"
+    cmd = params[:cli_path] || System.find_executable("agy") || "agy"
     args = ["-p", prompt, "--output-format", "json"]
     {:ok, {cmd, args, [cd: root, stderr_to_stdout: true]}}
   end

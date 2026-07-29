@@ -132,7 +132,7 @@ defmodule Roundtable.WorkflowDefinitionsTest do
 
     refute WorkflowDefinitions.runtime_allowed?(resolved,
              runtime_id: "rtk-2",
-             runtime_profile_ids: ["gemini-cli"],
+             runtime_profile_ids: ["agy"],
              runtime_labels: ["linux"],
              transport: "unix_socket"
            )

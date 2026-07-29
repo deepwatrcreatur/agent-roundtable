@@ -95,7 +95,7 @@ care which.
 
 - **Runtime:** Jido 2.0 (Elixir). Do not propose a different runtime.
 - **Shared state:** GitHub Issues (active turns) + git files (durable artifacts).
-- **Agent invocation:** `claude -p`, `codex exec -`, `gemini -p` in v1.
+- **Agent invocation:** `claude -p`, `codex exec -`, `agy -p` in v1.
   OpenCode HTTP API for Copilot/OpenCode Go in v2.
 - **Round enrichment:** optional free-model/OpenCode-style seats are encouraged
   when they add genuine extra coverage, but they are experimental supplements,

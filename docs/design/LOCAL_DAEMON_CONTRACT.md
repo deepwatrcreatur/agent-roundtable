@@ -119,7 +119,7 @@ Example shape:
       "supports_patch_output": true
     },
     {
-      "id": "gemini-cli",
+      "id": "agy",
       "provider": "gemini",
       "model": "default",
       "supports_streaming": true,

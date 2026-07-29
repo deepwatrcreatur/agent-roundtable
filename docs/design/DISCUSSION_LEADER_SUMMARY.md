@@ -141,7 +141,7 @@ Every voice should answer the **same** prompt.
 ### 5.2 Run the voices
 
 - `Codex`: real `codex` CLI
-- `Gemini`: real `gemini -p`
+- `Gemini`: real `agy -p` (replacing deprecated `gemini-cli` / `gemini`)
 - `Claude`: real `claude -p`
 - `DeepSeek`: repo Elixir action or direct HTTP API with the CA bundle fix above
 - `Copilot`: an explicit independent position, not just a summary of others

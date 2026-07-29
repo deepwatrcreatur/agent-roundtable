@@ -237,7 +237,7 @@ defmodule Roundtable.LocalDaemonTest do
                workflow: FakeWorkflow,
                store: store,
                runtime_id: "rtk-1",
-               runtime_profile_ids: ["gemini-cli"],
+               runtime_profile_ids: ["agy"],
                runtime_labels: ["linux"]
              )
 

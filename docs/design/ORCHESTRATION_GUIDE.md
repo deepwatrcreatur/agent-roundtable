@@ -137,7 +137,7 @@ Example:
 
 #### Gemini
 
-- binary: `gemini`
+- binary: `agy` (replacing deprecated `gemini` / `gemini-cli`)
 - keychain warnings are usually non-fatal
 
 #### DeepSeek
@@ -252,17 +252,18 @@ codex exec /tmp/round_prompt.txt --skip-git-repo-check --full-auto --model gpt-5
 
 ## 6.2 Gemini
 
-Use `gemini -p` with the prompt content.
+Use `agy -p` with the prompt content (replacing deprecated `gemini-cli` / `gemini`).
 
 Example pattern:
 
 ```bash
 PROMPT="$(cat /tmp/round_prompt.txt)"
-gemini -p "$PROMPT" > /tmp/gemini_round.txt
+agy -p "$PROMPT" > /tmp/gemini_round.txt
 ```
 
 Notes:
 
+- `agy` is the current CLI client for Gemini Pro, replacing deprecated `gemini-cli`
 - keychain warnings do not necessarily mean failure
 - read the output file, not just stderr noise
 
