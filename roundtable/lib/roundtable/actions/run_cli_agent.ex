@@ -85,7 +85,20 @@ defmodule Roundtable.Actions.RunCliAgent do
 
   @impl true
   def run(%{agent: :deepseek, prompt: prompt} = params, _context) do
-    run_deepseek(prompt, params)
+    use_http =
+      Map.get(params, :harness) == :http or
+        (Map.get(params, :harness) != :cli and
+           is_nil(params[:cli_path]) and
+           is_nil(System.find_executable("dsh")) and
+           is_nil(System.find_executable("deepseek")))
+
+    if use_http do
+      run_deepseek(prompt, params)
+    else
+      with :ok <- validate_agent(:deepseek) do
+        do_run(params)
+      end
+    end
   end
 
   def run(params, _context) do
@@ -200,6 +213,12 @@ defmodule Roundtable.Actions.RunCliAgent do
   defp build_command(%{agent: :gemini, prompt: prompt, repo_root: root} = params) do
     cmd = params[:cli_path] || System.find_executable("agy") || "agy"
     args = ["-p", prompt, "--output-format", "json"]
+    {:ok, {cmd, args, [cd: root, stderr_to_stdout: true]}}
+  end
+
+  defp build_command(%{agent: :deepseek, prompt: prompt, repo_root: root} = params) do
+    cmd = params[:cli_path] || System.find_executable("dsh") || System.find_executable("deepseek") || "dsh"
+    args = ["--profile", "headless", prompt]
     {:ok, {cmd, args, [cd: root, stderr_to_stdout: true]}}
   end
 end
